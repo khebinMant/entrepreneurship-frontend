@@ -1,0 +1,10 @@
+.shell {
+  display: flex;
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
+
+  &__content {
+    flex: 1;
+    padding: var(--spacing-lg);
+    margin-left: var(--sidebar-width);
+  }
+}
