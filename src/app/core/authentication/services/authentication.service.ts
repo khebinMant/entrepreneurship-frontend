@@ -84,7 +84,7 @@ export class AuthenticationService {
           this.setUserImage(user.imageUrl);
         }
       } catch {
-        await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName }));
+        await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName, profilePictureUrl: null }));
       }
     }
   }

@@ -1,3 +1,83 @@
 <div class="profile-page">
-  <h1>Mi Perfil</h1>
+  <div class="profile-page__header">
+    <h1 class="profile-page__title">Mi Perfil</h1>
+    <p class="profile-page__subtitle">Administra tu información personal y foto de perfil.</p>
+  </div>
+
+  <div class="profile-page__loading" *ngIf="loading()">
+    <i class="pi pi-spin pi-spinner"></i> Cargando perfil...
+  </div>
+
+  <ng-container *ngIf="!loading() && user() as u">
+    <div class="profile-page__success" *ngIf="success()">
+      <i class="pi pi-check-circle"></i> {{ success() }}
+    </div>
+    <div class="profile-page__error" *ngIf="error()">
+      <i class="pi pi-exclamation-circle"></i> {{ error() }}
+    </div>
+
+    <div class="profile-page__grid">
+      <div class="profile-page__card profile-page__card--photo">
+        <h2 class="profile-page__card-title">Foto de Perfil</h2>
+        <div class="profile-page__photo">
+          <div class="profile-page__photo-img">
+            <img [src]="imageService.getEntityImageUrl(u, 'USER', u.userId)" alt="Foto de perfil" />
+          </div>
+          <label class="btn btn--outline profile-page__upload-btn" [class.btn--disabled]="uploading()">
+            <i class="pi pi-camera"></i>
+            {{ uploading() ? 'Subiendo...' : 'Cambiar foto' }}
+            <input type="file" accept="image/*" (change)="uploadProfilePicture($event)" hidden />
+          </label>
+        </div>
+      </div>
+
+      <div class="profile-page__card profile-page__card--info">
+        <h2 class="profile-page__card-title">Información Personal</h2>
+        <div class="profile-page__field">
+          <label class="profile-page__label">Nombres</label>
+          <input class="profile-page__input" type="text" [(ngModel)]="editFirstName" placeholder="Tus nombres" />
+        </div>
+        <div class="profile-page__field">
+          <label class="profile-page__label">Apellidos</label>
+          <input class="profile-page__input" type="text" [(ngModel)]="editLastName" placeholder="Tus apellidos" />
+        </div>
+        <div class="profile-page__field">
+          <label class="profile-page__label">Correo electrónico</label>
+          <input class="profile-page__input" type="email" [value]="u.email || ''" disabled />
+        </div>
+        <button class="btn btn--primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-page__card profile-page__card--gallery">
+      <div class="profile-page__card-header">
+        <h2 class="profile-page__card-title">Galería de Imágenes</h2>
+        <label class="btn btn--outline btn--sm" *ngIf="canAddMore()" [class.btn--disabled]="uploading()">
+          <i class="pi pi-plus"></i> Agregar
+          <input type="file" accept="image/*" (change)="uploadGalleryImage($event)" hidden />
+        </label>
+      </div>
+      <div class="profile-page__gallery" *ngIf="images().length > 0">
+        <div class="profile-page__gallery-item" *ngFor="let img of images(); trackBy: trackById">
+          <img [src]="img.imageUrl" [alt]="img.altText || 'Imagen'" />
+          <div class="profile-page__gallery-overlay">
+            <button class="btn btn--danger btn--sm" (click)="deleteConfirmId.set(img.imageId)">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+          <div class="profile-page__gallery-confirm" *ngIf="deleteConfirmId() === img.imageId">
+            <span>¿Eliminar?</span>
+            <button class="btn btn--danger btn--xs" (click)="deleteImage(img.imageId)">Sí</button>
+            <button class="btn btn--ghost btn--xs" (click)="deleteConfirmId.set(null)">No</button>
+          </div>
+        </div>
+      </div>
+      <div class="profile-page__gallery-empty" *ngIf="images().length === 0 && !uploading()">
+        <i class="pi pi-image"></i>
+        <p>No tienes imágenes en tu galería</p>
+      </div>
+    </div>
+  </ng-container>
 </div>

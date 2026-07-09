@@ -33,6 +33,10 @@ export class EntrepreneurshipService {
   }
 
   search(filters: EntrepreneurshipSearchFilters): Observable<Entrepreneurship[]> {
+    return this.searchPage(filters).pipe(map((page) => page.content));
+  }
+
+  searchPage(filters: EntrepreneurshipSearchFilters): Observable<Page<Entrepreneurship>> {
     let params = new HttpParams();
     if (filters.name) params = params.set('name', filters.name);
     if (filters.categoryId) params = params.set('categoryId', filters.categoryId.toString());
@@ -40,8 +44,7 @@ export class EntrepreneurshipService {
     if (filters.isDigital !== undefined) params = params.set('isDigital', filters.isDigital.toString());
     if (filters.page !== undefined) params = params.set('page', filters.page.toString());
     if (filters.size !== undefined) params = params.set('size', filters.size.toString());
-    return this.api.get<Page<Entrepreneurship>>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.SEARCH, params)
-      .pipe(map((page) => page.content));
+    return this.api.get<Page<Entrepreneurship>>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.SEARCH, params);
   }
 
   create(data: { userId: number; categoryId: number; name: string; description: string; isPhysical: boolean; isDigital: boolean }): Observable<Entrepreneurship> {

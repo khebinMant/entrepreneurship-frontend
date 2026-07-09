@@ -1,10 +1,16 @@
 .shell {
   display: flex;
   min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  transition: all var(--transition-normal);
 
   &__content {
     flex: 1;
     padding: var(--spacing-lg);
     margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition-normal);
+  }
+
+  &--sidebar-collapsed &__content {
+    margin-left: 64px;
   }
 }

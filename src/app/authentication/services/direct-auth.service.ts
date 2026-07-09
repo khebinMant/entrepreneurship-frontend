@@ -67,7 +67,7 @@ export class DirectAuthService {
     try {
       await lastValueFrom(this.userService.getByKeycloakId(keycloakId));
     } catch {
-      await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName }));
+      await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName, profilePictureUrl: null }));
     }
 
     this.authService.setAuthenticated(
@@ -98,7 +98,7 @@ export class DirectAuthService {
     try {
       await lastValueFrom(this.userService.getByKeycloakId(keycloakId));
     } catch {
-      await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName }));
+      await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName, profilePictureUrl: null }));
     }
   }
 

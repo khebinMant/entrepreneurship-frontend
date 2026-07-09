@@ -26,6 +26,7 @@ import { ThemeService } from './theme.service';
       justify-content: center;
       cursor: pointer;
       color: var(--color-text-secondary);
+      background: var(--color-surface);
       transition: all var(--transition-fast);
     }
     .theme-toggle:hover {

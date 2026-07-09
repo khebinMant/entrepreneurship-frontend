@@ -3,8 +3,8 @@ import { ApiService } from '../../core/http/services/api.service';
 import { API_ENDPOINTS } from '../../core/constants/app.constants';
 import { AppConfigService } from '../../core/config/services/app-config.service';
 import type { Observable } from 'rxjs';
-import type { CatalogueType } from '../models/catalogue-type';
-import type { CatalogueValue } from '../models/catalogue-value';
+import type { CatalogueType, CreateCatalogueTypeDto, UpdateCatalogueTypeDto } from '../models/catalogue-type';
+import type { CatalogueValue, CreateCatalogueValueDto, UpdateCatalogueValueDto } from '../models/catalogue-value';
 
 @Injectable({
   providedIn: 'root',

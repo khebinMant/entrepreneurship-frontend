@@ -1,25 +1,45 @@
 <header class="header">
-  <a class="header__logo" routerLink="/">Emprendia</a>
+  <div class="header__left">
+    <button class="header__hamburger" (click)="sidebarState.toggle()" aria-label="Alternar menú lateral">
+      <i class="pi pi-bars"></i>
+    </button>
+    <a class="header__logo" routerLink="/">
+      <span class="header__logo-icon">E</span>
+      <span class="header__logo-text">mprendia</span>
+    </a>
+  </div>
   <nav class="header__nav">
+    <div class="header__theme-toggle">
+      <app-theme-toggle />
+    </div>
     <div class="header__user">
       <button class="header__avatar" (click)="toggleMenu()" appClickOutside (appClickOutside)="closeMenu()" aria-label="Menú de usuario">
         <img *ngIf="authService.authState().userImage; else defaultAvatar"
              [src]="authService.authState().userImage"
              alt="Avatar" class="header__avatar-img" />
-        <ng-template #defaultAvatar><i class="pi pi-user"></i></ng-template>
+        <ng-template #defaultAvatar><i class="pi pi-user header__avatar-icon"></i></ng-template>
         <span class="header__username">{{ authService.authState().username }}</span>
-        <i class="pi pi-chevron-down" [class.open]="menuOpen()"></i>
+        <i class="pi pi-chevron-down header__chevron" [class.header__chevron--open]="menuOpen()"></i>
       </button>
 
       <div class="header__dropdown" *ngIf="menuOpen()">
         <div class="header__dropdown-header">
-          <span class="header__dropdown-name">{{ authService.authState().username }}</span>
+          <div class="header__dropdown-avatar">
+            <img *ngIf="authService.authState().userImage; else dropdownAvatar"
+                 [src]="authService.authState().userImage"
+                 alt="Avatar" />
+            <ng-template #dropdownAvatar><i class="pi pi-user"></i></ng-template>
+          </div>
+          <div class="header__dropdown-info">
+            <span class="header__dropdown-name">{{ authService.authState().username }}</span>
+            <span class="header__dropdown-email">{{ authService.authState().username }}@emprendia.com</span>
+          </div>
         </div>
-        <a class="header__dropdown-item" routerLink="/app/profile" (click)="closeMenu()">
-          <i class="pi pi-user"></i> Mi Perfil
+        <a class="header__dropdown-item" routerLink="/app/events" (click)="closeMenu()">
+          <i class="pi pi-calendar"></i> Eventos
         </a>
-        <a class="header__dropdown-item" routerLink="/app/settings" (click)="closeMenu()">
-          <i class="pi pi-cog"></i> Configuración
+        <a class="header__dropdown-item" routerLink="/app/entrepreneurships" (click)="closeMenu()">
+          <i class="pi pi-briefcase"></i> Emprendimientos
         </a>
         <div class="header__dropdown-divider"></div>
         <div class="header__dropdown-item header__dropdown-item--theme">
@@ -27,7 +47,7 @@
           <app-theme-toggle />
         </div>
         <div class="header__dropdown-divider"></div>
-        <button class="header__dropdown-item header__dropdown-item--danger" (click)="logout()">
+        <button class="header__dropdown-item header__dropdown-item--danger" (click)="logout(); closeMenu()">
           <i class="pi pi-sign-out"></i> Cerrar Sesión
         </button>
       </div>

@@ -1,13 +1,36 @@
-<aside class="sidebar">
+<aside class="sidebar" [ngClass]="{ 'sidebar--collapsed': sidebarState.isCollapsed() }">
   <nav class="sidebar__nav">
-    <a
-      *ngFor="let item of navItems"
-      [routerLink]="item.route"
-      routerLinkActive="sidebar__link--active"
-      class="sidebar__link"
-    >
-      <span class="sidebar__icon">{{ item.icon }}</span>
-      <span class="sidebar__label">{{ item.label }}</span>
-    </a>
+    <ng-container *ngFor="let item of navItems">
+      <ng-container *ngIf="!item.adminOnly">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="sidebar__link--active"
+          class="sidebar__link"
+          [routerLinkActiveOptions]="{ exact: false }"
+        >
+          <i class="sidebar__icon {{ item.icon }}"></i>
+          <span class="sidebar__label">{{ item.label }}</span>
+        </a>
+      </ng-container>
+      <ng-container *ngIf="item.adminOnly">
+        <ng-container *appHasRole="['admin']">
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="sidebar__link--active"
+            class="sidebar__link"
+            [routerLinkActiveOptions]="{ exact: false }"
+          >
+            <i class="sidebar__icon {{ item.icon }}"></i>
+            <span class="sidebar__label">{{ item.label }}</span>
+          </a>
+        </ng-container>
+      </ng-container>
+    </ng-container>
   </nav>
+  <div class="sidebar__footer">
+    <button class="sidebar__toggle" (click)="sidebarState.toggle()" [attr.aria-label]="sidebarState.isCollapsed() ? 'Expandir menú' : 'Colapsar menú'">
+      <i class="pi" [ngClass]="sidebarState.isCollapsed() ? 'pi-angle-right' : 'pi-angle-left'"></i>
+    </button>
+    <span class="sidebar__version" [class.sidebar__version--hidden]="sidebarState.isCollapsed()">Emprendia v1.0</span>
+  </div>
 </aside>

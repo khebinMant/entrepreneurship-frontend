@@ -64,6 +64,7 @@ export class ImageService {
     entityId: number,
     displayOrder = 0,
     altText?: string,
+    uploadedByUserId?: number,
   ): Observable<ImageUploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
@@ -72,6 +73,9 @@ export class ImageService {
     formData.append('displayOrder', displayOrder.toString());
     if (altText) {
       formData.append('altText', altText);
+    }
+    if (uploadedByUserId != null) {
+      formData.append('uploadedByUserId', uploadedByUserId.toString());
     }
     this.invalidateCache(entityType, entityId);
     return this.api.upload<ImageUploadResponse>(this.baseUrl, `${API_ENDPOINTS.SHARED.IMAGES}/upload`, formData);

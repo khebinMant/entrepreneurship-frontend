@@ -1,6 +1,8 @@
 import type { Routes } from '@angular/router';
 import { isNotAuthenticatedGuard } from './authentication/guards/auth.guard';
 import { authGuard } from './core/authentication/guards/auth.guard';
+import { permissionGuard } from './core/guards/permission.guard';
+import { ADMIN_ROLES } from './core/constants/app.constants';
 import { userRoutes } from './user/user.routes';
 import { entrepreneurshipRoutes } from './entrepreneurship/entrepreneurship.routes';
 import { eventRoutes } from './event/event.routes';
@@ -56,6 +58,15 @@ export const routes: Routes = [
       {
         path: 'perfil',
         loadComponent: () => import('./entrepreneurship/pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./entrepreneurship/pages/dashboard-metrics/dashboard-metrics.component').then((m) => m.DashboardMetricsComponent),
+      },
+      {
+        path: 'categories',
+        canActivate: [permissionGuard([...ADMIN_ROLES])],
+        loadComponent: () => import('./shared-domain/pages/categories/categories.component').then((m) => m.CategoriesComponent),
       },
       ...userRoutes,
       ...entrepreneurshipRoutes,
