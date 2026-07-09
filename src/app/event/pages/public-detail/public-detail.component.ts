@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
 import { EventService } from '../../services/event.service';
@@ -78,7 +78,7 @@ import type { EventParticipant } from '../../models/event-invitation';
           @if (participants().length > 0) {
             <div class="participants">
               @for (p of participants(); track p.entrepreneurshipId) {
-                <a class="participant-card" [routerLink]="'/entrepreneurships/' + p.entrepreneurshipId">
+                <a class="participant-card" [routerLink]="(isAppContext ? '/app' : '') + '/entrepreneurships/' + p.entrepreneurshipId">
                   <img [src]="imageService.getEntityImageUrl(
                     { imageUrl: p.entrepreneurshipImageUrl, imageId: p.entrepreneurshipImageId },
                     'ENTREPRENEURSHIP', p.entrepreneurshipId)"
@@ -283,9 +283,13 @@ import type { EventParticipant } from '../../models/event-invitation';
 })
 export class PublicDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly eventService = inject(EventService);
   readonly imageService = inject(ImageService);
 
+  get isAppContext(): boolean {
+    return this.router.url.startsWith('/app');
+  }
   readonly event = signal<Event | null>(null);
   readonly participants = signal<EventParticipant[]>([]);
 

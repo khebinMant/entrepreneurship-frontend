@@ -28,7 +28,18 @@ export class UserService {
     return this.api.get<User>(this.baseUrl, API_ENDPOINTS.USERS.BY_KEYCLOAK_ID(keycloakId));
   }
 
-  create(data: { keycloakId: string; firstName: string; lastName: string }): Observable<User> {
+  create(data: { keycloakId: string; firstName: string; lastName: string; profilePictureUrl?: string | null }): Observable<User> {
+    return this.api.post<User>(this.baseUrl, API_ENDPOINTS.USERS.BASE, data);
+  }
+
+  register(data: {
+    username: string;
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    profilePictureUrl?: string | null;
+  }): Observable<User> {
     return this.api.post<User>(this.baseUrl, API_ENDPOINTS.USERS.BASE, data);
   }
 

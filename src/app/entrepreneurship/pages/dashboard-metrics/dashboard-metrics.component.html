@@ -1,0 +1,74 @@
+<div class="dashboard-metrics">
+  <div class="dashboard-metrics__hero">
+    <div class="dashboard-metrics__hero-content">
+      <h1 class="dashboard-metrics__title">Panel de Control</h1>
+      <p class="dashboard-metrics__subtitle">
+        Bienvenido de nuevo, {{ authService.authState().username }}. Aquí tienes un resumen de tu plataforma.
+      </p>
+    </div>
+    <div class="dashboard-metrics__hero-icon">
+      <i class="pi pi-chart-bar"></i>
+    </div>
+  </div>
+
+  <div class="dashboard-metrics__cards">
+    <a *ngFor="let card of metrics(); let i = index" class="metric-card" [routerLink]="card.route">
+      <div class="metric-card__icon" [class]="'metric-card__icon metric-card__icon--' + i">
+        <i class="{{ card.icon }}"></i>
+      </div>
+      <div class="metric-card__info">
+        <span class="metric-card__label">{{ card.label }}</span>
+        <span class="metric-card__value">{{ card.value }}</span>
+      </div>
+      <div class="metric-card__trend">
+        <i class="pi pi-arrow-right"></i>
+      </div>
+    </a>
+  </div>
+
+  <div class="dashboard-metrics__charts">
+    <div class="dashboard-metrics__chart-card">
+      <div class="dashboard-metrics__chart-header">
+        <h3>Actividad Mensual</h3>
+        <span class="dashboard-metrics__chart-badge">2026</span>
+      </div>
+      <div class="chart-bar">
+        <div class="chart-bar__item" *ngFor="let bar of chartData()">
+          <div class="chart-bar__bar-container">
+            <div
+              class="chart-bar__bar"
+              [style.height.%]="bar.value"
+              [style.background]="bar.color"
+            ></div>
+          </div>
+          <span class="chart-bar__label">{{ bar.label }}</span>
+        </div>
+      </div>
+      <p class="dashboard-metrics__chart-empty" *ngIf="chartData().every(b => b.value === 0)">
+        Los datos aparecerán cuando haya actividad registrada.
+      </p>
+    </div>
+
+    <div class="dashboard-metrics__quick-actions">
+      <h3>Acciones Rápidas</h3>
+      <div class="dashboard-metrics__actions">
+        <a class="action-btn" routerLink="/app/entrepreneurships/create">
+          <i class="pi pi-plus-circle"></i>
+          <span>Nuevo Emprendimiento</span>
+        </a>
+        <a class="action-btn" routerLink="/app/events/create">
+          <i class="pi pi-plus-circle"></i>
+          <span>Nuevo Evento</span>
+        </a>
+        <a class="action-btn" routerLink="/app/entrepreneurships">
+          <i class="pi pi-list"></i>
+          <span>Ver Emprendimientos</span>
+        </a>
+        <a class="action-btn" routerLink="/app/events">
+          <i class="pi pi-list"></i>
+          <span>Ver Eventos</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

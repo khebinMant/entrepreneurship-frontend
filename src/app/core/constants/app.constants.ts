@@ -55,6 +55,7 @@ export const ROUTE_PATHS = {
     SETTINGS: 'settings',
     LIST: 'users',
   },
+  DASHBOARD: 'dashboard',
   ENTREPRENEURSHIP: {
     DASHBOARD: 'dashboard',
     LIST: 'entrepreneurships',
@@ -70,6 +71,7 @@ export const ROUTE_PATHS = {
     INVITATIONS: 'events/:id/invitations',
   },
   SHARED: {
+    CATEGORIES: 'categories',
     CATALOGUES: 'catalogues',
     IMAGES: 'images',
   },
@@ -111,5 +113,8 @@ export const PARTICIPATION_STATUS = {
 
 export const APP_ROLE = {
   ADMIN: 'ADMIN',
+  ADMIN_KEYCLOAK: 'default-roles-emprendia',
   USER: 'USER',
 } as const;
+
+export const ADMIN_ROLES = [APP_ROLE.ADMIN_KEYCLOAK, APP_ROLE.ADMIN] as const;

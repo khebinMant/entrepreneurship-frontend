@@ -16,7 +16,7 @@ export const eventRoutes: Routes = [
       },
       {
         path: ':id',
-        loadComponent: () => import('./pages/detail/detail.component').then((m) => m.DetailComponent),
+        loadComponent: () => import('./pages/public-detail/public-detail.component').then((m) => m.PublicDetailComponent),
       },
       {
         path: ':id/edit',

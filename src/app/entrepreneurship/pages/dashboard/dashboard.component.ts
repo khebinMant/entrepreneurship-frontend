@@ -9,12 +9,13 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
   template: `
     <div class="dashboard">
       <div class="dashboard__hero">
-        <h1 class="dashboard__title">
-          Bienvenido, {{ authService.authState().username }}
-        </h1>
-        <p class="dashboard__subtitle">
-          Gestiona tus emprendimientos, organiza eventos y mucho más.
-        </p>
+        <div class="dashboard__hero-bg"></div>
+        <div class="dashboard__hero-content">
+          <h1 class="dashboard__title">Panel de Control</h1>
+          <p class="dashboard__subtitle">
+            Bienvenido de nuevo, {{ authService.authState().username }}. Aquí tienes un resumen de tu plataforma.
+          </p>
+        </div>
       </div>
 
       <div class="dashboard__cards">
@@ -27,7 +28,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
         </a>
 
         <a class="dashboard__card" routerLink="/app/events">
-          <div class="dashboard__card-icon" style="background: #eef2ff; color: var(--color-primary);">
+          <div class="dashboard__card-icon" style="background: var(--color-primary-light); color: var(--color-primary);">
             <i class="pi pi-calendar"></i>
           </div>
           <h3 class="dashboard__card-title">Eventos</h3>
@@ -35,7 +36,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
         </a>
 
         <a class="dashboard__card" routerLink="/app/catalogues">
-          <div class="dashboard__card-icon" style="background: #f0fdf4; color: #16a34a;">
+          <div class="dashboard__card-icon" style="background: var(--color-primary-light); color: var(--color-primary);">
             <i class="pi pi-th-large"></i>
           </div>
           <h3 class="dashboard__card-title">Catálogos</h3>
@@ -43,7 +44,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
         </a>
 
         <a class="dashboard__card" routerLink="/app/profile">
-          <div class="dashboard__card-icon" style="background: #fef2f2; color: #dc2626;">
+          <div class="dashboard__card-icon" style="background: var(--color-primary-light); color: var(--color-primary);">
             <i class="pi pi-user"></i>
           </div>
           <h3 class="dashboard__card-title">Mi Perfil</h3>
@@ -54,21 +55,30 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
   `,
   styles: [`
     .dashboard {
-      padding: var(--spacing-xxl);
       max-width: 960px;
       margin: 0 auto;
     }
     .dashboard__hero {
+      position: relative;
+      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 50%, var(--color-primary-light) 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-xxl);
       margin-bottom: var(--spacing-xxl);
+      overflow: hidden;
+    }
+    .dashboard__hero-content {
+      position: relative;
+      z-index: 1;
     }
     .dashboard__title {
       font-size: var(--font-size-xxl);
-      font-weight: 700;
-      color: var(--color-text-primary);
+      font-weight: 800;
+      color: #fff;
       margin: 0;
+      letter-spacing: -0.02em;
     }
     .dashboard__subtitle {
-      color: var(--color-text-secondary);
+      color: rgba(255,255,255,0.85);
       margin: var(--spacing-sm) 0 0;
       font-size: var(--font-size-md);
     }
@@ -78,37 +88,30 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
       gap: var(--spacing-md);
     }
     .dashboard__card {
+      display: flex;
+      flex-direction: column;
       padding: var(--spacing-lg);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
       text-decoration: none;
-      transition: all var(--transition-fast);
+      transition: all 0.3s ease;
       position: relative;
     }
-    .dashboard__card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: var(--color-primary-light);
-      border-radius: 2px;
-      opacity: 0;
-      transition: opacity var(--transition-fast);
-    }
-    .dashboard__card:hover::before {
-      opacity: 1;
-    }
     .dashboard__card:hover {
-      background: var(--color-surface-alt);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+      border-color: transparent;
     }
     .dashboard__card-icon {
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      margin-bottom: var(--spacing-sm);
+      font-size: 20px;
+      margin-bottom: var(--spacing-md);
     }
     .dashboard__card-title {
       font-size: var(--font-size-md);
@@ -120,7 +123,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
       font-size: var(--font-size-sm);
       color: var(--color-text-secondary);
       margin: 0;
-      line-height: 1.4;
+      line-height: 1.5;
     }
   `],
 })

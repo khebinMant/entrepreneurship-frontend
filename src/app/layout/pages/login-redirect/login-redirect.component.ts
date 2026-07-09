@@ -2,7 +2,10 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 import { DirectAuthService } from '../../../authentication/services/direct-auth.service';
+import { AuthService } from '../../../authentication/services/auth.service';
+import { UserService } from '../../../user/services/user.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -445,6 +448,8 @@ import { environment } from '../../../../environments/environment';
 export class LoginRedirectComponent {
   private readonly router = inject(Router);
   private readonly directAuth = inject(DirectAuthService);
+  private readonly authService = inject(AuthService);
+  private readonly userService = inject(UserService);
 
   readonly isRegister = computed(() => this.router.url.includes('/register'));
 
@@ -490,7 +495,29 @@ export class LoginRedirectComponent {
       this.errorMessage.set('Todos los campos son obligatorios');
       return;
     }
-    window.location.href = `${environment.keycloak.url}/realms/${environment.keycloak.realm}/protocol/openid-connect/auth?client_id=${environment.keycloak.clientId}&redirect_uri=${window.location.origin}/&response_type=code&scope=openid&kc_action=register`;
+    this.loading.set(true);
+    this.errorMessage.set('');
+    try {
+      await lastValueFrom(this.userService.register({
+        username: this.username,
+        email: this.email,
+        password: this.password,
+        firstName: this.firstName,
+        lastName: this.lastName,
+        profilePictureUrl: null,
+      }));
+      this.router.navigate(['/login']);
+    } catch (err: any) {
+      if (err.status === 409) {
+        this.errorMessage.set('El usuario o correo ya está registrado');
+      } else if (err.error?.message) {
+        this.errorMessage.set(err.error.message);
+      } else {
+        this.errorMessage.set('Error al crear la cuenta. Intenta nuevamente.');
+      }
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   loginGoogle(): void {

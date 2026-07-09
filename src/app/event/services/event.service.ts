@@ -31,6 +31,10 @@ export class EventService {
   }
 
   search(filters: EventSearchFilters): Observable<Event[]> {
+    return this.searchPage(filters).pipe(map((page) => page.content));
+  }
+
+  searchPage(filters: EventSearchFilters): Observable<Page<Event>> {
     let params = new HttpParams();
     if (filters.name) params = params.set('name', filters.name);
     if (filters.eventTypeId) params = params.set('eventTypeId', filters.eventTypeId.toString());
@@ -39,8 +43,7 @@ export class EventService {
     if (filters.toDate) params = params.set('toDate', filters.toDate);
     if (filters.page !== undefined) params = params.set('page', filters.page.toString());
     if (filters.size !== undefined) params = params.set('size', filters.size.toString());
-    return this.api.get<Page<Event>>(this.baseUrl, API_ENDPOINTS.EVENTS.SEARCH, params)
-      .pipe(map((page) => page.content));
+    return this.api.get<Page<Event>>(this.baseUrl, API_ENDPOINTS.EVENTS.SEARCH, params);
   }
 
   create(data: {

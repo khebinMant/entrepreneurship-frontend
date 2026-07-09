@@ -1,8 +1,9 @@
 <app-header />
-<div class="shell">
+<div class="shell" [ngClass]="{ 'shell--sidebar-collapsed': sidebarState.isCollapsed() }">
   <app-sidebar />
   <main class="shell__content">
     <router-outlet />
   </main>
 </div>
 <app-footer />
+<app-session-expired-modal />

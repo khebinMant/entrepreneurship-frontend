@@ -5,6 +5,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
 import { DirectAuthService } from '../../../authentication/services/direct-auth.service';
 import { ThemeToggleComponent } from '../../../core/theme/theme-toggle.component';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
+import { SidebarStateService } from '../../../core/theme/sidebar-state.service';
 
 @Component({
   selector: 'app-header',
@@ -16,6 +17,7 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
 export class HeaderComponent {
   readonly authService = inject(AuthenticationService);
   private readonly directAuth = inject(DirectAuthService);
+  readonly sidebarState = inject(SidebarStateService);
   readonly menuOpen = signal(false);
 
   toggleMenu(): void {
