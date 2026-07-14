@@ -20,6 +20,41 @@
     <app-entrepreneurship-create (created)="closeCreateModal()" (cancelled)="closeCreateModal()" />
   </app-modal>
 
+  <app-modal
+    [visible]="showEditModal()"
+    title="Editar Emprendimiento"
+    size="md"
+    (close)="closeEditModal()"
+  >
+    @if (editingEntrepreneurship(); as e) {
+      <app-entrepreneurship-create [editingEntrepreneurship]="e" (created)="closeEditModal()" (cancelled)="closeEditModal()" />
+    }
+  </app-modal>
+
+  <app-modal
+    [visible]="showDeleteConfirm()"
+    title="Eliminar emprendimiento"
+    size="sm"
+    (close)="cancelDelete()"
+  >
+    <div class="delete-confirm">
+      <div class="delete-confirm__icon">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <p class="delete-confirm__text">
+        ¿Estás seguro de que deseas eliminar el emprendimiento <strong>{{ deletingEntrepreneurship()?.name }}</strong>?
+      </p>
+      <p class="delete-confirm__hint">Esta acción no se puede deshacer.</p>
+      <div class="delete-confirm__actions">
+        <button class="btn btn--ghost" type="button" (click)="cancelDelete()" [disabled]="deleting()">Cancelar</button>
+        <button class="btn btn--danger" type="button" (click)="confirmDelete()" [disabled]="deleting()">
+          <i class="pi pi-spin pi-spinner" *ngIf="deleting()"></i>
+          {{ deleting() ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </app-modal>
+
   <div class="entrepreneurship-list__filters">
     <div class="entrepreneurship-list__search">
       <i class="pi pi-search"></i>
@@ -35,16 +70,20 @@
     <select
       [ngModel]="filters().categoryId"
       (ngModelChange)="filters.update(f => ({...f, categoryId: $event || undefined})); onFilterChange()"
-      class="entrepreneurship-list__select"
+      class="select"
+      style="min-width: 180px"
     >
       <option [ngValue]="undefined">Todas las categorías</option>
-      <option *ngFor="let cat of categories()" [ngValue]="cat.categoryId">{{ cat.name }}</option>
+      @for (cat of categories(); track cat.categoryId) {
+        <option [ngValue]="cat.categoryId">{{ cat.name }}</option>
+      }
     </select>
 
     <select
       [ngModel]="filters().isPhysical"
       (ngModelChange)="filters.update(f => ({...f, isPhysical: $event})); onFilterChange()"
-      class="entrepreneurship-list__select"
+      class="select"
+      style="min-width: 140px"
     >
       <option [ngValue]="undefined">Todos los tipos</option>
       <option [ngValue]="true">Físico</option>
@@ -61,28 +100,45 @@
   </div>
 
   <div class="entrepreneurship-list__grid" *ngIf="!loading() && entrepreneurships().length > 0">
-    <a
-      class="entrepreneurship-card"
-      *ngFor="let item of entrepreneurships(); trackBy: trackById"
-      [routerLink]="'/app/entrepreneurships/' + item.entrepreneurshipId"
-    >
-      <div class="entrepreneurship-card__image">
-        <img [src]="getImageUrl(item)" [alt]="item.name" loading="lazy" />
+    @for (item of entrepreneurships(); track item.entrepreneurshipId) {
+      <div class="entrepreneurship-card">
+        <a class="entrepreneurship-card__link" [routerLink]="'/app/entrepreneurships/' + item.entrepreneurshipId">
+          <div class="entrepreneurship-card__image">
+            <img [src]="getImageUrl(item)" [alt]="item.name" loading="lazy" />
+          </div>
+          <div class="entrepreneurship-card__body">
+            <h3 class="entrepreneurship-card__name">{{ item.name }}</h3>
+            <p class="entrepreneurship-card__description">{{ item.description }}</p>
+            <div class="entrepreneurship-card__meta">
+              <span class="entrepreneurship-card__category" *ngIf="item.categoryName">
+                <i class="pi pi-tag"></i> {{ item.categoryName }}
+              </span>
+              <span class="entrepreneurship-card__type">
+                <i class="pi" [ngClass]="item.isPhysical ? 'pi-building' : 'pi-globe'"></i>
+                {{ item.isPhysical ? 'Físico' : '' }}{{ item.isPhysical && item.isDigital ? ' / ' : '' }}{{ item.isDigital ? 'Digital' : '' }}
+              </span>
+            </div>
+          </div>
+        </a>
+        @if (isAppRoute) {
+          <div class="entrepreneurship-card__actions" appClickOutside (appClickOutside)="closeMenu()">
+            <button class="entrepreneurship-card__menu-btn" (click)="toggleMenu(item.entrepreneurshipId); $event.stopPropagation()" aria-label="Acciones">
+              <i class="pi pi-ellipsis-v"></i>
+            </button>
+            @if (openMenuId() === item.entrepreneurshipId) {
+              <div class="entrepreneurship-card__dropdown">
+                <button class="entrepreneurship-card__dropdown-item" (click)="openEditModal(item)">
+                  <i class="pi pi-pencil"></i> Editar
+                </button>
+                <button class="entrepreneurship-card__dropdown-item entrepreneurship-card__dropdown-item--danger" (click)="openDeleteConfirm(item)">
+                  <i class="pi pi-trash"></i> Eliminar
+                </button>
+              </div>
+            }
+          </div>
+        }
       </div>
-      <div class="entrepreneurship-card__body">
-        <h3 class="entrepreneurship-card__name">{{ item.name }}</h3>
-        <p class="entrepreneurship-card__description">{{ item.description }}</p>
-        <div class="entrepreneurship-card__meta">
-          <span class="entrepreneurship-card__category" *ngIf="item.categoryName">
-            <i class="pi pi-tag"></i> {{ item.categoryName }}
-          </span>
-          <span class="entrepreneurship-card__type">
-            <i class="pi" [ngClass]="item.isPhysical ? 'pi-building' : 'pi-globe'"></i>
-            {{ item.isPhysical ? 'Físico' : '' }}{{ item.isPhysical && item.isDigital ? ' / ' : '' }}{{ item.isDigital ? 'Digital' : '' }}
-          </span>
-        </div>
-      </div>
-    </a>
+    }
   </div>
 
   <div class="entrepreneurship-list__empty" *ngIf="!loading() && entrepreneurships().length === 0">
@@ -92,14 +148,16 @@
   </div>
 
   <div class="entrepreneurship-list__skeleton" *ngIf="loading()">
-    <div class="skeleton-card" *ngFor="let _ of [1,2,3,4,5,6]">
-      <div class="skeleton-card__image"></div>
-      <div class="skeleton-card__body">
-        <div class="skeleton-card__line skeleton-card__line--title"></div>
-        <div class="skeleton-card__line skeleton-card__line--desc"></div>
-        <div class="skeleton-card__line skeleton-card__line--meta"></div>
+    @for (_ of [1,2,3,4,5,6]; track _) {
+      <div class="skeleton-card">
+        <div class="skeleton-card__image"></div>
+        <div class="skeleton-card__body">
+          <div class="skeleton-card__line skeleton-card__line--title"></div>
+          <div class="skeleton-card__line skeleton-card__line--desc"></div>
+          <div class="skeleton-card__line skeleton-card__line--meta"></div>
+        </div>
       </div>
-    </div>
+    }
   </div>
 
   <ng-container *ngIf="pageData() as data">
@@ -120,14 +178,15 @@
         <i class="pi pi-angle-left"></i>
       </button>
 
-      <button
-        class="pagination__btn pagination__btn--page"
-        *ngFor="let p of getPageNumbers()"
-        [class.pagination__btn--active]="p === data.number"
-        (click)="goToPage(p)"
-      >
-        {{ p + 1 }}
-      </button>
+      @for (p of getPageNumbers(); track p) {
+        <button
+          class="pagination__btn pagination__btn--page"
+          [class.pagination__btn--active]="p === data.number"
+          (click)="goToPage(p)"
+        >
+          {{ p + 1 }}
+        </button>
+      }
 
       <button
         class="pagination__btn"

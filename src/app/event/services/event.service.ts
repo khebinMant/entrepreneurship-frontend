@@ -46,6 +46,18 @@ export class EventService {
     return this.api.get<Page<Event>>(this.baseUrl, API_ENDPOINTS.EVENTS.SEARCH, params);
   }
 
+  searchPageByCreator(userId: number, filters: EventSearchFilters): Observable<Page<Event>> {
+    let params = new HttpParams();
+    if (filters.name) params = params.set('name', filters.name);
+    if (filters.eventTypeId) params = params.set('eventTypeId', filters.eventTypeId.toString());
+    if (filters.eventVisibilityId) params = params.set('eventVisibilityId', filters.eventVisibilityId.toString());
+    if (filters.fromDate) params = params.set('fromDate', filters.fromDate);
+    if (filters.toDate) params = params.set('toDate', filters.toDate);
+    if (filters.page !== undefined) params = params.set('page', filters.page.toString());
+    if (filters.size !== undefined) params = params.set('size', filters.size.toString());
+    return this.api.get<Page<Event>>(this.baseUrl, API_ENDPOINTS.EVENTS.BY_CREATOR(userId), params);
+  }
+
   create(data: {
     createdByUserId: number;
     name: string;
@@ -67,6 +79,7 @@ export class EventService {
   }
 
   update(id: number, data: Partial<{
+    createdByUserId: number;
     name: string;
     description: string;
     eventTypeId: number;

@@ -2,64 +2,101 @@
   <div class="create-form__section">
     <h3 class="create-form__section-title">Información del Emprendimiento</h3>
     <div class="create-form__grid">
-      <div class="create-form__field create-form__field--full" [class.create-form__field--error]="submitted() && !form().name">
+      <div class="create-form__field create-form__field--full" [class.create-form__field--error]="errors().name">
         <label class="create-form__label">Nombre *</label>
-        <input class="create-form__input" [class.create-form__input--error]="submitted() && !form().name" [(ngModel)]="form().name" (ngModelChange)="form.update(f => ({...f, name: $event}))" placeholder="Ej: Mi Emprendimiento Tech" />
-        <span class="create-form__error" *ngIf="submitted() && !form().name">El nombre es obligatorio</span>
+        <input class="create-form__input" [class.create-form__input--error]="errors().name" [(ngModel)]="form().name" (ngModelChange)="form.update(f => ({...f, name: $event})); markTouched('name')" maxlength="150" placeholder="Ej: Mi Emprendimiento Tech" />
+        <span class="create-form__error" *ngIf="errors().name">{{ errors().name }}</span>
       </div>
-      <div class="create-form__field create-form__field--full" [class.create-form__field--error]="submitted() && !form().description">
+      <div class="create-form__field create-form__field--full" [class.create-form__field--error]="errors().description">
         <label class="create-form__label">Descripción *</label>
-        <textarea class="create-form__textarea" [class.create-form__textarea--error]="submitted() && !form().description" [(ngModel)]="form().description" (ngModelChange)="form.update(f => ({...f, description: $event}))" rows="3" placeholder="Describe tu emprendimiento..."></textarea>
-        <span class="create-form__error" *ngIf="submitted() && !form().description">La descripción es obligatoria</span>
+        <textarea class="create-form__textarea" [class.create-form__textarea--error]="errors().description" [(ngModel)]="form().description" (ngModelChange)="form.update(f => ({...f, description: $event})); markTouched('description')" rows="3" placeholder="Describe tu emprendimiento..." maxlength="2000"></textarea>
+        <span class="create-form__error" *ngIf="errors().description">{{ errors().description }}</span>
       </div>
-      <div class="create-form__field" [class.create-form__field--error]="submitted() && !form().categoryId">
+      <div class="create-form__field" [class.create-form__field--error]="errors().categoryId">
         <label class="create-form__label">Categoría *</label>
-        <select class="create-form__select" [class.create-form__select--error]="submitted() && !form().categoryId" [(ngModel)]="form().categoryId" (ngModelChange)="form.update(f => ({...f, categoryId: $event}))">
+        <select class="select" style="width: 100%" [class.select--error]="errors().categoryId" [(ngModel)]="form().categoryId" (ngModelChange)="form.update(f => ({...f, categoryId: $event})); markTouched('categoryId')">
           <option [ngValue]="null">Seleccionar...</option>
-          <option *ngFor="let cat of categories()" [ngValue]="cat.categoryId">{{ cat.name }}</option>
+          @for (cat of categories(); track cat.categoryId) {
+            <option [ngValue]="cat.categoryId">{{ cat.name }}</option>
+          }
         </select>
-        <span class="create-form__error" *ngIf="submitted() && !form().categoryId">La categoría es obligatoria</span>
+        <span class="create-form__error" *ngIf="errors().categoryId">{{ errors().categoryId }}</span>
       </div>
       <div class="create-form__field">
         <label class="create-form__label">Tipo</label>
         <div class="create-form__radio-group">
-          <label class="create-form__radio">
-            <input type="radio" name="type" [checked]="form().isPhysical && !form().isDigital" (change)="form.update(f => ({...f, isPhysical: true, isDigital: false}))" />
-            Físico
+          <label class="create-form__radio" [class.create-form__radio--active]="form().isPhysical && !form().isDigital">
+            <input class="create-form__radio-input" type="radio" name="type" [checked]="form().isPhysical && !form().isDigital" (change)="form.update(f => ({...f, isPhysical: true, isDigital: false}))" />
+            <span class="create-form__radio-indicator"></span>
+            <span>Físico</span>
           </label>
-          <label class="create-form__radio">
-            <input type="radio" name="type" [checked]="!form().isPhysical && form().isDigital" (change)="form.update(f => ({...f, isPhysical: false, isDigital: true}))" />
-            Digital
+          <label class="create-form__radio" [class.create-form__radio--active]="!form().isPhysical && form().isDigital">
+            <input class="create-form__radio-input" type="radio" name="type" [checked]="!form().isPhysical && form().isDigital" (change)="form.update(f => ({...f, isPhysical: false, isDigital: true}))" />
+            <span class="create-form__radio-indicator"></span>
+            <span>Digital</span>
           </label>
-          <label class="create-form__radio">
-            <input type="radio" name="type" [checked]="!form().isPhysical && !form().isDigital" (change)="form.update(f => ({...f, isPhysical: false, isDigital: false}))" />
-            Ambos
+          <label class="create-form__radio" [class.create-form__radio--active]="form().isPhysical && form().isDigital">
+            <input class="create-form__radio-input" type="radio" name="type" [checked]="form().isPhysical && form().isDigital" (change)="form.update(f => ({...f, isPhysical: true, isDigital: true}))" />
+            <span class="create-form__radio-indicator"></span>
+            <span>Ambos</span>
           </label>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="create-form__section">
-    <h3 class="create-form__section-title">Logo (Opcional)</h3>
-    <div class="create-form__logo">
-      <div class="create-form__logo-preview" *ngIf="logoPreview()">
-        <img [src]="logoPreview()" alt="Logo preview" />
-        <button class="create-form__logo-remove" (click)="removeLogo()"><i class="pi pi-times"></i></button>
+  @if (!isEditMode()) {
+    <div class="create-form__section">
+      <h3 class="create-form__section-title">Logo *</h3>
+      <div class="create-form__logo" [class.create-form__field--error]="errors().logo">
+        <div class="create-form__logo-preview" *ngIf="logoPreview()">
+          <img [src]="logoPreview()" alt="Logo preview" />
+          <button class="create-form__logo-remove" type="button" (click)="removeLogo()"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="create-form__logo-upload" *ngIf="!logoPreview()" (click)="logoInput.click()">
+          <i class="pi pi-image"></i>
+          <span>Seleccionar logo</span>
+        </div>
+        <input #logoInput type="file" accept="image/*" (change)="onLogoSelected($event)" style="display: none" />
+        <span class="create-form__error" *ngIf="errors().logo">{{ errors().logo }}</span>
       </div>
-      <div class="create-form__logo-upload" *ngIf="!logoPreview()" (click)="logoInput.click()">
-        <i class="pi pi-image"></i>
-        <span>Seleccionar logo</span>
-      </div>
-      <input #logoInput type="file" accept="image/*" (change)="onLogoSelected($event)" style="display: none" />
     </div>
-  </div>
+  }
+
+  @if (isEditMode()) {
+    <div class="create-form__section">
+      <h3 class="create-form__section-title">Galería de imágenes</h3>
+      <div class="create-form__gallery-info">
+        {{ existingImages().length }} / {{ maxImages }} imágenes
+      </div>
+      <div class="create-form__gallery">
+        @for (img of existingImages(); track img.imageId) {
+          <div class="create-form__gallery-item">
+            <img [src]="img.imageUrl" [alt]="img.altText || 'Imagen del emprendimiento'" />
+            <button class="create-form__gallery-item-remove" type="button" (click)="deleteImage(img.imageId)" title="Eliminar imagen">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+        }
+      </div>
+      @if (canAddMoreImages()) {
+        <div class="create-form__gallery-add" (click)="galleryInput.click()">
+          <i class="pi pi-plus"></i>
+          <span>{{ uploadingImage() ? 'Subiendo...' : 'Añadir imagen' }}</span>
+        </div>
+      }
+      @if (!canAddMoreImages()) {
+        <div class="create-form__gallery-limit">Has alcanzado el límite de {{ maxImages }} imágenes.</div>
+      }
+      <input #galleryInput type="file" accept="image/*" (change)="onGalleryImageSelected($event)" style="display: none" />
+    </div>
+  }
 
   <div class="create-form__actions">
-    <button class="btn btn--ghost" (click)="cancel()" [disabled]="loading()">Cancelar</button>
-    <button class="btn btn--primary" (click)="onSubmit()" [disabled]="loading() || !form().name || !form().description || !form().categoryId">
+    <button class="btn btn--ghost" type="button" (click)="cancel()" [disabled]="loading()">Cancelar</button>
+    <button class="btn btn--primary" type="button" (click)="onSubmit()" [disabled]="loading() || !isValid()">
       <i class="pi pi-spin pi-spinner" *ngIf="loading()"></i>
-      {{ loading() ? 'Creando...' : 'Crear Emprendimiento' }}
+      {{ loading() ? 'Guardando...' : isEditMode() ? 'Guardar Cambios' : 'Crear Emprendimiento' }}
     </button>
   </div>
 </div>

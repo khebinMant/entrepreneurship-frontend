@@ -8,9 +8,34 @@
     padding: var(--spacing-lg);
     margin-left: var(--sidebar-width);
     transition: margin-left var(--transition-normal);
+    min-width: 0;
   }
 
-  &--sidebar-collapsed &__content {
-    margin-left: 64px;
+  &__backdrop {
+    display: none;
   }
+}
+
+@media (max-width: 767px) {
+  .shell {
+    &__content {
+      margin-left: 0 !important;
+      padding: var(--spacing-md);
+    }
+
+    &__backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      top: var(--header-height);
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 39;
+      animation: fadeIn 200ms ease;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

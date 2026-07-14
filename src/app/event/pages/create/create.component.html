@@ -2,23 +2,25 @@
   <div class="create-form__section">
     <h3 class="create-form__section-title">Información General</h3>
     <div class="create-form__grid">
-      <div class="create-form__field" [class.create-form__field--error]="submitted() && !form().name">
+      <div class="create-form__field" [class.create-form__field--error]="errors().name">
         <label class="create-form__label">Nombre del evento *</label>
-        <input class="create-form__input" [class.create-form__input--error]="submitted() && !form().name" [(ngModel)]="form().name" (ngModelChange)="form.update(f => ({...f, name: $event}))" placeholder="Ej: Feria de Emprendedores 2026" />
-        <span class="create-form__error" *ngIf="submitted() && !form().name">El nombre es obligatorio</span>
+        <input class="create-form__input" [class.create-form__input--error]="errors().name" [(ngModel)]="form().name" (ngModelChange)="form.update(f => ({...f, name: $event})); markTouched('name')" maxlength="150" placeholder="Ej: Feria de Emprendedores 2026" />
+        <span class="create-form__error" *ngIf="errors().name">{{ errors().name }}</span>
       </div>
-      <div class="create-form__field" [class.create-form__field--error]="submitted() && !form().eventTypeId">
+      <div class="create-form__field" [class.create-form__field--error]="errors().eventTypeId">
         <label class="create-form__label">Tipo de evento *</label>
-        <select class="create-form__select" [class.create-form__select--error]="submitted() && !form().eventTypeId" [(ngModel)]="form().eventTypeId" (ngModelChange)="form.update(f => ({...f, eventTypeId: $event}))">
+        <select class="select" style="width: 100%" [class.select--error]="errors().eventTypeId" [(ngModel)]="form().eventTypeId" (ngModelChange)="form.update(f => ({...f, eventTypeId: $event})); markTouched('eventTypeId')">
           <option [ngValue]="null">Seleccionar...</option>
-          <option *ngFor="let t of eventTypes()" [ngValue]="t.catalogueValueId">{{ t.name }}</option>
+          @for (t of eventTypes(); track t.catalogueValueId) {
+            <option [ngValue]="t.catalogueValueId">{{ t.name === 'Physical Event' ? 'Evento Presencial' : t.name === 'Virtual Event' ? 'Evento Virtual' : t.name }}</option>
+          }
         </select>
-        <span class="create-form__error" *ngIf="submitted() && !form().eventTypeId">El tipo de evento es obligatorio</span>
+        <span class="create-form__error" *ngIf="errors().eventTypeId">{{ errors().eventTypeId }}</span>
       </div>
-      <div class="create-form__field create-form__field--full" [class.create-form__field--error]="submitted() && !form().description">
+      <div class="create-form__field create-form__field--full" [class.create-form__field--error]="errors().description">
         <label class="create-form__label">Descripción *</label>
-        <textarea class="create-form__textarea" [class.create-form__textarea--error]="submitted() && !form().description" [(ngModel)]="form().description" (ngModelChange)="form.update(f => ({...f, description: $event}))" rows="3" placeholder="Describe el evento..."></textarea>
-        <span class="create-form__error" *ngIf="submitted() && !form().description">La descripción es obligatoria</span>
+        <textarea class="create-form__textarea" [class.create-form__textarea--error]="errors().description" [(ngModel)]="form().description" (ngModelChange)="form.update(f => ({...f, description: $event})); markTouched('description')" rows="3" placeholder="Describe el evento..." maxlength="2000"></textarea>
+        <span class="create-form__error" *ngIf="errors().description">{{ errors().description }}</span>
       </div>
     </div>
   </div>
@@ -26,31 +28,37 @@
   <div class="create-form__section">
     <h3 class="create-form__section-title">Configuración</h3>
     <div class="create-form__grid">
-      <div class="create-form__field" [class.create-form__field--error]="submitted() && !form().eventVisibilityId">
+      <div class="create-form__field" [class.create-form__field--error]="errors().eventVisibilityId">
         <label class="create-form__label">Visibilidad *</label>
-        <select class="create-form__select" [class.create-form__select--error]="submitted() && !form().eventVisibilityId" [(ngModel)]="form().eventVisibilityId" (ngModelChange)="form.update(f => ({...f, eventVisibilityId: $event}))">
+        <select class="select" style="width: 100%" [class.select--error]="errors().eventVisibilityId" [(ngModel)]="form().eventVisibilityId" (ngModelChange)="form.update(f => ({...f, eventVisibilityId: $event})); markTouched('eventVisibilityId')">
           <option [ngValue]="null">Seleccionar...</option>
-          <option *ngFor="let v of visibilities()" [ngValue]="v.catalogueValueId">{{ v.name }}</option>
+          @for (v of visibilities(); track v.catalogueValueId) {
+            <option [ngValue]="v.catalogueValueId">{{ v.name === 'Public' ? 'Público' : v.name === 'Private' ? 'Privado' : v.name }}</option>
+          }
         </select>
-        <span class="create-form__error" *ngIf="submitted() && !form().eventVisibilityId">La visibilidad es obligatoria</span>
+        <span class="create-form__error" *ngIf="errors().eventVisibilityId">{{ errors().eventVisibilityId }}</span>
       </div>
       <div class="create-form__field">
-        <label class="create-form__label">
-          <input type="checkbox" [checked]="form().isPaid" (change)="form.update(f => ({...f, isPaid: !f.isPaid}))" />
+        <label class="create-form__toggle">
+          <input type="checkbox" class="create-form__toggle-input" [checked]="form().isPaid" (change)="form.update(f => ({...f, isPaid: !f.isPaid}))" />
+          <span class="create-form__toggle-slider"></span>
           Evento de pago
         </label>
       </div>
-      <div class="create-form__field" *ngIf="form().isPaid">
+      <div class="create-form__field" *ngIf="form().isPaid" [class.create-form__field--error]="errors().price">
         <label class="create-form__label">Precio</label>
-        <input class="create-form__input" type="number" [(ngModel)]="form().price" (ngModelChange)="form.update(f => ({...f, price: $event}))" placeholder="0.00" />
+        <input class="create-form__input" [class.create-form__input--error]="errors().price" type="number" min="0.01" step="0.01" [(ngModel)]="form().price" (ngModelChange)="form.update(f => ({...f, price: $event})); markTouched('price')" placeholder="0.00" />
+        <span class="create-form__error" *ngIf="errors().price">{{ errors().price }}</span>
       </div>
-      <div class="create-form__field">
+      <div class="create-form__field" [class.create-form__field--error]="errors().maxAttendees">
         <label class="create-form__label">Máx. asistentes</label>
-        <input class="create-form__input" type="number" [(ngModel)]="form().maxAttendees" (ngModelChange)="form.update(f => ({...f, maxAttendees: $event}))" placeholder="500" />
+        <input class="create-form__input" [class.create-form__input--error]="errors().maxAttendees" type="number" min="0" [(ngModel)]="form().maxAttendees" (ngModelChange)="form.update(f => ({...f, maxAttendees: $event})); markTouched('maxAttendees')" placeholder="500" />
+        <span class="create-form__error" *ngIf="errors().maxAttendees">{{ errors().maxAttendees }}</span>
       </div>
-      <div class="create-form__field">
+      <div class="create-form__field" [class.create-form__field--error]="errors().maxEntrepreneurships">
         <label class="create-form__label">Máx. emprendimientos</label>
-        <input class="create-form__input" type="number" [(ngModel)]="form().maxEntrepreneurships" (ngModelChange)="form.update(f => ({...f, maxEntrepreneurships: $event}))" placeholder="50" />
+        <input class="create-form__input" [class.create-form__input--error]="errors().maxEntrepreneurships" type="number" min="0" [(ngModel)]="form().maxEntrepreneurships" (ngModelChange)="form.update(f => ({...f, maxEntrepreneurships: $event})); markTouched('maxEntrepreneurships')" placeholder="50" />
+        <span class="create-form__error" *ngIf="errors().maxEntrepreneurships">{{ errors().maxEntrepreneurships }}</span>
       </div>
     </div>
   </div>
@@ -58,15 +66,15 @@
   <div class="create-form__section">
     <h3 class="create-form__section-title">Fecha y Hora</h3>
     <div class="create-form__grid">
-      <div class="create-form__field" [class.create-form__field--error]="submitted() && !form().startDatetime">
+      <div class="create-form__field" [class.create-form__field--error]="errors().startDatetime">
         <label class="create-form__label">Inicio *</label>
-        <input class="create-form__input" [class.create-form__input--error]="submitted() && !form().startDatetime" type="datetime-local" [(ngModel)]="form().startDatetime" (ngModelChange)="form.update(f => ({...f, startDatetime: $event}))" />
-        <span class="create-form__error" *ngIf="submitted() && !form().startDatetime">La fecha de inicio es obligatoria</span>
+        <input class="create-form__input" [class.create-form__input--error]="errors().startDatetime" type="datetime-local" [(ngModel)]="form().startDatetime" (ngModelChange)="form.update(f => ({...f, startDatetime: $event})); markTouched('startDatetime')" />
+        <span class="create-form__error" *ngIf="errors().startDatetime">{{ errors().startDatetime }}</span>
       </div>
-      <div class="create-form__field" [class.create-form__field--error]="submitted() && !form().endDatetime">
+      <div class="create-form__field" [class.create-form__field--error]="errors().endDatetime">
         <label class="create-form__label">Fin *</label>
-        <input class="create-form__input" [class.create-form__input--error]="submitted() && !form().endDatetime" type="datetime-local" [(ngModel)]="form().endDatetime" (ngModelChange)="form.update(f => ({...f, endDatetime: $event}))" />
-        <span class="create-form__error" *ngIf="submitted() && !form().endDatetime">La fecha de fin es obligatoria</span>
+        <input class="create-form__input" [class.create-form__input--error]="errors().endDatetime" type="datetime-local" [(ngModel)]="form().endDatetime" (ngModelChange)="form.update(f => ({...f, endDatetime: $event})); markTouched('endDatetime')" />
+        <span class="create-form__error" *ngIf="errors().endDatetime">{{ errors().endDatetime }}</span>
       </div>
     </div>
   </div>
@@ -76,47 +84,94 @@
     <div class="create-form__grid">
       <div class="create-form__field">
         <label class="create-form__label">País</label>
-        <input class="create-form__input" type="number" [(ngModel)]="form().countryId" (ngModelChange)="form.update(f => ({...f, countryId: $event}))" placeholder="1" />
+        <select class="select" style="width: 100%" [(ngModel)]="form().countryId" (ngModelChange)="onCountryChange($event)">
+          <option [ngValue]="null">Seleccionar...</option>
+          @for (c of countries(); track c.catalogueValueId) {
+            <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+          }
+        </select>
       </div>
       <div class="create-form__field">
         <label class="create-form__label">Provincia</label>
-        <input class="create-form__input" type="number" [(ngModel)]="form().provinceId" (ngModelChange)="form.update(f => ({...f, provinceId: $event}))" placeholder="1" />
+        <select class="select" style="width: 100%" [(ngModel)]="form().provinceId" (ngModelChange)="onProvinceChange($event)" [disabled]="!form().countryId || loadingProvinces()">
+          <option [ngValue]="null">{{ loadingProvinces() ? 'Cargando...' : 'Seleccionar...' }}</option>
+          @for (p of provinces(); track p.catalogueValueId) {
+            <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+          }
+        </select>
       </div>
       <div class="create-form__field">
         <label class="create-form__label">Ciudad</label>
-        <input class="create-form__input" type="number" [(ngModel)]="form().cityId" (ngModelChange)="form.update(f => ({...f, cityId: $event}))" placeholder="1" />
+        <select class="select" style="width: 100%" [(ngModel)]="form().cityId" (ngModelChange)="form.update(f => ({...f, cityId: $event}))" [disabled]="!form().provinceId || loadingCities()">
+          <option [ngValue]="null">{{ loadingCities() ? 'Cargando...' : 'Seleccionar...' }}</option>
+          @for (c of cities(); track c.catalogueValueId) {
+            <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+          }
+        </select>
       </div>
       <div class="create-form__field create-form__field--full">
         <label class="create-form__label">Dirección</label>
-        <input class="create-form__input" [(ngModel)]="form().addressLine" (ngModelChange)="form.update(f => ({...f, addressLine: $event}))" placeholder="Av. Amazonas N35-17 y Juan Pablo Sanz, Quito" />
+        <input class="create-form__input" [(ngModel)]="form().addressLine" (ngModelChange)="form.update(f => ({...f, addressLine: $event}))" placeholder="Av. Amazonas N35-17 y Juan Pablo Sanz, Quito" maxlength="300" />
       </div>
     </div>
   </div>
 
-  <div class="create-form__section">
-    <h3 class="create-form__section-title">Imagen de Portada (Opcional)</h3>
-    <div class="create-form__cover">
-      <div class="create-form__cover-preview" *ngIf="coverPreview()">
-        <img [src]="coverPreview()" alt="Preview" />
-        <div class="create-form__cover-ratio-warning" *ngIf="coverRatioWarning()">
-          <i class="pi pi-exclamation-triangle"></i> La imagen no tiene proporciones de cover (16:9 recomendado).
+  @if (!isEditMode()) {
+    <div class="create-form__section">
+      <h3 class="create-form__section-title">Imagen de Portada *</h3>
+      <div class="create-form__cover" [class.create-form__field--error]="errors().cover">
+        <div class="create-form__cover-preview" *ngIf="coverPreview()">
+          <img [src]="coverPreview()" alt="Preview" />
+          <div class="create-form__cover-ratio-warning" *ngIf="coverRatioWarning()">
+            <i class="pi pi-exclamation-triangle"></i> La imagen no tiene proporciones de cover (16:9 recomendado).
+          </div>
+          <button class="create-form__cover-remove" type="button" (click)="removeCover()"><i class="pi pi-times"></i></button>
         </div>
-        <button class="create-form__cover-remove" (click)="removeCover()"><i class="pi pi-times"></i></button>
+        <div class="create-form__cover-upload" *ngIf="!coverPreview()" (click)="coverInput.click()">
+          <i class="pi pi-image"></i>
+          <span>Seleccionar imagen de portada</span>
+          <span class="create-form__cover-hint">Recomendado: 1200x500px (16:9)</span>
+        </div>
+        <input #coverInput type="file" accept="image/*" (change)="onCoverSelected($event)" style="display: none" />
+        <span class="create-form__error" *ngIf="errors().cover">{{ errors().cover }}</span>
       </div>
-      <div class="create-form__cover-upload" *ngIf="!coverPreview()" (click)="coverInput.click()">
-        <i class="pi pi-image"></i>
-        <span>Seleccionar imagen de portada</span>
-        <span class="create-form__cover-hint">Recomendado: 1200x500px (16:9)</span>
-      </div>
-      <input #coverInput type="file" accept="image/*" (change)="onCoverSelected($event)" style="display: none" />
     </div>
-  </div>
+  }
+
+  @if (isEditMode()) {
+    <div class="create-form__section">
+      <h3 class="create-form__section-title">Galería de imágenes</h3>
+      <div class="create-form__gallery-info">
+        {{ existingImages().length }} / {{ maxImages }} imágenes
+      </div>
+      <div class="create-form__gallery">
+        @for (img of existingImages(); track img.imageId) {
+          <div class="create-form__gallery-item">
+            <img [src]="img.imageUrl" [alt]="img.altText || 'Imagen del evento'" />
+            <button class="create-form__gallery-item-remove" type="button" (click)="deleteImage(img.imageId)" title="Eliminar imagen">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+        }
+      </div>
+      @if (canAddMoreImages()) {
+        <div class="create-form__gallery-add" (click)="galleryInput.click()">
+          <i class="pi pi-plus"></i>
+          <span>{{ uploadingImage() ? 'Subiendo...' : 'Añadir imagen' }}</span>
+        </div>
+      }
+      @if (!canAddMoreImages()) {
+        <div class="create-form__gallery-limit">Has alcanzado el límite de {{ maxImages }} imágenes.</div>
+      }
+      <input #galleryInput type="file" accept="image/*" (change)="onGalleryImageSelected($event)" style="display: none" />
+    </div>
+  }
 
   <div class="create-form__actions">
-    <button class="btn btn--ghost" (click)="cancel()" [disabled]="loading()">Cancelar</button>
-    <button class="btn btn--primary" (click)="onSubmit()" [disabled]="loading() || !form().name || !form().eventTypeId || !form().eventVisibilityId || !form().startDatetime || !form().endDatetime">
+    <button class="btn btn--ghost" type="button" (click)="cancel()" [disabled]="loading()">Cancelar</button>
+    <button class="btn btn--primary" type="button" (click)="onSubmit()" [disabled]="loading() || !isValid()">
       <i class="pi pi-spin pi-spinner" *ngIf="loading()"></i>
-      {{ loading() ? 'Creando...' : 'Crear Evento' }}
+      {{ loading() ? 'Guardando...' : isEditMode() ? 'Guardar Cambios' : 'Crear Evento' }}
     </button>
   </div>
 </div>

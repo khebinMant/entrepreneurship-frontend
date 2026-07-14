@@ -13,16 +13,26 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
   template: `
     <nav class="public-nav">
       <div class="public-nav__inner">
-        <a class="public-nav__logo" routerLink="/">Emprendia</a>
-
-        <div class="public-nav__links" [class.open]="mobileOpen">
-          <a class="public-nav__link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-          <a class="public-nav__link" routerLink="/entrepreneurships" routerLinkActive="active">Emprendimientos</a>
-          <a class="public-nav__link" routerLink="/events" routerLinkActive="active">Eventos</a>
+        <div class="public-nav__left">
+          <button class="public-nav__hamburger" (click)="mobileOpen = !mobileOpen" [class.open]="mobileOpen" aria-label="Menú">
+            <span></span><span></span><span></span>
+          </button>
+          <a class="public-nav__logo" routerLink="/">Emprendia</a>
         </div>
 
-        <div class="public-nav__actions">
-          <app-theme-toggle />
+        <div class="public-nav__center" [class.open]="mobileOpen">
+          <a class="public-nav__link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="mobileOpen = false">Home</a>
+          <a class="public-nav__link" routerLink="/entrepreneurships" routerLinkActive="active" (click)="mobileOpen = false">Emprendimientos</a>
+          <a class="public-nav__link" routerLink="/events" routerLinkActive="active" (click)="mobileOpen = false">Eventos</a>
+          <div class="public-nav__mobile-theme">
+            <app-theme-toggle />
+          </div>
+        </div>
+
+        <div class="public-nav__right">
+          <div class="public-nav__desktop-theme">
+            <app-theme-toggle />
+          </div>
 
           <ng-container *ngIf="authService.authState().isAuthenticated; else loginBtns">
             <div class="public-nav__user" appClickOutside (appClickOutside)="dropdownOpen.set(false)">
@@ -31,7 +41,7 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
                      [src]="authService.authState().userImage"
                      alt="Avatar" class="public-nav__avatar-img" />
                 <ng-template #defaultAvatar><i class="pi pi-user"></i></ng-template>
-                <span>{{ authService.authState().username }}</span>
+                <span class="public-nav__avatar-name">{{ authService.authState().username }}</span>
                 <i class="pi pi-chevron-down" [class.open]="dropdownOpen()"></i>
               </button>
               <div class="public-nav__dropdown" *ngIf="dropdownOpen()">
@@ -49,13 +59,9 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
             </div>
           </ng-container>
           <ng-template #loginBtns>
-            <a class="public-nav__btn public-nav__btn--outline" routerLink="/login">Iniciar Sesión</a>
-            <a class="public-nav__btn public-nav__btn--primary" routerLink="/register">Registrarse</a>
+            <a class="public-nav__btn public-nav__btn--outline" routerLink="/login">Ingresar</a>
+            <a class="public-nav__btn public-nav__btn--primary" routerLink="/register">Registro</a>
           </ng-template>
-
-          <button class="public-nav__hamburger" (click)="mobileOpen = !mobileOpen" aria-label="Menú">
-            <span></span><span></span><span></span>
-          </button>
         </div>
       </div>
     </nav>
@@ -76,7 +82,12 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
       height: 100%;
       display: flex;
       align-items: center;
-      gap: var(--spacing-xl);
+      gap: var(--spacing-lg);
+    }
+    .public-nav__left {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
     }
     .public-nav__logo {
       font-size: var(--font-size-xl);
@@ -84,7 +95,7 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
       color: var(--color-primary);
       text-decoration: none;
     }
-    .public-nav__links {
+    .public-nav__center {
       display: flex;
       gap: var(--spacing-lg);
       flex: 1;
@@ -96,6 +107,7 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
       font-size: var(--font-size-sm);
       font-weight: 500;
       padding: 4px 0;
+      white-space: nowrap;
     }
     .public-nav__link::after {
       content: '';
@@ -114,10 +126,11 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
     .public-nav__link:hover, .public-nav__link.active {
       color: var(--color-primary);
     }
-    .public-nav__actions {
+    .public-nav__right {
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
+      margin-left: auto;
     }
     .public-nav__btn {
       padding: 8px 16px;
@@ -217,34 +230,94 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
     .public-nav__hamburger {
       display: none;
       flex-direction: column;
-      gap: 4px;
+      justify-content: center;
+      gap: 5px;
       background: none;
       border: none;
       cursor: pointer;
       padding: 4px;
+      width: 28px;
+      height: 28px;
+      position: relative;
     }
     .public-nav__hamburger span {
       display: block;
-      width: 20px;
+      width: 100%;
       height: 2px;
       background: var(--color-text-primary);
       border-radius: 2px;
+      transition: all var(--transition-fast);
+      transform-origin: center;
     }
+    .public-nav__hamburger.open span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .public-nav__hamburger.open span:nth-child(2) {
+      opacity: 0;
+    }
+    .public-nav__hamburger.open span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .public-nav__mobile-theme {
+      display: none;
+    }
+
     @media (max-width: 768px) {
-      .public-nav__links {
+      .public-nav__inner {
+        padding: 0 var(--spacing-md);
+        gap: var(--spacing-sm);
+      }
+      .public-nav__hamburger {
+        display: flex;
+      }
+      .public-nav__desktop-theme {
+        display: none;
+      }
+      .public-nav__center {
         display: none;
         position: absolute;
-        top: 64px; left: 0; right: 0;
+        top: 64px;
+        left: 0;
+        right: 0;
         background: var(--color-surface);
         border-bottom: 1px solid var(--color-border);
         flex-direction: column;
         padding: var(--spacing-md);
+        gap: var(--spacing-xs);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
       }
-      .public-nav__links.open {
+      .public-nav__center.open {
         display: flex;
       }
-      .public-nav__hamburger {
+      .public-nav__link {
+        padding: 12px var(--spacing-sm);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-md);
+      }
+      .public-nav__link:hover, .public-nav__link.active {
+        background: var(--color-primary-light);
+      }
+      .public-nav__link::after {
+        display: none;
+      }
+      .public-nav__mobile-theme {
         display: flex;
+        padding: 12px var(--spacing-sm);
+        border-top: 1px solid var(--color-border);
+        margin-top: var(--spacing-xs);
+        align-items: center;
+        justify-content: space-between;
+      }
+      .public-nav__btn {
+        font-size: var(--font-size-xs);
+        padding: 6px 10px;
+      }
+      .public-nav__avatar-name {
+        display: none;
+      }
+      .public-nav__avatar {
+        padding: 6px 8px;
       }
     }
   `],

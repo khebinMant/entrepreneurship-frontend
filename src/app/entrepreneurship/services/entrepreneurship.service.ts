@@ -47,11 +47,22 @@ export class EntrepreneurshipService {
     return this.api.get<Page<Entrepreneurship>>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.SEARCH, params);
   }
 
+  searchPageByUser(userId: number, filters: EntrepreneurshipSearchFilters): Observable<Page<Entrepreneurship>> {
+    let params = new HttpParams();
+    if (filters.name) params = params.set('name', filters.name);
+    if (filters.categoryId) params = params.set('categoryId', filters.categoryId.toString());
+    if (filters.isPhysical !== undefined) params = params.set('isPhysical', filters.isPhysical.toString());
+    if (filters.isDigital !== undefined) params = params.set('isDigital', filters.isDigital.toString());
+    if (filters.page !== undefined) params = params.set('page', filters.page.toString());
+    if (filters.size !== undefined) params = params.set('size', filters.size.toString());
+    return this.api.get<Page<Entrepreneurship>>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.BY_USER(userId), params);
+  }
+
   create(data: { userId: number; categoryId: number; name: string; description: string; isPhysical: boolean; isDigital: boolean }): Observable<Entrepreneurship> {
     return this.api.post<Entrepreneurship>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.BASE, data);
   }
 
-  update(id: number, data: { name?: string; description?: string; categoryId?: number; isPhysical?: boolean; isDigital?: boolean }): Observable<Entrepreneurship> {
+  update(id: number, data: { userId: number; name?: string; description?: string; categoryId?: number; isPhysical?: boolean; isDigital?: boolean }): Observable<Entrepreneurship> {
     return this.api.put<Entrepreneurship>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.BASE}/${id}`, data);
   }
 

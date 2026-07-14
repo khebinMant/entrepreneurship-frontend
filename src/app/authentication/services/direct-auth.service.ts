@@ -7,6 +7,7 @@ import { AuthenticationService } from '../../core/authentication/services/authen
 import { UserService } from '../../user/services/user.service';
 import { KeycloakService } from './keycloak.service';
 import { STORAGE_KEYS } from '../../core/constants/app.constants';
+import type { User } from '../../user/models/user';
 
 @Injectable({ providedIn: 'root' })
 export class DirectAuthService {
@@ -51,7 +52,10 @@ export class DirectAuthService {
       tokenParsed.realm_access?.roles ?? [],
     );
 
-    await this.syncUser(tokenParsed, response.access_token);
+    const user = await this.syncUser(tokenParsed);
+    if (user?.userId) {
+      this.authService.setBackendUserId(user.userId);
+    }
 
     this.router.navigate(['/']);
   }
@@ -64,10 +68,11 @@ export class DirectAuthService {
     const firstName = tokenParsed.given_name || tokenParsed.name || '';
     const lastName = tokenParsed.family_name || '';
 
+    let user: User | undefined;
     try {
-      await lastValueFrom(this.userService.getByKeycloakId(keycloakId));
+      user = await lastValueFrom(this.userService.getByKeycloakId(keycloakId));
     } catch {
-      await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName, profilePictureUrl: null }));
+      user = await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName, profilePictureUrl: null }));
     }
 
     this.authService.setAuthenticated(
@@ -75,6 +80,10 @@ export class DirectAuthService {
       tokenParsed.preferred_username,
       tokenParsed.realm_access?.roles ?? [],
     );
+
+    if (user?.userId) {
+      this.authService.setBackendUserId(user.userId);
+    }
   }
 
   logout(): void {
@@ -82,6 +91,7 @@ export class DirectAuthService {
     this.refreshToken = null;
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    this.keycloakService.setTokens('', '', null);
     this.authService.clearAuthentication();
     this.router.navigate(['/']);
   }
@@ -90,15 +100,15 @@ export class DirectAuthService {
     return this.accessToken || localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
   }
 
-  private async syncUser(tokenParsed: any, token: string): Promise<void> {
+  private async syncUser(tokenParsed: any): Promise<User | undefined> {
     const keycloakId = tokenParsed.sub;
     const firstName = tokenParsed.given_name || tokenParsed.name || '';
     const lastName = tokenParsed.family_name || '';
 
     try {
-      await lastValueFrom(this.userService.getByKeycloakId(keycloakId));
+      return await lastValueFrom(this.userService.getByKeycloakId(keycloakId));
     } catch {
-      await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName, profilePictureUrl: null }));
+      return await lastValueFrom(this.userService.create({ keycloakId, firstName, lastName, profilePictureUrl: null }));
     }
   }
 

@@ -1,4 +1,10 @@
-<aside class="sidebar" [ngClass]="{ 'sidebar--collapsed': sidebarState.isCollapsed() }">
+<aside
+  class="sidebar"
+  [ngClass]="{
+    'sidebar--collapsed': sidebarState.isCollapsed(),
+    'sidebar--mobile-open': sidebarState.isMobileOpen()
+  }"
+>
   <nav class="sidebar__nav">
     <ng-container *ngFor="let item of navItems">
       <ng-container *ngIf="!item.adminOnly">
@@ -7,6 +13,7 @@
           routerLinkActive="sidebar__link--active"
           class="sidebar__link"
           [routerLinkActiveOptions]="{ exact: false }"
+          (click)="sidebarState.closeMobile()"
         >
           <i class="sidebar__icon {{ item.icon }}"></i>
           <span class="sidebar__label">{{ item.label }}</span>
@@ -19,6 +26,7 @@
             routerLinkActive="sidebar__link--active"
             class="sidebar__link"
             [routerLinkActiveOptions]="{ exact: false }"
+            (click)="sidebarState.closeMobile()"
           >
             <i class="sidebar__icon {{ item.icon }}"></i>
             <span class="sidebar__label">{{ item.label }}</span>

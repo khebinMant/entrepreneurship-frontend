@@ -1,4 +1,4 @@
-import { Component, output, input } from '@angular/core';
+import { Component, output, input, HostListener } from '@angular/core';
 import { NgIf } from '@angular/common';
 
 @Component({
@@ -90,6 +90,13 @@ export class ModalComponent {
   readonly closeOnOverlay = input(true);
 
   readonly close = output<void>();
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.visible()) {
+      this.close.emit();
+    }
+  }
 
   onOverlayClick(event: MouseEvent): void {
     if (this.closeOnOverlay() && (event.target as HTMLElement).classList.contains('modal-overlay')) {
