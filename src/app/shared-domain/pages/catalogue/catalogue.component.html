@@ -1,8 +1,8 @@
 <div class="catalogue-page">
   <div class="catalogue-page__header">
     <div>
-      <h1 class="catalogue-page__title">Catálogos</h1>
-      <p class="catalogue-page__subtitle">Administra tipos y valores de catálogo del sistema.</p>
+      <h1 class="catalogue-page__title">Variables del Sistema</h1>
+      <p class="catalogue-page__subtitle">Administra tipos y valores de variables del sistema.</p>
     </div>
   </div>
 
@@ -72,7 +72,7 @@
   <div class="catalogue-page__content" *ngIf="activeTab() === 'values'">
     <div class="catalogue-page__type-selector">
       <label>Tipo de catálogo:</label>
-      <select class="catalogue-page__select" [ngModel]="selectedType()?.catalogueTypeId" (ngModelChange)="selectType(types().find(t => t.catalogueTypeId === $event)!)">
+      <select class="select" style="min-width: 250px" [ngModel]="selectedType()?.catalogueTypeId" (ngModelChange)="selectType(types().find(t => t.catalogueTypeId === $event)!)">
         <option [ngValue]="undefined">Seleccionar tipo...</option>
         <option *ngFor="let type of types()" [ngValue]="type.catalogueTypeId">{{ type.name }} ({{ type.code }})</option>
       </select>

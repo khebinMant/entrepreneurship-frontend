@@ -3,7 +3,10 @@ import { Injectable, signal } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class SidebarStateService {
   private readonly collapsed = signal(false);
+  private readonly mobileOpen = signal(false);
+
   readonly isCollapsed = this.collapsed.asReadonly();
+  readonly isMobileOpen = this.mobileOpen.asReadonly();
 
   toggle(): void {
     this.collapsed.update((v) => !v);
@@ -11,5 +14,13 @@ export class SidebarStateService {
 
   setCollapsed(value: boolean): void {
     this.collapsed.set(value);
+  }
+
+  toggleMobile(): void {
+    this.mobileOpen.update((v) => !v);
+  }
+
+  closeMobile(): void {
+    this.mobileOpen.set(false);
   }
 }

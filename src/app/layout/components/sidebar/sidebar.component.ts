@@ -5,6 +5,7 @@ import { SidebarStateService } from '../../../core/theme/sidebar-state.service';
 import { PermissionService } from '../../../core/permission/services/permission.service';
 import { HasRoleDirective } from '../../../core/permission/directives/has-role.directive';
 
+
 interface NavItem {
   label: string;
   route: string;
@@ -25,10 +26,10 @@ export class SidebarComponent {
 
   readonly navItems: NavItem[] = [
     { label: 'Inicio', route: '/app/dashboard', icon: 'pi pi-home' },
-    { label: 'Eventos', route: '/app/events', icon: 'pi pi-calendar' },
-    { label: 'Emprendimientos', route: '/app/entrepreneurships', icon: 'pi pi-briefcase' },
-    { label: 'Categorías', route: '/app/categories', icon: 'pi pi-tags', adminOnly: true },
-    { label: 'Catálogos', route: '/app/catalogues', icon: 'pi pi-book', adminOnly: true },
+    { label: 'Mis Eventos', route: '/app/events', icon: 'pi pi-calendar' },
+    { label: 'Mis Emprendimientos', route: '/app/entrepreneurships', icon: 'pi pi-briefcase' },
+    { label: 'Categorías del sistema', route: '/app/categories', icon: 'pi pi-tags', adminOnly: true },
+    { label: 'Variables del Sistema', route: '/app/catalogues', icon: 'pi pi-book', adminOnly: true },
     { label: 'Perfil', route: '/app/profile', icon: 'pi pi-user' },
   ];
 }

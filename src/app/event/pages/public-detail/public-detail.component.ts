@@ -1,21 +1,38 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
+import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
+import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import type { Event } from '../../models/event';
 import type { EventParticipant } from '../../models/event-invitation';
 
 @Component({
   selector: 'app-event-public-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, ClickOutsideDirective],
   template: `
     @if (event(); as e) {
       <div class="hero">
         <img [src]="imageService.getEntityImageUrl(e, 'EVENT', e.eventId)"
              alt="{{ e.name }}" class="hero-img" />
+        @if (isAppContext) {
+          <div class="hero__actions" appClickOutside (appClickOutside)="coverMenuOpen.set(false)">
+            <button class="hero__menu-btn" (click)="toggleCoverMenu()" aria-label="Opciones de portada">
+              <i class="pi pi-ellipsis-v"></i>
+            </button>
+            @if (coverMenuOpen()) {
+              <div class="hero__dropdown">
+                <button class="hero__dropdown-item" (click)="openCoverPicker()">
+                  <i class="pi pi-image"></i> Editar imagen de portada
+                </button>
+              </div>
+            }
+          </div>
+        }
+        <input #coverInput type="file" accept="image/*" (change)="onCoverSelected($event)" style="display: none" />
         <div class="hero-overlay">
           <div class="hero-content">
             <span class="hero-chip">{{ e.eventTypeName || 'Evento' }}</span>
@@ -99,6 +116,13 @@ import type { EventParticipant } from '../../models/event-invitation';
         </aside>
       </div>
     }
+
+    @if (uploadingCover()) {
+      <div class="cover-uploading-overlay">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Actualizando portada...</span>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; }
@@ -153,6 +177,76 @@ import type { EventParticipant } from '../../models/event-invitation';
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
+    }
+
+    .hero__actions {
+      position: absolute;
+      top: var(--spacing-md);
+      right: var(--spacing-md);
+      z-index: 10;
+    }
+
+    .hero__menu-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity var(--transition-fast), background var(--transition-fast);
+
+      .hero:hover & {
+        opacity: 1;
+      }
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.7);
+      }
+    }
+
+    .hero__dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      min-width: 200px;
+      overflow: hidden;
+      z-index: 20;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .hero__dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      background: none;
+      color: var(--color-text-primary);
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      text-align: left;
+
+      i {
+        font-size: 14px;
+        width: 16px;
+      }
+
+      &:hover {
+        background: var(--color-surface-alt);
+      }
     }
 
     .layout {
@@ -274,6 +368,21 @@ import type { EventParticipant } from '../../models/event-invitation';
     .empty i { font-size: 36px; margin-bottom: var(--spacing-sm); opacity: 0.4; }
     .empty p { font-size: var(--font-size-sm); margin: 0; }
 
+    .cover-uploading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-md);
+      z-index: 2000;
+      color: white;
+      font-size: var(--font-size-lg);
+    }
+    .cover-uploading-overlay i { font-size: 36px; }
+
     @media (max-width: 768px) {
       .hero { height: 300px; }
       .layout { grid-template-columns: 1fr; }
@@ -285,6 +394,7 @@ export class PublicDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly eventService = inject(EventService);
+  private readonly authService = inject(AuthenticationService);
   readonly imageService = inject(ImageService);
 
   get isAppContext(): boolean {
@@ -292,6 +402,10 @@ export class PublicDetailComponent implements OnInit {
   }
   readonly event = signal<Event | null>(null);
   readonly participants = signal<EventParticipant[]>([]);
+  readonly coverMenuOpen = signal(false);
+  readonly uploadingCover = signal(false);
+
+  @ViewChild('coverInput') coverInputRef!: ElementRef<HTMLInputElement>;
 
   async ngOnInit(): Promise<void> {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -317,6 +431,51 @@ export class PublicDetailComponent implements OnInit {
       this.participants.set(result);
     } catch {
       // fallback
+    }
+  }
+
+  toggleCoverMenu(): void {
+    this.coverMenuOpen.update(v => !v);
+  }
+
+  openCoverPicker(): void {
+    this.coverMenuOpen.set(false);
+    this.coverInputRef.nativeElement.click();
+  }
+
+  async onCoverSelected(evt: any): Promise<void> {
+    const input = evt.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    const ev = this.event();
+    if (!ev) return;
+
+    this.uploadingCover.set(true);
+    try {
+      const images = await lastValueFrom(this.imageService.list('EVENT', ev.eventId));
+      const oldCovers = images.filter(img => img.displayOrder === 0);
+
+      const uploadResult = await lastValueFrom(this.imageService.upload(
+        file,
+        'EVENT',
+        ev.eventId,
+        0,
+        'Portada de ' + ev.name,
+        this.authService.backendUserId() ?? undefined,
+      ));
+
+      for (const old of oldCovers) {
+        try {
+          await lastValueFrom(this.imageService.delete(old.imageId, 'EVENT', ev.eventId));
+        } catch { /* ignore */ }
+      }
+
+      this.imageService.invalidateCache('EVENT', ev.eventId);
+      await this.loadEvent(ev.eventId);
+    } catch (err) {
+      console.error('Error updating cover:', err);
+    } finally {
+      this.uploadingCover.set(false);
     }
   }
 }

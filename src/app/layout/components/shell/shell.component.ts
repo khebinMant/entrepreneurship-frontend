@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NgClass } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { FooterComponent } from '../footer/footer.component';
@@ -11,7 +11,7 @@ import { SessionExpiredModalComponent } from '../../../core/authentication/compo
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, NgClass, HeaderComponent, SidebarComponent, FooterComponent, SessionExpiredModalComponent],
+  imports: [RouterOutlet, NgIf, HeaderComponent, SidebarComponent, FooterComponent, SessionExpiredModalComponent],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })

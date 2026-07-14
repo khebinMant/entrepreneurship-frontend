@@ -1,24 +1,29 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { NgFor, NgIf, NgClass } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { NgIf, NgClass } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { lastValueFrom } from 'rxjs';
 import { EntrepreneurshipService } from '../../services/entrepreneurship.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
+import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
 import { Category } from '../../models/category';
 import { Entrepreneurship, EntrepreneurshipSearchFilters } from '../../models/entrepreneurship';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
 import { CreateComponent } from '../create/create.component';
+import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import type { Page } from '../../../shared/models/pagination';
 
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [NgFor, NgIf, NgClass, RouterLink, FormsModule, ModalComponent, CreateComponent],
+  imports: [NgIf, NgClass, RouterLink, FormsModule, ModalComponent, CreateComponent, ClickOutsideDirective],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
 })
 export class ListComponent implements OnInit {
   private readonly entrepreneurshipService = inject(EntrepreneurshipService);
+  private readonly authService = inject(AuthenticationService);
+  private readonly router = inject(Router);
   readonly imageService = inject(ImageService);
 
   readonly entrepreneurships = signal<Entrepreneurship[]>([]);
@@ -26,6 +31,12 @@ export class ListComponent implements OnInit {
   readonly loading = signal(false);
   readonly pageData = signal<Pick<Page<Entrepreneurship>, 'totalElements' | 'totalPages' | 'number' | 'size'> | null>(null);
   readonly showCreateModal = signal(false);
+  readonly showEditModal = signal(false);
+  readonly editingEntrepreneurship = signal<Entrepreneurship | null>(null);
+  readonly showDeleteConfirm = signal(false);
+  readonly deletingEntrepreneurship = signal<Entrepreneurship | null>(null);
+  readonly deleting = signal(false);
+  readonly openMenuId = signal<number | null>(null);
 
   readonly pageSize = 10;
 
@@ -49,18 +60,35 @@ export class ListComponent implements OnInit {
     });
   }
 
+  get isAppRoute(): boolean {
+    return this.router.url.startsWith('/app/');
+  }
+
   loadEntrepreneurships(): void {
     this.loading.set(true);
     const currentFilters = this.filters();
-    this.entrepreneurshipService.searchPage({
-      ...currentFilters,
-      name: currentFilters.name || undefined,
-      categoryId: currentFilters.categoryId || undefined,
-      isPhysical: currentFilters.isPhysical,
-      isDigital: currentFilters.isDigital,
-      page: currentFilters.page ?? 0,
-      size: currentFilters.size ?? this.pageSize,
-    }).subscribe({
+
+    const obs$ = this.isAppRoute
+      ? this.entrepreneurshipService.searchPageByUser(this.authService.backendUserId()!, {
+          ...currentFilters,
+          name: currentFilters.name || undefined,
+          categoryId: currentFilters.categoryId || undefined,
+          isPhysical: currentFilters.isPhysical,
+          isDigital: currentFilters.isDigital,
+          page: currentFilters.page ?? 0,
+          size: currentFilters.size ?? this.pageSize,
+        })
+      : this.entrepreneurshipService.searchPage({
+          ...currentFilters,
+          name: currentFilters.name || undefined,
+          categoryId: currentFilters.categoryId || undefined,
+          isPhysical: currentFilters.isPhysical,
+          isDigital: currentFilters.isDigital,
+          page: currentFilters.page ?? 0,
+          size: currentFilters.size ?? this.pageSize,
+        });
+
+    obs$.subscribe({
       next: (page) => {
         this.entrepreneurships.set(page.content);
         this.pageData.set({
@@ -119,5 +147,52 @@ export class ListComponent implements OnInit {
   closeCreateModal(): void {
     this.showCreateModal.set(false);
     this.loadEntrepreneurships();
+  }
+
+  openEditModal(entrepreneurship: Entrepreneurship): void {
+    this.editingEntrepreneurship.set(entrepreneurship);
+    this.showEditModal.set(true);
+    this.openMenuId.set(null);
+  }
+
+  closeEditModal(): void {
+    this.showEditModal.set(false);
+    this.editingEntrepreneurship.set(null);
+    this.loadEntrepreneurships();
+  }
+
+  openDeleteConfirm(entrepreneurship: Entrepreneurship): void {
+    this.deletingEntrepreneurship.set(entrepreneurship);
+    this.showDeleteConfirm.set(true);
+    this.openMenuId.set(null);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deletingEntrepreneurship.set(null);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const entrepreneurship = this.deletingEntrepreneurship();
+    if (!entrepreneurship) return;
+    this.deleting.set(true);
+    try {
+      await lastValueFrom(this.entrepreneurshipService.delete(entrepreneurship.entrepreneurshipId));
+      this.showDeleteConfirm.set(false);
+      this.deletingEntrepreneurship.set(null);
+      this.loadEntrepreneurships();
+    } catch (err) {
+      console.error('Error deleting entrepreneurship:', err);
+    } finally {
+      this.deleting.set(false);
+    }
+  }
+
+  toggleMenu(id: number): void {
+    this.openMenuId.update(current => current === id ? null : id);
+  }
+
+  closeMenu(): void {
+    this.openMenuId.set(null);
   }
 }

@@ -39,8 +39,8 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
           <div class="dashboard__card-icon" style="background: var(--color-primary-light); color: var(--color-primary);">
             <i class="pi pi-th-large"></i>
           </div>
-          <h3 class="dashboard__card-title">Catálogos</h3>
-          <p class="dashboard__card-desc">Configura tipos y valores de catálogo.</p>
+          <h3 class="dashboard__card-title">Variables del Sistema</h3>
+          <p class="dashboard__card-desc">Configura tipos y valores de variables del sistema.</p>
         </a>
 
         <a class="dashboard__card" routerLink="/app/profile">
@@ -65,6 +65,12 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
       padding: var(--spacing-xxl);
       margin-bottom: var(--spacing-xxl);
       overflow: hidden;
+    }
+    @media (max-width: 767px) {
+      .dashboard__hero { padding: var(--spacing-lg); border-radius: var(--radius-lg); }
+      .dashboard__title { font-size: var(--font-size-xl); }
+      .dashboard__subtitle { font-size: var(--font-size-sm); }
+      .dashboard__cards { grid-template-columns: 1fr; }
     }
     .dashboard__hero-content {
       position: relative;

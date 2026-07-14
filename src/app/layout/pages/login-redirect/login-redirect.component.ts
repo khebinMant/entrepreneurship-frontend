@@ -422,17 +422,19 @@ import { environment } from '../../../../environments/environment';
       z-index: 1;
       text-align: center;
       padding: var(--spacing-xl);
-      color: #fff;
+      color: #fef2f2;
     }
     .auth-image-overlay h2 {
       font-size: var(--font-size-xxl);
       font-weight: 700;
       margin: 0 0 var(--spacing-sm);
+      color: #fef2f2;
     }
     .auth-image-overlay p {
       font-size: var(--font-size-md);
       opacity: 0.9;
       margin: 0;
+      color: #fef2f2;
     }
 
     @media (max-width: 768px) {

@@ -24,6 +24,14 @@ export class HeaderComponent {
     this.menuOpen.update((v) => !v);
   }
 
+  handleHamburgerClick(): void {
+    if (window.innerWidth < 768) {
+      this.sidebarState.toggleMobile();
+    } else {
+      this.sidebarState.toggle();
+    }
+  }
+
   closeMenu(): void {
     this.menuOpen.set(false);
   }

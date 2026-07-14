@@ -1,6 +1,11 @@
 <app-header />
-<div class="shell" [ngClass]="{ 'shell--sidebar-collapsed': sidebarState.isCollapsed() }">
+<div class="shell">
   <app-sidebar />
+  <div
+    class="shell__backdrop"
+    *ngIf="sidebarState.isMobileOpen()"
+    (click)="sidebarState.closeMobile()"
+  ></div>
   <main class="shell__content">
     <router-outlet />
   </main>
