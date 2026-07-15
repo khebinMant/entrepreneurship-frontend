@@ -3,7 +3,9 @@ export interface UserIdentification {
   userId: number;
   identificationTypeId: number;
   identificationTypeName?: string;
-  identificationValue: string;
+  identificationNumber: string;
+  issuedCountryId?: number;
+  issuedCountryName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -11,10 +13,13 @@ export interface UserIdentification {
 export interface CreateUserIdentificationDto {
   userId: number;
   identificationTypeId: number;
-  identificationValue: string;
+  identificationNumber: string;
+  issuedCountryId?: number;
 }
 
 export interface UpdateUserIdentificationDto {
+  userId?: number;
   identificationTypeId?: number;
-  identificationValue?: string;
+  identificationNumber?: string;
+  issuedCountryId?: number;
 }

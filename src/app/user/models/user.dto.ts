@@ -2,13 +2,9 @@ export interface UpdateUserDto {
   firstName?: string;
   lastName?: string;
   email?: string;
-  phone?: string;
-  bio?: string;
-  avatarUrl?: string;
+  profilePictureUrl?: string;
 }
 
-export interface ChangePasswordDto {
-  currentPassword: string;
+export interface ChangePasswordRequestDto {
   newPassword: string;
-  confirmPassword: string;
 }

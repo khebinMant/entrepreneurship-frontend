@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'emprendia_access_token',
   REFRESH_TOKEN: 'emprendia_refresh_token',
   USER_SESSION: 'emprendia_user_session',
+  USER_ROLES: 'emprendia_user_roles',
   THEME: 'emprendia_theme',
 } as const;
 
@@ -21,9 +22,13 @@ export const API_ENDPOINTS = {
   USERS: {
     BASE: `${API_PREFIX}/users`,
     BY_KEYCLOAK_ID: (keycloakId: string) => `${API_PREFIX}/users/keycloak/${keycloakId}`,
+    CHANGE_PASSWORD: (userId: number) => `${API_PREFIX}/users/${userId}/change-password`,
     CONTACTS: `${API_PREFIX}/user-contacts`,
+    CONTACTS_BY_USER: (userId: number) => `${API_PREFIX}/user-contacts/user/${userId}`,
     ADDRESSES: `${API_PREFIX}/user-addresses`,
+    ADDRESSES_BY_USER: (userId: number) => `${API_PREFIX}/user-addresses/user/${userId}`,
     IDENTIFICATIONS: `${API_PREFIX}/user-identifications`,
+    IDENTIFICATIONS_BY_USER: (userId: number) => `${API_PREFIX}/user-identifications/user/${userId}`,
   },
   ENTREPRENEURSHIPS: {
     BASE: `${API_PREFIX}/entrepreneurships`,

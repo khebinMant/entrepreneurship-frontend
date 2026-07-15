@@ -2,117 +2,163 @@
   <div class="catalogue-page__header">
     <div>
       <h1 class="catalogue-page__title">Variables del Sistema</h1>
-      <p class="catalogue-page__subtitle">Administra tipos y valores de variables del sistema.</p>
+      <p class="catalogue-page__subtitle">Administra tipos y valores de las variables del sistema.</p>
     </div>
   </div>
 
-  <div class="catalogue-page__tabs">
-    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'types'" (click)="setTab('types')">
-      <i class="pi pi-tags"></i> Tipos
-    </button>
-    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'values'" (click)="setTab('values')">
-      <i class="pi pi-list"></i> Valores
-    </button>
-  </div>
-
-  <div class="catalogue-page__content" *ngIf="activeTab() === 'types'">
+  <div class="catalogue-page__section">
     <div class="catalogue-page__create-form">
       <input class="catalogue-page__input" [(ngModel)]="typeForm().code" (ngModelChange)="typeForm.update(f => ({...f, code: $event}))" placeholder="Código" />
       <input class="catalogue-page__input" [(ngModel)]="typeForm().name" (ngModelChange)="typeForm.update(f => ({...f, name: $event}))" placeholder="Nombre" />
       <input class="catalogue-page__input" [(ngModel)]="typeForm().description" (ngModelChange)="typeForm.update(f => ({...f, description: $event}))" placeholder="Descripción (opcional)" />
       <button class="btn btn--primary" (click)="createType()" [disabled]="!typeForm().name.trim() || !typeForm().code.trim()">
-        <i class="pi pi-plus"></i> Agregar
+        <i class="pi pi-plus"></i> Agregar tipo
       </button>
-    </div>
-
-    <div class="catalogue-page__list">
-      <div class="catalogue-page__item" *ngFor="let t of getFilteredTypes()">
-        <div class="catalogue-page__item-info" *ngIf="editingTypeId() !== t.catalogueTypeId; else editTypeTmpl">
-          <div class="catalogue-page__item-icon"><i class="pi pi-tag"></i></div>
-          <div class="catalogue-page__item-details">
-            <span class="catalogue-page__item-code">{{ t.code }}</span>
-            <span class="catalogue-page__item-name">{{ t.name }}</span>
-            <span class="catalogue-page__item-desc" *ngIf="t.description">{{ t.description }}</span>
-          </div>
-        </div>
-        <ng-template #editTypeTmpl>
-          <div class="catalogue-page__item-edit">
-            <input class="catalogue-page__input catalogue-page__input--small" [(ngModel)]="editTypeForm().code" (ngModelChange)="editTypeForm.update(f => ({...f, code: $event}))" />
-            <input class="catalogue-page__input catalogue-page__input--small" [(ngModel)]="editTypeForm().name" (ngModelChange)="editTypeForm.update(f => ({...f, name: $event}))" />
-            <input class="catalogue-page__input catalogue-page__input--small" [(ngModel)]="editTypeForm().description" (ngModelChange)="editTypeForm.update(f => ({...f, description: $event}))" />
-          </div>
-        </ng-template>
-        <div class="catalogue-page__item-actions" *ngIf="editingTypeId() !== t.catalogueTypeId">
-          <button class="btn btn--ghost btn--sm" (click)="toggleExpand(t)" [class.btn--active]="expandedTypeId() === t.catalogueTypeId">
-            <i class="pi pi-chevron-right" [class.rotated]="expandedTypeId() === t.catalogueTypeId"></i>
-          </button>
-          <button class="btn btn--ghost btn--sm" (click)="startEditType(t)"><i class="pi pi-pencil"></i></button>
-          <button class="btn btn--danger btn--sm" (click)="deleteType(t.catalogueTypeId)"><i class="pi pi-trash"></i></button>
-        </div>
-        <div class="catalogue-page__item-actions" *ngIf="editingTypeId() === t.catalogueTypeId">
-          <button class="btn btn--primary btn--sm" (click)="saveEditType(t)"><i class="pi pi-check"></i></button>
-          <button class="btn btn--ghost btn--sm" (click)="cancelEditType()"><i class="pi pi-times"></i></button>
-        </div>
-        <div class="catalogue-page__expanded-values" *ngIf="expandedTypeId() === t.catalogueTypeId && values().length > 0">
-          <div class="catalogue-page__value-item" *ngFor="let value of values()">
-            <div class="catalogue-page__value-icon"><i class="pi pi-circle"></i></div>
-            <div class="catalogue-page__value-details">
-              <span class="catalogue-page__value-code">{{ value.code }}</span>
-              <span class="catalogue-page__value-name">{{ value.name }}</span>
-              <span class="catalogue-page__value-desc" *ngIf="value.description">{{ value.description }}</span>
-            </div>
-          </div>
-        </div>
-        <div class="catalogue-page__expanded-empty" *ngIf="expandedTypeId() === t.catalogueTypeId && values().length === 0">
-          <i class="pi pi-inbox"></i> Sin valores para este tipo
-        </div>
     </div>
   </div>
 
-  <div class="catalogue-page__content" *ngIf="activeTab() === 'values'">
-    <div class="catalogue-page__type-selector">
-      <label>Tipo de catálogo:</label>
-      <select class="select" style="min-width: 250px" [ngModel]="selectedType()?.catalogueTypeId" (ngModelChange)="selectType(types().find(t => t.catalogueTypeId === $event)!)">
-        <option [ngValue]="undefined">Seleccionar tipo...</option>
-        <option *ngFor="let type of types()" [ngValue]="type.catalogueTypeId">{{ type.name }} ({{ type.code }})</option>
-      </select>
-    </div>
+  <div class="catalogue-page__section">
+    @if (loading()) {
+      <div class="catalogue-page__loading"><i class="pi pi-spin pi-spinner"></i> Cargando...</div>
+    } @else {
+      <div class="catalogue-page__list">
+        @for (type of types(); track type.catalogueTypeId) {
+          <div class="type-card">
+            <div class="type-card__header">
+              <button class="type-card__expand" (click)="toggleExpand(type)" [class.type-card__expand--open]="expandedTypeId() === type.catalogueTypeId">
+                <i class="pi pi-chevron-right"></i>
+              </button>
+              <div class="type-card__icon"><i class="pi pi-tag"></i></div>
 
-    <div class="catalogue-page__create-form" *ngIf="selectedType()">
-      <input class="catalogue-page__input" [(ngModel)]="valueForm().code" (ngModelChange)="valueForm.update(f => ({...f, code: $event}))" placeholder="Código" />
-      <input class="catalogue-page__input" [(ngModel)]="valueForm().name" (ngModelChange)="valueForm.update(f => ({...f, name: $event}))" placeholder="Nombre" />
-      <input class="catalogue-page__input" [(ngModel)]="valueForm().description" (ngModelChange)="valueForm.update(f => ({...f, description: $event}))" placeholder="Descripción" />
-      <button class="btn btn--primary" (click)="createValue()" [disabled]="!valueForm().name.trim() || !valueForm().code.trim()">
-        <i class="pi pi-plus"></i> Agregar
-      </button>
-    </div>
+              @if (editingTypeId() === type.catalogueTypeId) {
+                <div class="type-card__edit-form">
+                  <input class="type-card__input" [(ngModel)]="editTypeForm().code" (ngModelChange)="editTypeForm.update(f => ({...f, code: $event}))" placeholder="Código" />
+                  <input class="type-card__input" [(ngModel)]="editTypeForm().name" (ngModelChange)="editTypeForm.update(f => ({...f, name: $event}))" placeholder="Nombre" />
+                  <input class="type-card__input" [(ngModel)]="editTypeForm().description" (ngModelChange)="editTypeForm.update(f => ({...f, description: $event}))" placeholder="Descripción" />
+                </div>
+              } @else {
+                <div class="type-card__info">
+                  <span class="type-card__code">{{ type.code }}</span>
+                  <span class="type-card__name">{{ type.name }}</span>
+                  <span class="type-card__desc" *ngIf="type.description">{{ type.description }}</span>
+                </div>
+              }
 
-    <div class="catalogue-page__list" *ngIf="selectedType()">
-      <div class="catalogue-page__item" *ngFor="let value of values()">
-        <div class="catalogue-page__item-info" *ngIf="editingValueId() !== value.catalogueValueId; else editValueTmpl">
-          <div class="catalogue-page__item-icon"><i class="pi pi-circle"></i></div>
-          <div class="catalogue-page__item-details">
-            <span class="catalogue-page__item-code">{{ value.code }}</span>
-            <span class="catalogue-page__item-name">{{ value.name }}</span>
-            <span class="catalogue-page__item-desc" *ngIf="value.description">{{ value.description }}</span>
+              <div class="type-card__actions">
+                @if (editingTypeId() === type.catalogueTypeId) {
+                  <button class="btn btn--primary btn--sm" (click)="saveEditType(type)"><i class="pi pi-check"></i></button>
+                  <button class="btn btn--ghost btn--sm" (click)="cancelEditType()"><i class="pi pi-times"></i></button>
+                } @else {
+                  <button class="btn btn--ghost btn--sm" (click)="startEditType(type)"><i class="pi pi-pencil"></i></button>
+                  <button class="btn btn--danger btn--sm" (click)="openDeleteTypeConfirm(type)"><i class="pi pi-trash"></i></button>
+                }
+              </div>
+            </div>
+
+            @if (expandedTypeId() === type.catalogueTypeId) {
+              <div class="type-card__values">
+                @if (valuesLoading()) {
+                  <div class="type-card__values-loading"><i class="pi pi-spin pi-spinner"></i> Cargando valores...</div>
+                } @else {
+                  <div class="type-card__values-form">
+                    <input class="type-card__input type-card__input--sm" [(ngModel)]="newValueForm().code" (ngModelChange)="newValueForm.update(f => ({...f, code: $event}))" placeholder="Código" />
+                    <input class="type-card__input type-card__input--sm" [(ngModel)]="newValueForm().name" (ngModelChange)="newValueForm.update(f => ({...f, name: $event}))" placeholder="Nombre" />
+                    <input class="type-card__input type-card__input--sm" [(ngModel)]="newValueForm().description" (ngModelChange)="newValueForm.update(f => ({...f, description: $event}))" placeholder="Descripción" />
+                    <button class="btn btn--primary btn--sm" (click)="addValue(type)" [disabled]="!newValueForm().name.trim() || !newValueForm().code.trim()">
+                      <i class="pi pi-plus"></i>
+                    </button>
+                  </div>
+
+                  @if ((valuesByType()[type.catalogueTypeId] || []).length === 0) {
+                    <div class="type-card__values-empty">
+                      <i class="pi pi-inbox"></i> No hay valores para este tipo.
+                    </div>
+                  } @else {
+                    @for (value of valuesByType()[type.catalogueTypeId] || []; track value.catalogueValueId) {
+                      <div class="value-row">
+                        <div class="value-row__icon"><i class="pi pi-circle"></i></div>
+
+                        @if (editingValueId() === value.catalogueValueId) {
+                          <div class="value-row__edit">
+                            <input class="type-card__input type-card__input--xs" [(ngModel)]="editValueForm().code" (ngModelChange)="editValueForm.update(f => ({...f, code: $event}))" placeholder="Código" />
+                            <input class="type-card__input type-card__input--xs" [(ngModel)]="editValueForm().name" (ngModelChange)="editValueForm.update(f => ({...f, name: $event}))" placeholder="Nombre" />
+                            <input class="type-card__input type-card__input--xs" [(ngModel)]="editValueForm().description" (ngModelChange)="editValueForm.update(f => ({...f, description: $event}))" placeholder="Descripción" />
+                          </div>
+                        } @else {
+                          <div class="value-row__info">
+                            <span class="value-row__code">{{ value.code }}</span>
+                            <span class="value-row__name">{{ value.name }}</span>
+                            <span class="value-row__desc" *ngIf="value.description">{{ value.description }}</span>
+                          </div>
+                        }
+
+                        <div class="value-row__actions">
+                          @if (editingValueId() === value.catalogueValueId) {
+                            <button class="btn btn--primary btn--sm" (click)="saveEditValue(value)"><i class="pi pi-check"></i></button>
+                            <button class="btn btn--ghost btn--sm" (click)="cancelEditValue()"><i class="pi pi-times"></i></button>
+                          } @else {
+                            <button class="btn btn--ghost btn--sm" (click)="startEditValue(value)"><i class="pi pi-pencil"></i></button>
+                            <button class="btn btn--danger btn--sm" (click)="openDeleteValueConfirm(value)"><i class="pi pi-trash"></i></button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  }
+                }
+              </div>
+            }
           </div>
-        </div>
-        <ng-template #editValueTmpl>
-          <div class="catalogue-page__item-edit">
-            <input class="catalogue-page__input catalogue-page__input--small" [(ngModel)]="editValueForm().code" (ngModelChange)="editValueForm.update(f => ({...f, code: $event}))" />
-            <input class="catalogue-page__input catalogue-page__input--small" [(ngModel)]="editValueForm().name" (ngModelChange)="editValueForm.update(f => ({...f, name: $event}))" />
-            <input class="catalogue-page__input catalogue-page__input--small" [(ngModel)]="editValueForm().description" (ngModelChange)="editValueForm.update(f => ({...f, description: $event}))" />
+        } @empty {
+          <div class="catalogue-page__empty">
+            <i class="pi pi-inbox"></i>
+            <p>No hay tipos de catálogo registrados.</p>
           </div>
-        </ng-template>
-        <div class="catalogue-page__item-actions" *ngIf="editingValueId() !== value.catalogueValueId">
-          <button class="btn btn--ghost btn--sm" (click)="startEditValue(value)"><i class="pi pi-pencil"></i></button>
-          <button class="btn btn--danger btn--sm" (click)="deleteValue(value.catalogueValueId)"><i class="pi pi-trash"></i></button>
-        </div>
-        <div class="catalogue-page__item-actions" *ngIf="editingValueId() === value.catalogueValueId">
-          <button class="btn btn--primary btn--sm" (click)="saveEditValue(value)"><i class="pi pi-check"></i></button>
-          <button class="btn btn--ghost btn--sm" (click)="cancelEditValue()"><i class="pi pi-times"></i></button>
-        </div>
+        }
       </div>
-    </div>
+    }
   </div>
 </div>
+
+<app-modal
+  [visible]="showDeleteTypeConfirm()"
+  title="Eliminar tipo"
+  size="sm"
+  (close)="cancelDeleteType()"
+>
+  <div class="delete-confirm">
+    <div class="delete-confirm__icon"><i class="pi pi-exclamation-triangle"></i></div>
+    <p class="delete-confirm__text">
+      ¿Estás seguro de que deseas eliminar el tipo <strong>{{ deletingType()?.name }}</strong>?
+    </p>
+    <p class="delete-confirm__hint">Esta acción no se puede deshacer.</p>
+    <div class="delete-confirm__actions">
+      <button class="btn btn--ghost" type="button" (click)="cancelDeleteType()" [disabled]="deleting()">Cancelar</button>
+      <button class="btn btn--danger" type="button" (click)="confirmDeleteType()" [disabled]="deleting()">
+        <i class="pi pi-spin pi-spinner" *ngIf="deleting()"></i>
+        {{ deleting() ? 'Eliminando...' : 'Eliminar' }}
+      </button>
+    </div>
+  </div>
+</app-modal>
+
+<app-modal
+  [visible]="showDeleteValueConfirm()"
+  title="Eliminar valor"
+  size="sm"
+  (close)="cancelDeleteValue()"
+>
+  <div class="delete-confirm">
+    <div class="delete-confirm__icon"><i class="pi pi-exclamation-triangle"></i></div>
+    <p class="delete-confirm__text">
+      ¿Estás seguro de que deseas eliminar el valor <strong>{{ deletingValue()?.name }}</strong>?
+    </p>
+    <p class="delete-confirm__hint">Esta acción no se puede deshacer.</p>
+    <div class="delete-confirm__actions">
+      <button class="btn btn--ghost" type="button" (click)="cancelDeleteValue()" [disabled]="deleting()">Cancelar</button>
+      <button class="btn btn--danger" type="button" (click)="confirmDeleteValue()" [disabled]="deleting()">
+        <i class="pi pi-spin pi-spinner" *ngIf="deleting()"></i>
+        {{ deleting() ? 'Eliminando...' : 'Eliminar' }}
+      </button>
+    </div>
+  </div>
+</app-modal>

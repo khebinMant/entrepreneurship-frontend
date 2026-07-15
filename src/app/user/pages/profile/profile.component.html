@@ -1,83 +1,479 @@
 <div class="profile-page">
   <div class="profile-page__header">
     <h1 class="profile-page__title">Mi Perfil</h1>
-    <p class="profile-page__subtitle">Administra tu información personal y foto de perfil.</p>
+    <p class="profile-page__subtitle">Administra tu información personal, seguridad, direcciones, contactos e identificaciones.</p>
   </div>
 
-  <div class="profile-page__loading" *ngIf="loading()">
-    <i class="pi pi-spin pi-spinner"></i> Cargando perfil...
-  </div>
+  @if (loading()) {
+    <div class="profile-page__loading"><i class="pi pi-spin pi-spinner"></i> Cargando perfil...</div>
+  }
 
-  <ng-container *ngIf="!loading() && user() as u">
-    <div class="profile-page__success" *ngIf="success()">
-      <i class="pi pi-check-circle"></i> {{ success() }}
-    </div>
-    <div class="profile-page__error" *ngIf="error()">
-      <i class="pi pi-exclamation-circle"></i> {{ error() }}
-    </div>
+  @if (!loading()) {
 
-    <div class="profile-page__grid">
-      <div class="profile-page__card profile-page__card--photo">
-        <h2 class="profile-page__card-title">Foto de Perfil</h2>
-        <div class="profile-page__photo">
-          <div class="profile-page__photo-img">
-            <img [src]="imageService.getEntityImageUrl(u, 'USER', u.userId)" alt="Foto de perfil" />
-          </div>
-          <label class="btn btn--outline profile-page__upload-btn" [class.btn--disabled]="uploading()">
-            <i class="pi pi-camera"></i>
-            {{ uploading() ? 'Subiendo...' : 'Cambiar foto' }}
-            <input type="file" accept="image/*" (change)="uploadProfilePicture($event)" hidden />
-          </label>
-        </div>
-      </div>
+    @if (success()) {
+      <div class="profile-page__success"><i class="pi pi-check-circle"></i> {{ success() }}</div>
+    }
 
-      <div class="profile-page__card profile-page__card--info">
-        <h2 class="profile-page__card-title">Información Personal</h2>
-        <div class="profile-page__field">
-          <label class="profile-page__label">Nombres</label>
-          <input class="profile-page__input" type="text" [(ngModel)]="editFirstName" placeholder="Tus nombres" />
-        </div>
-        <div class="profile-page__field">
-          <label class="profile-page__label">Apellidos</label>
-          <input class="profile-page__input" type="text" [(ngModel)]="editLastName" placeholder="Tus apellidos" />
-        </div>
-        <div class="profile-page__field">
-          <label class="profile-page__label">Correo electrónico</label>
-          <input class="profile-page__input" type="email" [value]="u.email || ''" disabled />
-        </div>
-        <button class="btn btn--primary" (click)="save()" [disabled]="saving()">
-          {{ saving() ? 'Guardando...' : 'Guardar Cambios' }}
+    @if (error()) {
+      <div class="profile-page__error"><i class="pi pi-exclamation-circle"></i> {{ error() }}</div>
+    }
+
+    @if (user(); as u) {
+
+      <!-- ===================== TABS ===================== -->
+      <div class="profile-page__tabs">
+        <button class="profile-page__tab" [class.active]="activeTab() === 'info'" (click)="activeTab.set('info')">
+          <i class="pi pi-user"></i>
+          <span>Información</span>
+        </button>
+        <button class="profile-page__tab" [class.active]="activeTab() === 'password'" (click)="activeTab.set('password')">
+          <i class="pi pi-lock"></i>
+          <span>Contraseña</span>
+        </button>
+        <button class="profile-page__tab" [class.active]="activeTab() === 'addresses'" (click)="activeTab.set('addresses')">
+          <i class="pi pi-map-marker"></i>
+          <span>Direcciones</span>
+        </button>
+        <button class="profile-page__tab" [class.active]="activeTab() === 'contacts'" (click)="activeTab.set('contacts')">
+          <i class="pi pi-phone"></i>
+          <span>Contactos</span>
+        </button>
+        <button class="profile-page__tab" [class.active]="activeTab() === 'identifications'" (click)="activeTab.set('identifications')">
+          <i class="pi pi-id-card"></i>
+          <span>Identificaciones</span>
         </button>
       </div>
-    </div>
 
-    <div class="profile-page__card profile-page__card--gallery">
-      <div class="profile-page__card-header">
-        <h2 class="profile-page__card-title">Galería de Imágenes</h2>
-        <label class="btn btn--outline btn--sm" *ngIf="canAddMore()" [class.btn--disabled]="uploading()">
-          <i class="pi pi-plus"></i> Agregar
-          <input type="file" accept="image/*" (change)="uploadGalleryImage($event)" hidden />
-        </label>
-      </div>
-      <div class="profile-page__gallery" *ngIf="images().length > 0">
-        <div class="profile-page__gallery-item" *ngFor="let img of images(); trackBy: trackById">
-          <img [src]="img.imageUrl" [alt]="img.altText || 'Imagen'" />
-          <div class="profile-page__gallery-overlay">
-            <button class="btn btn--danger btn--sm" (click)="deleteConfirmId.set(img.imageId)">
-              <i class="pi pi-trash"></i>
+      <!-- ===================== TAB: INFO ===================== -->
+      @if (activeTab() === 'info') {
+        <div class="profile-page__grid">
+          <div class="profile-page__card profile-page__card--photo">
+            <h2 class="profile-page__card-title">Foto de Perfil</h2>
+            <div class="profile-page__photo">
+              <div class="profile-page__photo-img">
+                <img [src]="imageService.getEntityImageUrl(u, 'USER', u.userId)" alt="Foto de perfil" />
+              </div>
+              <label class="btn btn--outline profile-page__upload-btn" [class.btn--disabled]="uploading()">
+                <i class="pi pi-camera"></i>
+                {{ uploading() ? 'Subiendo...' : 'Cambiar foto' }}
+                <input type="file" accept="image/*" (change)="uploadProfilePicture($event)" hidden />
+              </label>
+            </div>
+          </div>
+
+          <div class="profile-page__card profile-page__card--info">
+            <h2 class="profile-page__card-title">Información Personal</h2>
+            <div class="profile-page__field">
+              <label class="profile-page__label">Nombres</label>
+              <input class="profile-page__input" type="text" [(ngModel)]="editFirstName" placeholder="Tus nombres" />
+            </div>
+            <div class="profile-page__field">
+              <label class="profile-page__label">Apellidos</label>
+              <input class="profile-page__input" type="text" [(ngModel)]="editLastName" placeholder="Tus apellidos" />
+            </div>
+            <div class="profile-page__field">
+              <label class="profile-page__label">Correo electrónico</label>
+              <input class="profile-page__input" type="email" [value]="editEmail" disabled />
+            </div>
+            <button class="btn btn--primary" (click)="saveProfile()" [disabled]="saving()">
+              {{ saving() ? 'Guardando...' : 'Guardar Cambios' }}
             </button>
           </div>
-          <div class="profile-page__gallery-confirm" *ngIf="deleteConfirmId() === img.imageId">
-            <span>¿Eliminar?</span>
-            <button class="btn btn--danger btn--xs" (click)="deleteImage(img.imageId)">Sí</button>
-            <button class="btn btn--ghost btn--xs" (click)="deleteConfirmId.set(null)">No</button>
+        </div>
+
+        <div class="profile-page__card">
+          <div class="profile-page__card-header">
+            <h2 class="profile-page__card-title">Galería de Imágenes</h2>
+            @if (canAddMore()) {
+              <label class="btn btn--outline btn--sm" [class.btn--disabled]="uploading()">
+                <i class="pi pi-plus"></i> Agregar
+                <input type="file" accept="image/*" (change)="uploadGalleryImage($event)" hidden />
+              </label>
+            }
+          </div>
+          @if (images().length > 0) {
+            <div class="profile-page__gallery">
+              @for (img of images(); track img.imageId) {
+                <div class="profile-page__gallery-item">
+                  <img [src]="img.imageUrl" [alt]="img.altText || 'Imagen'" />
+                  <div class="profile-page__gallery-overlay">
+                    <button class="btn btn--danger btn--sm" (click)="deleteConfirmId.set(img.imageId)">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                  @if (deleteConfirmId() === img.imageId) {
+                    <div class="profile-page__gallery-confirm">
+                      <span>¿Eliminar?</span>
+                      <button class="btn btn--danger btn--xs" (click)="deleteImage(img.imageId)">Sí</button>
+                      <button class="btn btn--ghost btn--xs" (click)="deleteConfirmId.set(null)">No</button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else if (!uploading()) {
+            <div class="profile-page__empty">
+              <i class="pi pi-image"></i>
+              <p>No tienes imágenes en tu galería</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ===================== TAB: PASSWORD ===================== -->
+      @if (activeTab() === 'password') {
+        <div class="profile-page__card">
+          <h2 class="profile-page__card-title">Cambiar Contraseña</h2>
+          <div class="profile-page__password-form">
+            <div class="profile-page__field">
+              <label class="profile-page__label">Nueva contraseña</label>
+              <input class="profile-page__input" type="password" [(ngModel)]="newPassword" placeholder="Mínimo 6 caracteres" />
+            </div>
+            <div class="profile-page__field">
+              <label class="profile-page__label">Repetir contraseña</label>
+              <input class="profile-page__input" type="password" [(ngModel)]="repeatPassword" placeholder="Repite la contraseña" />
+            </div>
+            <button class="btn btn--primary" (click)="changePassword()" [disabled]="changingPassword()">
+              {{ changingPassword() ? 'Cambiando...' : 'Cambiar Contraseña' }}
+            </button>
           </div>
         </div>
-      </div>
-      <div class="profile-page__gallery-empty" *ngIf="images().length === 0 && !uploading()">
-        <i class="pi pi-image"></i>
-        <p>No tienes imágenes en tu galería</p>
-      </div>
-    </div>
-  </ng-container>
+      }
+
+      <!-- ===================== TAB: ADDRESSES ===================== -->
+      @if (activeTab() === 'addresses') {
+        <div class="profile-page__card">
+          <div class="profile-page__card-header">
+            <h2 class="profile-page__card-title">Direcciones</h2>
+            <button class="btn btn--outline btn--sm" (click)="openCreateAddress()"><i class="pi pi-plus"></i> Agregar</button>
+          </div>
+
+          @if (addressesLoading()) {
+            <div class="profile-page__loading-sm"><i class="pi pi-spin pi-spinner"></i> Cargando...</div>
+          } @else if (addresses().length === 0) {
+            <div class="profile-page__empty">
+              <i class="pi pi-map-marker"></i>
+              <p>No tienes direcciones registradas</p>
+            </div>
+          } @else {
+            <div class="profile-page__list">
+              @for (addr of addresses(); track addr.userAddressId) {
+                <div class="profile-page__list-item">
+                  <div class="profile-page__list-info">
+                    <strong>{{ addr.addressLine }}</strong>
+                    <span class="profile-page__list-meta">
+                      {{ addr.countryName || getCountryName(addr.countryId) }}
+                      @if (addr.isPrimary) { <span class="badge badge--primary">Principal</span> }
+                      @if (addr.reference) { <span class="profile-page__list-ref">{{ addr.reference }}</span> }
+                    </span>
+                  </div>
+                  <div class="profile-page__list-actions">
+                    <button class="btn btn--ghost btn--sm" (click)="openEditAddress(addr)" title="Editar"><i class="pi pi-pencil"></i></button>
+                    <button class="btn btn--ghost btn--sm btn--danger-ghost" (click)="deletingAddressId.set(addr.userAddressId)" title="Eliminar"><i class="pi pi-trash"></i></button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ===================== TAB: CONTACTS ===================== -->
+      @if (activeTab() === 'contacts') {
+        <div class="profile-page__card">
+          <div class="profile-page__card-header">
+            <h2 class="profile-page__card-title">Contactos</h2>
+            <button class="btn btn--outline btn--sm" (click)="openCreateContact()"><i class="pi pi-plus"></i> Agregar</button>
+          </div>
+
+          @if (contactsLoading()) {
+            <div class="profile-page__loading-sm"><i class="pi pi-spin pi-spinner"></i> Cargando...</div>
+          } @else if (contacts().length === 0) {
+            <div class="profile-page__empty">
+              <i class="pi pi-phone"></i>
+              <p>No tienes contactos registrados</p>
+            </div>
+          } @else {
+            <div class="profile-page__list">
+              @for (c of contacts(); track c.userContactId) {
+                <div class="profile-page__list-item">
+                  <div class="profile-page__list-info">
+                    <strong>{{ c.contactValue }}</strong>
+                    <span class="profile-page__list-meta">
+                      {{ c.contactTypeName || getContactTypeName(c.contactTypeId) }}
+                      @if (c.isPrimary) { <span class="badge badge--primary">Principal</span> }
+                    </span>
+                  </div>
+                  <div class="profile-page__list-actions">
+                    <button class="btn btn--ghost btn--sm" (click)="openEditContact(c)" title="Editar"><i class="pi pi-pencil"></i></button>
+                    <button class="btn btn--ghost btn--sm btn--danger-ghost" (click)="deletingContactId.set(c.userContactId)" title="Eliminar"><i class="pi pi-trash"></i></button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ===================== TAB: IDENTIFICATIONS ===================== -->
+      @if (activeTab() === 'identifications') {
+        <div class="profile-page__card">
+          <div class="profile-page__card-header">
+            <h2 class="profile-page__card-title">Identificaciones</h2>
+            <button class="btn btn--outline btn--sm" (click)="openCreateIdentification()"><i class="pi pi-plus"></i> Agregar</button>
+          </div>
+
+          @if (identificationsLoading()) {
+            <div class="profile-page__loading-sm"><i class="pi pi-spin pi-spinner"></i> Cargando...</div>
+          } @else if (identifications().length === 0) {
+            <div class="profile-page__empty">
+              <i class="pi pi-id-card"></i>
+              <p>No tienes identificaciones registradas</p>
+            </div>
+          } @else {
+            <div class="profile-page__list">
+              @for (id of identifications(); track id.userIdentificationId) {
+                <div class="profile-page__list-item">
+                  <div class="profile-page__list-info">
+                    <strong>{{ id.identificationNumber }}</strong>
+                    <span class="profile-page__list-meta">
+                      {{ id.identificationTypeName || getIdentificationTypeName(id.identificationTypeId) }}
+                      @if (id.issuedCountryId) { <span>{{ getCountryName(id.issuedCountryId) }}</span> }
+                    </span>
+                  </div>
+                  <div class="profile-page__list-actions">
+                    <button class="btn btn--ghost btn--sm" (click)="openEditIdentification(id)" title="Editar"><i class="pi pi-pencil"></i></button>
+                    <button class="btn btn--ghost btn--sm btn--danger-ghost" (click)="deletingIdentificationId.set(id.userIdentificationId)" title="Eliminar"><i class="pi pi-trash"></i></button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ===================== MODALS ===================== -->
+
+      <app-modal [visible]="deletingAddressId() !== null" title="Eliminar dirección" size="sm" (close)="deletingAddressId.set(null)">
+        <div class="delete-confirm">
+          <div class="delete-confirm__icon"><i class="pi pi-exclamation-triangle"></i></div>
+          <p class="delete-confirm__text">¿Estás seguro de que deseas eliminar esta dirección?</p>
+          <p class="delete-confirm__hint">Esta acción no se puede deshacer.</p>
+          <div class="delete-confirm__actions">
+            <button class="btn btn--ghost" type="button" (click)="deletingAddressId.set(null)">Cancelar</button>
+            <button class="btn btn--danger" type="button" (click)="deleteAddress(deletingAddressId()!)">Eliminar</button>
+          </div>
+        </div>
+      </app-modal>
+
+      <app-modal [visible]="deletingContactId() !== null" title="Eliminar contacto" size="sm" (close)="deletingContactId.set(null)">
+        <div class="delete-confirm">
+          <div class="delete-confirm__icon"><i class="pi pi-exclamation-triangle"></i></div>
+          <p class="delete-confirm__text">¿Estás seguro de que deseas eliminar este contacto?</p>
+          <p class="delete-confirm__hint">Esta acción no se puede deshacer.</p>
+          <div class="delete-confirm__actions">
+            <button class="btn btn--ghost" type="button" (click)="deletingContactId.set(null)">Cancelar</button>
+            <button class="btn btn--danger" type="button" (click)="deleteContact(deletingContactId()!)">Eliminar</button>
+          </div>
+        </div>
+      </app-modal>
+
+      <app-modal [visible]="deletingIdentificationId() !== null" title="Eliminar identificación" size="sm" (close)="deletingIdentificationId.set(null)">
+        <div class="delete-confirm">
+          <div class="delete-confirm__icon"><i class="pi pi-exclamation-triangle"></i></div>
+          <p class="delete-confirm__text">¿Estás seguro de que deseas eliminar esta identificación?</p>
+          <p class="delete-confirm__hint">Esta acción no se puede deshacer.</p>
+          <div class="delete-confirm__actions">
+            <button class="btn btn--ghost" type="button" (click)="deletingIdentificationId.set(null)">Cancelar</button>
+            <button class="btn btn--danger" type="button" (click)="deleteIdentification(deletingIdentificationId()!)">Eliminar</button>
+          </div>
+        </div>
+      </app-modal>
+
+      <app-modal [visible]="showAddressModal()" [title]="editingAddress() ? 'Editar dirección' : 'Nueva dirección'" size="lg" (close)="closeAddressModal()">
+        <div class="modal-form">
+          <div class="modal-form__grid">
+            <div class="modal-form__field">
+              <label class="modal-form__label">País *</label>
+              <select class="modal-form__select"
+                [ngModel]="addressForm().countryId"
+                (ngModelChange)="onAddrFieldChange('countryId', $event); onAddressCountryChange()"
+                (blur)="markAddrTouched('countryId')">
+                <option [ngValue]="null">Seleccionar país</option>
+                @for (c of addressCountries(); track c.catalogueValueId) {
+                  <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+                }
+              </select>
+              @if (addressTouched()['countryId'] && !addressForm().countryId) {
+                <span class="modal-form__error">Selecciona un país</span>
+              }
+            </div>
+            <div class="modal-form__field">
+              <label class="modal-form__label">Provincia *</label>
+              <select class="modal-form__select"
+                [ngModel]="addressForm().provinceId"
+                (ngModelChange)="onAddrFieldChange('provinceId', $event); onAddressProvinceChange()"
+                (blur)="markAddrTouched('provinceId')">
+                <option [ngValue]="null">Seleccionar provincia</option>
+                @for (p of addressProvinces(); track p.catalogueValueId) {
+                  <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+                }
+              </select>
+              @if (addressTouched()['provinceId'] && !addressForm().provinceId) {
+                <span class="modal-form__error">Selecciona una provincia</span>
+              }
+            </div>
+            <div class="modal-form__field">
+              <label class="modal-form__label">Ciudad *</label>
+              <select class="modal-form__select"
+                [ngModel]="addressForm().cityId"
+                (ngModelChange)="onAddrFieldChange('cityId', $event); onAddressCityChange()"
+                (blur)="markAddrTouched('cityId')">
+                <option [ngValue]="null">Seleccionar ciudad</option>
+                @for (c of addressCities(); track c.catalogueValueId) {
+                  <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+                }
+              </select>
+              @if (addressTouched()['cityId'] && !addressForm().cityId) {
+                <span class="modal-form__error">Selecciona una ciudad</span>
+              }
+            </div>
+            <div class="modal-form__field">
+              <label class="modal-form__label">Parroquia</label>
+              <select class="modal-form__select"
+                [ngModel]="addressForm().parishId"
+                (ngModelChange)="onAddrFieldChange('parishId', $event)"
+                (blur)="markAddrTouched('parishId')">
+                <option [ngValue]="null">Seleccionar parroquia</option>
+                @for (p of addressParishes(); track p.catalogueValueId) {
+                  <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="modal-form__field">
+            <label class="modal-form__label">Dirección *</label>
+            <input class="modal-form__input" type="text" maxlength="500"
+              [ngModel]="addressForm().addressLine"
+              (ngModelChange)="onAddrFieldChange('addressLine', $event)"
+              (blur)="markAddrTouched('addressLine')"
+              placeholder="Calle, número, sector" />
+            @if (addressLineError()) {
+              <span class="modal-form__error">{{ addressLineError() }}</span>
+            }
+          </div>
+          <div class="modal-form__field">
+            <label class="modal-form__label">Referencia</label>
+            <input class="modal-form__input" type="text" maxlength="500"
+              [ngModel]="addressForm().reference"
+              (ngModelChange)="onAddrFieldChange('reference', $event)"
+              (blur)="markAddrTouched('reference')"
+              placeholder="Cerca de..." />
+          </div>
+          <div class="modal-form__checkbox">
+            <input type="checkbox" id="addr-primary"
+              [ngModel]="addressForm().isPrimary"
+              (ngModelChange)="onAddrFieldChange('isPrimary', $event)" />
+            <label for="addr-primary">Dirección principal</label>
+          </div>
+          <div class="modal-form__actions">
+            <button class="btn btn--ghost" type="button" (click)="closeAddressModal()">Cancelar</button>
+            <button class="btn btn--primary" type="button" (click)="saveAddress()" [disabled]="savingAddress()">
+              {{ savingAddress() ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </div>
+      </app-modal>
+
+      <app-modal [visible]="showContactModal()" [title]="editingContact() ? 'Editar contacto' : 'Nuevo contacto'" size="md" (close)="closeContactModal()">
+        <div class="modal-form">
+          <div class="modal-form__field">
+            <label class="modal-form__label">Tipo *</label>
+            <select class="modal-form__select"
+              [ngModel]="contactForm().contactTypeId"
+              (ngModelChange)="onContactFieldChange('contactTypeId', $event)"
+              (blur)="markContactTouched('contactTypeId')">
+              <option [ngValue]="null">Seleccionar tipo</option>
+              @for (t of contactTypes(); track t.catalogueValueId) {
+                <option [ngValue]="t.catalogueValueId">{{ t.name === 'Email' ? 'Correo electrónico' : t.name === 'Phone' ? 'Teléfono' : t.name }}</option>
+              }
+            </select>
+            @if (contactTypeError()) {
+              <span class="modal-form__error">{{ contactTypeError() }}</span>
+            }
+          </div>
+          <div class="modal-form__field">
+            <label class="modal-form__label">Valor *</label>
+            <input class="modal-form__input" type="text" maxlength="500"
+              [ngModel]="contactForm().contactValue"
+              (ngModelChange)="onContactFieldChange('contactValue', $event)"
+              (blur)="markContactTouched('contactValue')"
+              placeholder="Teléfono, correo, etc." />
+            @if (contactValueError()) {
+              <span class="modal-form__error">{{ contactValueError() }}</span>
+            }
+          </div>
+          <div class="modal-form__checkbox">
+            <input type="checkbox" id="contact-primary"
+              [ngModel]="contactForm().isPrimary"
+              (ngModelChange)="onContactFieldChange('isPrimary', $event)" />
+            <label for="contact-primary">Contacto principal</label>
+          </div>
+          <div class="modal-form__actions">
+            <button class="btn btn--ghost" type="button" (click)="closeContactModal()">Cancelar</button>
+            <button class="btn btn--primary" type="button" (click)="saveContact()" [disabled]="savingContact()">
+              {{ savingContact() ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </div>
+      </app-modal>
+
+      <app-modal [visible]="showIdentificationModal()" [title]="editingIdentification() ? 'Editar identificación' : 'Nueva identificación'" size="md" (close)="closeIdentificationModal()">
+        <div class="modal-form">
+          <div class="modal-form__field">
+            <label class="modal-form__label">Tipo de identificación *</label>
+            <select class="modal-form__select"
+              [ngModel]="identificationForm().identificationTypeId"
+              (ngModelChange)="onIdFieldChange('identificationTypeId', $event)"
+              (blur)="markIdTouched('identificationTypeId')">
+              <option [ngValue]="null">Seleccionar tipo</option>
+              @for (t of identificationTypes(); track t.catalogueValueId) {
+                <option [ngValue]="t.catalogueValueId">{{ getIdentificationDisplayName(t) }}</option>
+              }
+            </select>
+          </div>
+          <div class="modal-form__field">
+            <label class="modal-form__label">Número *</label>
+            <input class="modal-form__input" type="text" maxlength="500"
+              [ngModel]="identificationForm().identificationNumber"
+              (ngModelChange)="onIdFieldChange('identificationNumber', $event)"
+              (blur)="markIdTouched('identificationNumber')"
+              placeholder="Número de identificación" />
+            @if (idNumberError()) {
+              <span class="modal-form__error">{{ idNumberError() }}</span>
+            }
+          </div>
+          <div class="modal-form__field">
+            <label class="modal-form__label">País de emisión</label>
+            <select class="modal-form__select"
+              [ngModel]="identificationForm().issuedCountryId"
+              (ngModelChange)="onIdFieldChange('issuedCountryId', $event)"
+              (blur)="markIdTouched('issuedCountryId')">
+              <option [ngValue]="null">Seleccionar país</option>
+              @for (c of idCountries(); track c.catalogueValueId) {
+                <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="modal-form__actions">
+            <button class="btn btn--ghost" type="button" (click)="closeIdentificationModal()">Cancelar</button>
+            <button class="btn btn--primary" type="button" (click)="saveIdentification()" [disabled]="savingIdentification()">
+              {{ savingIdentification() ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </div>
+      </app-modal>
+
+    }
+  }
 </div>

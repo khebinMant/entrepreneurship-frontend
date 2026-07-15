@@ -11,6 +11,7 @@ export interface AuthState {
   keycloakId: string | null;
   roles: string[];
   username: string | null;
+  email: string | null;
   userImage: string | null;
 }
 
@@ -20,6 +21,7 @@ const initialState: AuthState = {
   keycloakId: null,
   roles: [],
   username: null,
+  email: null,
   userImage: null,
 };
 
@@ -54,13 +56,15 @@ export class AuthenticationService {
     if (tokenParsed) {
       const keycloakId = tokenParsed.sub;
       const username = tokenParsed.preferred_username;
+      const email = tokenParsed.email ?? null;
       const roles = tokenParsed.realm_access?.roles ?? [];
-      this.setAuthenticated(keycloakId, username, roles);
+      this.setAuthenticated(keycloakId, username, email, roles);
     }
   }
 
-  setAuthenticated(keycloakId: string, username: string, roles: string[], userImage: string | null = null): void {
-    this.state.set({ isAuthenticated: true, userId: keycloakId, keycloakId, username, roles, userImage });
+  setAuthenticated(keycloakId: string, username: string, email: string | null, roles: string[], userImage: string | null = null): void {
+    this.state.set({ isAuthenticated: true, userId: keycloakId, keycloakId, username, email, roles, userImage });
+    localStorage.setItem(STORAGE_KEYS.USER_ROLES, JSON.stringify(roles));
   }
 
   setBackendUserId(userId: number): void {
@@ -76,6 +80,7 @@ export class AuthenticationService {
     this.state.set(initialState);
     this.backendUserId.set(null);
     localStorage.removeItem(STORAGE_KEYS.USER_SESSION);
+    localStorage.removeItem(STORAGE_KEYS.USER_ROLES);
   }
 
   hasRole(role: string): boolean {
@@ -142,6 +147,7 @@ export class AuthenticationService {
       this.setAuthenticated(
         payload.sub,
         payload.preferred_username,
+        payload.email ?? null,
         payload.realm_access?.roles ?? [],
       );
 

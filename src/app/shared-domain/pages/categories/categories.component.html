@@ -1,90 +1,89 @@
 <div class="categories-page">
   <div class="categories-page__header">
     <div>
-      <h1 class="categories-page__title">Categorías</h1>
+      <h1 class="categories-page__title">Categorías del Sistema</h1>
       <p class="categories-page__subtitle">Administra las categorías de emprendimientos.</p>
     </div>
   </div>
 
-  <div class="categories-page__add">
-    <input
-      type="text"
-      placeholder="Nombre de la nueva categoría..."
-      [ngModel]="newCategoryName()"
-      (ngModelChange)="newCategoryName.set($event)"
-      class="categories-page__input"
-    />
-    <input
-      type="text"
-      placeholder="Descripción (opcional)"
-      [ngModel]="newCategoryDescription()"
-      (ngModelChange)="newCategoryDescription.set($event)"
-      (keyup.enter)="addCategory()"
-      class="categories-page__input"
-    />
-    <button class="btn btn--primary" (click)="addCategory()" [disabled]="!newCategoryName().trim()">
-      <i class="pi pi-plus"></i> Agregar
-    </button>
-  </div>
-
-  <div class="categories-page__list" *ngIf="!loading()">
-    <div class="categories-page__item" *ngFor="let cat of categories()">
-      <div class="categories-page__item-info" *ngIf="editingId() !== cat.categoryId">
-        <div class="categories-page__item-icon">
-          <i class="pi pi-tag"></i>
-        </div>
-        <div class="categories-page__item-details">
-          <span class="categories-page__item-name">{{ cat.name }}</span>
-          <span class="categories-page__item-desc" *ngIf="cat.description">{{ cat.description }}</span>
-        </div>
-      </div>
-
-      <div class="categories-page__item-edit" *ngIf="editingId() === cat.categoryId">
-        <input
-          type="text"
-          [ngModel]="editName()"
-          (ngModelChange)="editName.set($event)"
-          placeholder="Nombre"
-          (keyup.enter)="saveEdit(cat)"
-          (keyup.escape)="cancelEdit()"
-          class="categories-page__input categories-page__input--small"
-        />
-        <input
-          type="text"
-          [ngModel]="editDescription()"
-          (ngModelChange)="editDescription.set($event)"
-          placeholder="Descripción (opcional)"
-          (keyup.enter)="saveEdit(cat)"
-          (keyup.escape)="cancelEdit()"
-          class="categories-page__input categories-page__input--small"
-        />
-      </div>
-
-      <div class="categories-page__item-actions" *ngIf="editingId() !== cat.categoryId">
-        <button class="btn btn--ghost btn--sm" (click)="startEdit(cat)">
-          <i class="pi pi-pencil"></i>
-        </button>
-        <button class="btn btn--danger btn--sm" (click)="deleteCategory(cat.categoryId)">
-          <i class="pi pi-trash"></i>
-        </button>
-      </div>
-      <div class="categories-page__item-actions" *ngIf="editingId() === cat.categoryId">
-        <button class="btn btn--primary btn--sm" (click)="saveEdit(cat)">
-          <i class="pi pi-check"></i>
-        </button>
-        <button class="btn btn--ghost btn--sm" (click)="cancelEdit()">
-          <i class="pi pi-times"></i>
-        </button>
-      </div>
-    </div>
-
-    <div class="categories-page__empty" *ngIf="categories().length === 0">
-      <i class="pi pi-inbox"></i>
-      <p>No hay categorías registradas.</p>
+  <div class="categories-page__section">
+    <div class="categories-page__create-form">
+      <input type="text" placeholder="Nombre de la categoría..." class="categories-page__input"
+        [ngModel]="newCategoryName()" (ngModelChange)="newCategoryName.set($event)" />
+      <input type="text" placeholder="Descripción (opcional)" class="categories-page__input"
+        [ngModel]="newCategoryDescription()" (ngModelChange)="newCategoryDescription.set($event)" (keyup.enter)="addCategory()" />
+      <button class="btn btn--primary" (click)="addCategory()" [disabled]="!newCategoryName().trim()">
+        <i class="pi pi-plus"></i> Agregar
+      </button>
     </div>
   </div>
 
-  <div class="categories-page__loading" *ngIf="loading()">
-    <i class="pi pi-spin pi-spinner"></i> Cargando categorías...
+  <div class="categories-page__section">
+    @if (loading()) {
+      <div class="categories-page__loading"><i class="pi pi-spin pi-spinner"></i> Cargando categorías...</div>
+    } @else {
+      <div class="categories-page__list">
+        @for (cat of categories(); track cat.categoryId) {
+          <div class="category-card">
+            <div class="category-card__icon"><i class="pi pi-tag"></i></div>
+
+            @if (editingId() === cat.categoryId) {
+              <div class="category-card__edit">
+                <input type="text" class="categories-page__input categories-page__input--sm"
+                  [ngModel]="editName()" (ngModelChange)="editName.set($event)"
+                  placeholder="Nombre" (keyup.enter)="saveEdit(cat)" (keyup.escape)="cancelEdit()" />
+                <input type="text" class="categories-page__input categories-page__input--sm"
+                  [ngModel]="editDescription()" (ngModelChange)="editDescription.set($event)"
+                  placeholder="Descripción" (keyup.enter)="saveEdit(cat)" (keyup.escape)="cancelEdit()" />
+              </div>
+            } @else {
+              <div class="category-card__info">
+                <span class="category-card__name">{{ cat.name }}</span>
+                <span class="category-card__desc" *ngIf="cat.description">{{ cat.description }}</span>
+              </div>
+            }
+
+            <div class="category-card__actions">
+              @if (editingId() === cat.categoryId) {
+                <button class="btn btn--primary btn--sm" (click)="saveEdit(cat)"><i class="pi pi-check"></i></button>
+                <button class="btn btn--ghost btn--sm" (click)="cancelEdit()"><i class="pi pi-times"></i></button>
+              } @else {
+                <button class="btn btn--ghost btn--sm" (click)="startEdit(cat)"><i class="pi pi-pencil"></i></button>
+                <button class="btn btn--danger btn--sm" (click)="openDeleteConfirm(cat)"><i class="pi pi-trash"></i></button>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="categories-page__empty">
+            <i class="pi pi-inbox"></i>
+            <p>No hay categorías registradas.</p>
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>
+
+<app-modal
+  [visible]="showDeleteConfirm()"
+  title="Eliminar categoría"
+  size="sm"
+  (close)="cancelDelete()"
+>
+  <div class="delete-confirm">
+    <div class="delete-confirm__icon">
+      <i class="pi pi-exclamation-triangle"></i>
+    </div>
+    <p class="delete-confirm__text">
+      ¿Estás seguro de que deseas eliminar la categoría <strong>{{ deletingCategory()?.name }}</strong>?
+    </p>
+    <p class="delete-confirm__hint">Esta acción no se puede deshacer.</p>
+    <div class="delete-confirm__actions">
+      <button class="btn btn--ghost" type="button" (click)="cancelDelete()" [disabled]="deleting()">Cancelar</button>
+      <button class="btn btn--danger" type="button" (click)="confirmDelete()" [disabled]="deleting()">
+        <i class="pi pi-spin pi-spinner" *ngIf="deleting()"></i>
+        {{ deleting() ? 'Eliminando...' : 'Eliminar' }}
+      </button>
+    </div>
+  </div>
+</app-modal>

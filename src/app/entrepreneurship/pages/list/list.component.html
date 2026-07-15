@@ -102,7 +102,7 @@
   <div class="entrepreneurship-list__grid" *ngIf="!loading() && entrepreneurships().length > 0">
     @for (item of entrepreneurships(); track item.entrepreneurshipId) {
       <div class="entrepreneurship-card">
-        <a class="entrepreneurship-card__link" [routerLink]="'/app/entrepreneurships/' + item.entrepreneurshipId">
+        <a class="entrepreneurship-card__link" [routerLink]="(isAppRoute ? '/app' : '') + '/entrepreneurships/' + item.entrepreneurshipId">
           <div class="entrepreneurship-card__image">
             <img [src]="getImageUrl(item)" [alt]="item.name" loading="lazy" />
           </div>
@@ -127,6 +127,9 @@
             </button>
             @if (openMenuId() === item.entrepreneurshipId) {
               <div class="entrepreneurship-card__dropdown">
+                <a class="entrepreneurship-card__dropdown-item" [routerLink]="'/entrepreneurships/' + item.entrepreneurshipId" (click)="closeMenu()">
+                  <i class="pi pi-eye"></i> Visualizar
+                </a>
                 <button class="entrepreneurship-card__dropdown-item" (click)="openEditModal(item)">
                   <i class="pi pi-pencil"></i> Editar
                 </button>
