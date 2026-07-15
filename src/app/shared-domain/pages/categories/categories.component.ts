@@ -1,15 +1,17 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { lastValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/http/services/api.service';
 import { AppConfigService } from '../../../core/config/services/app-config.service';
 import { API_ENDPOINTS } from '../../../core/constants/app.constants';
-import { Category } from '../../../entrepreneurship/models/category';
+import { ModalComponent } from '../../../shared/ui/modal/modal.component';
+import type { Category } from '../../../entrepreneurship/models/category';
 
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule],
+  imports: [NgIf, FormsModule, ModalComponent],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss',
 })
@@ -25,6 +27,9 @@ export class CategoriesComponent implements OnInit {
   readonly newCategoryDescription = signal('');
   readonly editName = signal('');
   readonly editDescription = signal('');
+  readonly showDeleteConfirm = signal(false);
+  readonly deletingCategory = signal<Category | null>(null);
+  readonly deleting = signal(false);
 
   ngOnInit(): void {
     this.loadCategories();
@@ -86,13 +91,28 @@ export class CategoriesComponent implements OnInit {
       });
   }
 
-  deleteCategory(id: number): void {
-    if (!confirm('¿Estás seguro de eliminar esta categoría?')) return;
-    this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.CATEGORIES}/${id}`)
-      .subscribe({
-        next: () => {
-          this.categories.update((cats) => cats.filter((c) => c.categoryId !== id));
-        },
-      });
+  openDeleteConfirm(category: Category): void {
+    this.deletingCategory.set(category);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm.set(false);
+    this.deletingCategory.set(null);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const category = this.deletingCategory();
+    if (!category) return;
+    this.deleting.set(true);
+    try {
+      await lastValueFrom(this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.CATEGORIES}/${category.categoryId}`));
+      this.categories.update((cats) => cats.filter((c) => c.categoryId !== category.categoryId));
+      this.cancelDelete();
+    } catch {
+      // fallback
+    } finally {
+      this.deleting.set(false);
+    }
   }
 }

@@ -1,19 +1,19 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { lastValueFrom } from 'rxjs';
 import { CatalogueService } from '../../services/catalogue.service';
 import { ApiService } from '../../../core/http/services/api.service';
 import { AppConfigService } from '../../../core/config/services/app-config.service';
 import { API_ENDPOINTS } from '../../../core/constants/app.constants';
-import { CatalogueType, CreateCatalogueTypeDto, UpdateCatalogueTypeDto } from '../../models/catalogue-type';
-import { CatalogueValue, CreateCatalogueValueDto, UpdateCatalogueValueDto } from '../../models/catalogue-value';
-
-type ActiveTab = 'types' | 'values';
+import { ModalComponent } from '../../../shared/ui/modal/modal.component';
+import type { CatalogueType, CreateCatalogueTypeDto, UpdateCatalogueTypeDto } from '../../models/catalogue-type';
+import type { CatalogueValue, CreateCatalogueValueDto, UpdateCatalogueValueDto } from '../../models/catalogue-value';
 
 @Component({
   selector: 'app-catalogue',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule],
+  imports: [NgIf, FormsModule, ModalComponent],
   templateUrl: './catalogue.component.html',
   styleUrl: './catalogue.component.scss',
 })
@@ -23,32 +23,28 @@ export class CatalogueComponent implements OnInit {
   private readonly config = inject(AppConfigService);
   private readonly sharedUrl = this.config.sharedUrl;
 
-  readonly activeTab = signal<ActiveTab>('types');
   readonly types = signal<CatalogueType[]>([]);
-  readonly values = signal<CatalogueValue[]>([]);
-  readonly selectedType = signal<CatalogueType | null>(null);
+  readonly valuesByType = signal<Record<number, CatalogueValue[]>>({});
   readonly loading = signal(false);
+  readonly valuesLoading = signal(false);
 
   readonly editingTypeId = signal<number | null>(null);
   readonly editingValueId = signal<number | null>(null);
   readonly expandedTypeId = signal<number | null>(null);
+  readonly showDeleteTypeConfirm = signal(false);
+  readonly deletingType = signal<CatalogueType | null>(null);
+  readonly showDeleteValueConfirm = signal(false);
+  readonly deletingValue = signal<CatalogueValue | null>(null);
+  readonly deleting = signal(false);
 
   typeForm = signal<CreateCatalogueTypeDto>({ name: '', code: '', description: '' });
   valueForm = signal<CreateCatalogueValueDto>({ catalogueTypeId: 0, name: '', code: '', description: '' });
+  newValueForm = signal<{ name: string; code: string; description: string }>({ name: '', code: '', description: '' });
   editTypeForm = signal<UpdateCatalogueTypeDto>({});
   editValueForm = signal<UpdateCatalogueValueDto>({});
 
-  readonly typeCodeFilter = signal('');
-
   ngOnInit(): void {
     this.loadTypes();
-  }
-
-  setTab(tab: ActiveTab): void {
-    this.activeTab.set(tab);
-    if (tab === 'values') {
-      this.loadValues();
-    }
   }
 
   loadTypes(): void {
@@ -59,34 +55,24 @@ export class CatalogueComponent implements OnInit {
     });
   }
 
-  loadValues(): void {
-    this.loading.set(true);
-    if (this.selectedType()) {
-      this.catalogueService.getValuesByType(this.selectedType()!.code).subscribe({
-        next: (values) => { this.values.set(values); this.loading.set(false); },
-        error: () => this.loading.set(false),
-      });
-    } else {
-      this.values.set([]);
-      this.loading.set(false);
-    }
-  }
-
-  selectType(type: CatalogueType): void {
-    this.selectedType.set(type);
-    this.typeCodeFilter.set(type.code);
-    this.loadValues();
-  }
-
-  toggleExpand(type: CatalogueType): void {
+  async toggleExpand(type: CatalogueType): Promise<void> {
     if (this.expandedTypeId() === type.catalogueTypeId) {
       this.expandedTypeId.set(null);
-    } else {
-      this.expandedTypeId.set(type.catalogueTypeId);
-      this.selectedType.set(type);
-      this.typeCodeFilter.set(type.code);
-      this.loadValues();
+      return;
     }
+    this.expandedTypeId.set(type.catalogueTypeId);
+    await this.loadValuesForType(type);
+  }
+
+  private async loadValuesForType(type: CatalogueType): Promise<void> {
+    this.valuesLoading.set(true);
+    this.catalogueService.getValuesByType(type.code).subscribe({
+      next: (values) => {
+        this.valuesByType.update(v => ({ ...v, [type.catalogueTypeId]: values }));
+        this.valuesLoading.set(false);
+      },
+      error: () => this.valuesLoading.set(false),
+    });
   }
 
   createType(): void {
@@ -94,7 +80,7 @@ export class CatalogueComponent implements OnInit {
     if (!form.name.trim() || !form.code.trim()) return;
     this.api.post<CatalogueType>(this.sharedUrl, API_ENDPOINTS.SHARED.CATALOGUE_TYPES, form).subscribe({
       next: (type) => {
-        this.types.update((t) => [...t, type]);
+        this.types.update(t => [...t, type]);
         this.typeForm.set({ name: '', code: '', description: '' });
       },
     });
@@ -115,35 +101,78 @@ export class CatalogueComponent implements OnInit {
     if (!form.name?.trim() || !form.code?.trim()) return;
     this.api.put<CatalogueType>(this.sharedUrl, `${API_ENDPOINTS.SHARED.CATALOGUE_TYPES}/${type.catalogueTypeId}`, form).subscribe({
       next: (updated) => {
-        this.types.update((t) => t.map((x) => x.catalogueTypeId === type.catalogueTypeId ? updated : x));
+        this.types.update(t => t.map(x => x.catalogueTypeId === type.catalogueTypeId ? updated : x));
         this.cancelEditType();
       },
     });
   }
 
-  deleteType(id: number): void {
-    if (!confirm('¿Eliminar este tipo de catálogo?')) return;
-    this.api.delete<void>(this.sharedUrl, `${API_ENDPOINTS.SHARED.CATALOGUE_TYPES}/${id}`).subscribe({
-      next: () => {
-        this.types.update((t) => t.filter((x) => x.catalogueTypeId !== id));
-        if (this.selectedType()?.catalogueTypeId === id) {
-          this.selectedType.set(null);
-          this.values.set([]);
-        }
-      },
-    });
+  openDeleteTypeConfirm(type: CatalogueType): void {
+    this.deletingType.set(type);
+    this.showDeleteTypeConfirm.set(true);
   }
 
-  createValue(): void {
-    const type = this.selectedType();
+  cancelDeleteType(): void {
+    this.showDeleteTypeConfirm.set(false);
+    this.deletingType.set(null);
+  }
+
+  async confirmDeleteType(): Promise<void> {
+    const type = this.deletingType();
     if (!type) return;
-    const form = this.valueForm();
+    this.deleting.set(true);
+    try {
+      await lastValueFrom(this.api.delete<void>(this.sharedUrl, `${API_ENDPOINTS.SHARED.CATALOGUE_TYPES}/${type.catalogueTypeId}`));
+      this.types.update(t => t.filter(x => x.catalogueTypeId !== type.catalogueTypeId));
+      this.valuesByType.update(v => { const copy = { ...v }; delete copy[type.catalogueTypeId]; return copy; });
+      if (this.expandedTypeId() === type.catalogueTypeId) this.expandedTypeId.set(null);
+      this.cancelDeleteType();
+    } catch {
+      // fallback
+    } finally {
+      this.deleting.set(false);
+    }
+  }
+
+  openDeleteValueConfirm(value: CatalogueValue): void {
+    this.deletingValue.set(value);
+    this.showDeleteValueConfirm.set(true);
+  }
+
+  cancelDeleteValue(): void {
+    this.showDeleteValueConfirm.set(false);
+    this.deletingValue.set(null);
+  }
+
+  async confirmDeleteValue(): Promise<void> {
+    const value = this.deletingValue();
+    if (!value) return;
+    this.deleting.set(true);
+    try {
+      await lastValueFrom(this.api.delete<void>(this.sharedUrl, `${API_ENDPOINTS.SHARED.CATALOGUE_VALUES}/${value.catalogueValueId}`));
+      this.valuesByType.update(v => ({
+        ...v,
+        [value.catalogueTypeId]: (v[value.catalogueTypeId] || []).filter(x => x.catalogueValueId !== value.catalogueValueId),
+      }));
+      this.cancelDeleteValue();
+    } catch {
+      // fallback
+    } finally {
+      this.deleting.set(false);
+    }
+  }
+
+  addValue(type: CatalogueType): void {
+    const form = this.newValueForm();
     if (!form.name.trim() || !form.code.trim()) return;
-    const payload = { ...form, catalogueTypeId: type.catalogueTypeId };
+    const payload: CreateCatalogueValueDto = { catalogueTypeId: type.catalogueTypeId, name: form.name, code: form.code, description: form.description };
     this.api.post<CatalogueValue>(this.sharedUrl, API_ENDPOINTS.SHARED.CATALOGUE_VALUES, payload).subscribe({
       next: (value) => {
-        this.values.update((v) => [...v, value]);
-        this.valueForm.set({ catalogueTypeId: type.catalogueTypeId, name: '', code: '', description: '' });
+        this.valuesByType.update(v => ({
+          ...v,
+          [type.catalogueTypeId]: [...(v[type.catalogueTypeId] || []), value],
+        }));
+        this.newValueForm.set({ name: '', code: '', description: '' });
       },
     });
   }
@@ -163,24 +192,13 @@ export class CatalogueComponent implements OnInit {
     if (!form.name?.trim() || !form.code?.trim()) return;
     this.api.put<CatalogueValue>(this.sharedUrl, `${API_ENDPOINTS.SHARED.CATALOGUE_VALUES}/${value.catalogueValueId}`, form).subscribe({
       next: (updated) => {
-        this.values.update((v) => v.map((x) => x.catalogueValueId === value.catalogueValueId ? updated : x));
+        this.valuesByType.update(v => {
+          const typeId = value.catalogueTypeId;
+          const arr = v[typeId] || [];
+          return { ...v, [typeId]: arr.map(x => x.catalogueValueId === value.catalogueValueId ? updated : x) };
+        });
         this.cancelEditValue();
       },
     });
-  }
-
-  deleteValue(id: number): void {
-    if (!confirm('¿Eliminar este valor de catálogo?')) return;
-    this.api.delete<void>(this.sharedUrl, `${API_ENDPOINTS.SHARED.CATALOGUE_VALUES}/${id}`).subscribe({
-      next: () => {
-        this.values.update((v) => v.filter((x) => x.catalogueValueId !== id));
-      },
-    });
-  }
-
-  getFilteredTypes(): CatalogueType[] {
-    const filter = this.typeCodeFilter().toLowerCase();
-    if (!filter) return this.types();
-    return this.types().filter((t) => t.name.toLowerCase().includes(filter) || t.code.toLowerCase().includes(filter));
   }
 }

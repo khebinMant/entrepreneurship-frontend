@@ -6,34 +6,89 @@
   }"
 >
   <nav class="sidebar__nav">
-    <ng-container *ngFor="let item of navItems">
-      <ng-container *ngIf="!item.adminOnly">
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="sidebar__link--active"
-          class="sidebar__link"
-          [routerLinkActiveOptions]="{ exact: false }"
-          (click)="sidebarState.closeMobile()"
-        >
-          <i class="sidebar__icon {{ item.icon }}"></i>
-          <span class="sidebar__label">{{ item.label }}</span>
-        </a>
-      </ng-container>
-      <ng-container *ngIf="item.adminOnly">
+    @for (item of navItems; track item.label) {
+      @if (item.adminOnly) {
         <ng-container *appHasRole="['admin']">
+          @if (item.children) {
+            <div class="sidebar__group">
+              <button class="sidebar__group-btn" (click)="toggleGroup(item.label)">
+                <i class="sidebar__icon {{ item.icon }}"></i>
+                <span class="sidebar__label">{{ item.label }}</span>
+                @if (!sidebarState.isCollapsed()) {
+                  <i class="sidebar__chevron pi" [ngClass]="expandedGroup() === item.label ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                }
+              </button>
+              @if (expandedGroup() === item.label && !sidebarState.isCollapsed()) {
+                <div class="sidebar__subnav">
+                  @for (child of item.children; track child.label) {
+                    <a
+                      [routerLink]="child.route"
+                      routerLinkActive="sidebar__sublink--active"
+                      class="sidebar__sublink"
+                      [routerLinkActiveOptions]="{ exact: false }"
+                      (click)="closeMobile()"
+                    >
+                      <i class="sidebar__icon {{ child.icon }}"></i>
+                      <span class="sidebar__label">{{ child.label }}</span>
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <a
+              [routerLink]="item.route!"
+              routerLinkActive="sidebar__link--active"
+              class="sidebar__link"
+              [routerLinkActiveOptions]="{ exact: false }"
+              (click)="closeMobile()"
+            >
+              <i class="sidebar__icon {{ item.icon }}"></i>
+              <span class="sidebar__label">{{ item.label }}</span>
+            </a>
+          }
+        </ng-container>
+      } @else {
+        @if (item.children) {
+          <div class="sidebar__group">
+            <button class="sidebar__group-btn" (click)="toggleGroup(item.label)">
+              <i class="sidebar__icon {{ item.icon }}"></i>
+              <span class="sidebar__label">{{ item.label }}</span>
+              @if (!sidebarState.isCollapsed()) {
+                <i class="sidebar__chevron pi" [ngClass]="expandedGroup() === item.label ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+              }
+            </button>
+            @if (expandedGroup() === item.label && !sidebarState.isCollapsed()) {
+              <div class="sidebar__subnav">
+                @for (child of item.children; track child.label) {
+                  <a
+                    [routerLink]="child.route"
+                    routerLinkActive="sidebar__sublink--active"
+                    class="sidebar__sublink"
+                    [routerLinkActiveOptions]="{ exact: false }"
+                    (click)="closeMobile()"
+                  >
+                    <i class="sidebar__icon {{ child.icon }}"></i>
+                    <span class="sidebar__label">{{ child.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        } @else {
           <a
-            [routerLink]="item.route"
+            [routerLink]="item.route!"
             routerLinkActive="sidebar__link--active"
             class="sidebar__link"
             [routerLinkActiveOptions]="{ exact: false }"
-            (click)="sidebarState.closeMobile()"
+            (click)="closeMobile()"
           >
             <i class="sidebar__icon {{ item.icon }}"></i>
             <span class="sidebar__label">{{ item.label }}</span>
           </a>
-        </ng-container>
-      </ng-container>
-    </ng-container>
+        }
+      }
+    }
   </nav>
   <div class="sidebar__footer">
     <button class="sidebar__toggle" (click)="sidebarState.toggle()" [attr.aria-label]="sidebarState.isCollapsed() ? 'Expandir menú' : 'Colapsar menú'">

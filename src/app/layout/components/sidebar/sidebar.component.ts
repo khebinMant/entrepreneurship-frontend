@@ -1,35 +1,51 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { NgFor, NgClass, NgIf } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { SidebarStateService } from '../../../core/theme/sidebar-state.service';
-import { PermissionService } from '../../../core/permission/services/permission.service';
 import { HasRoleDirective } from '../../../core/permission/directives/has-role.directive';
-
 
 interface NavItem {
   label: string;
-  route: string;
+  route?: string;
   icon: string;
+  children?: NavItem[];
   adminOnly?: boolean;
 }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, NgFor, NgClass, NgIf, HasRoleDirective],
+  imports: [RouterLink, RouterLinkActive, NgClass, HasRoleDirective],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
 export class SidebarComponent {
   readonly sidebarState = inject(SidebarStateService);
-  readonly permissionService = inject(PermissionService);
 
   readonly navItems: NavItem[] = [
     { label: 'Inicio', route: '/app/dashboard', icon: 'pi pi-home' },
     { label: 'Mis Eventos', route: '/app/events', icon: 'pi pi-calendar' },
     { label: 'Mis Emprendimientos', route: '/app/entrepreneurships', icon: 'pi pi-briefcase' },
-    { label: 'Categorías del sistema', route: '/app/categories', icon: 'pi pi-tags', adminOnly: true },
-    { label: 'Variables del Sistema', route: '/app/catalogues', icon: 'pi pi-book', adminOnly: true },
     { label: 'Perfil', route: '/app/profile', icon: 'pi pi-user' },
+    {
+      label: 'Configuración del sistema',
+      icon: 'pi pi-cog',
+      adminOnly: true,
+      children: [
+        { label: 'Categorías del sistema', route: '/app/categories', icon: 'pi pi-tags' },
+        { label: 'Variables del Sistema', route: '/app/catalogues', icon: 'pi pi-book' },
+      ],
+    }
   ];
+
+  readonly expandedGroup = signal<string | null>(null);
+  readonly configLabel = 'Configuración del sistema';
+
+  toggleGroup(label: string): void {
+    this.expandedGroup.update(current => current === label ? null : label);
+  }
+
+  closeMobile(): void {
+    this.sidebarState.closeMobile();
+  }
 }

@@ -49,6 +49,7 @@ export class DirectAuthService {
     this.authService.setAuthenticated(
       tokenParsed.sub,
       tokenParsed.preferred_username,
+      tokenParsed.email ?? null,
       tokenParsed.realm_access?.roles ?? [],
     );
 
@@ -78,6 +79,7 @@ export class DirectAuthService {
     this.authService.setAuthenticated(
       keycloakId,
       tokenParsed.preferred_username,
+      tokenParsed.email ?? null,
       tokenParsed.realm_access?.roles ?? [],
     );
 

@@ -35,11 +35,11 @@
             <span class="header__dropdown-email">{{ authService.authState().username }}@emprendia.com</span>
           </div>
         </div>
-        <a class="header__dropdown-item" routerLink="/app/events" (click)="closeMenu()">
-          <i class="pi pi-calendar"></i> Eventos
+        <a class="header__dropdown-item" routerLink="/app/profile" (click)="closeMenu()">
+          <i class="pi pi-user"></i> Mi Perfil
         </a>
-        <a class="header__dropdown-item" routerLink="/app/entrepreneurships" (click)="closeMenu()">
-          <i class="pi pi-briefcase"></i> Emprendimientos
+        <a class="header__dropdown-item" routerLink="/app/categories" (click)="closeMenu()" *ngIf="isAdmin">
+          <i class="pi pi-cog"></i> Configuración
         </a>
         <div class="header__dropdown-divider"></div>
         <div class="header__dropdown-item header__dropdown-item--theme">

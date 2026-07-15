@@ -10,6 +10,8 @@ export interface UserAddress {
   parishId?: number;
   parishName?: string;
   addressLine: string;
+  reference?: string;
+  isPrimary: boolean;
   latitude?: number;
   longitude?: number;
   createdAt: string;
@@ -23,16 +25,17 @@ export interface CreateUserAddressDto {
   cityId: number;
   parishId?: number;
   addressLine: string;
-  latitude?: number;
-  longitude?: number;
+  reference?: string;
+  isPrimary: boolean;
 }
 
 export interface UpdateUserAddressDto {
+  userId?: number;
   countryId?: number;
   provinceId?: number;
   cityId?: number;
   parishId?: number;
   addressLine?: string;
-  latitude?: number;
-  longitude?: number;
+  reference?: string;
+  isPrimary?: boolean;
 }

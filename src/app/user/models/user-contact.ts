@@ -17,6 +17,7 @@ export interface CreateUserContactDto {
 }
 
 export interface UpdateUserContactDto {
+  userId?: number;
   contactTypeId?: number;
   contactValue?: string;
   isPrimary?: boolean;

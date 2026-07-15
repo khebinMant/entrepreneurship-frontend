@@ -4,6 +4,8 @@ import { API_ENDPOINTS } from '../../core/constants/app.constants';
 import { AppConfigService } from '../../core/config/services/app-config.service';
 import type { Observable } from 'rxjs';
 import type { User } from '../models/user';
+import type { UpdateUserDto } from '../models/user.dto';
+import type { ChangePasswordRequestDto } from '../models/user.dto';
 import type { UserContact, CreateUserContactDto, UpdateUserContactDto } from '../models/user-contact';
 import type { UserAddress, CreateUserAddressDto, UpdateUserAddressDto } from '../models/user-address';
 import type { UserIdentification, CreateUserIdentificationDto, UpdateUserIdentificationDto } from '../models/user-identification';
@@ -43,7 +45,7 @@ export class UserService {
     return this.api.post<User>(this.baseUrl, API_ENDPOINTS.USERS.BASE, data);
   }
 
-  update(id: number, data: { firstName?: string; lastName?: string }): Observable<User> {
+  update(id: number, data: UpdateUserDto): Observable<User> {
     return this.api.put<User>(this.baseUrl, `${API_ENDPOINTS.USERS.BASE}/${id}`, data);
   }
 
@@ -51,8 +53,12 @@ export class UserService {
     return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.USERS.BASE}/${id}`);
   }
 
-  getContacts(userId: number): Observable<UserContact[]> {
-    return this.api.get<UserContact[]>(this.baseUrl, API_ENDPOINTS.USERS.CONTACTS);
+  changePassword(userId: number, dto: ChangePasswordRequestDto): Observable<void> {
+    return this.api.post<void>(this.baseUrl, API_ENDPOINTS.USERS.CHANGE_PASSWORD(userId), dto);
+  }
+
+  getContactsByUser(userId: number): Observable<UserContact[]> {
+    return this.api.get<UserContact[]>(this.baseUrl, API_ENDPOINTS.USERS.CONTACTS_BY_USER(userId));
   }
 
   createContact(dto: CreateUserContactDto): Observable<UserContact> {
@@ -67,8 +73,8 @@ export class UserService {
     return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.USERS.CONTACTS}/${id}`);
   }
 
-  getAddresses(): Observable<UserAddress[]> {
-    return this.api.get<UserAddress[]>(this.baseUrl, API_ENDPOINTS.USERS.ADDRESSES);
+  getAddressesByUser(userId: number): Observable<UserAddress[]> {
+    return this.api.get<UserAddress[]>(this.baseUrl, API_ENDPOINTS.USERS.ADDRESSES_BY_USER(userId));
   }
 
   createAddress(dto: CreateUserAddressDto): Observable<UserAddress> {
@@ -83,8 +89,8 @@ export class UserService {
     return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.USERS.ADDRESSES}/${id}`);
   }
 
-  getIdentifications(): Observable<UserIdentification[]> {
-    return this.api.get<UserIdentification[]>(this.baseUrl, API_ENDPOINTS.USERS.IDENTIFICATIONS);
+  getIdentificationsByUser(userId: number): Observable<UserIdentification[]> {
+    return this.api.get<UserIdentification[]>(this.baseUrl, API_ENDPOINTS.USERS.IDENTIFICATIONS_BY_USER(userId));
   }
 
   createIdentification(dto: CreateUserIdentificationDto): Observable<UserIdentification> {

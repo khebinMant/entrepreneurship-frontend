@@ -5,6 +5,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
 import { DirectAuthService } from '../../../authentication/services/direct-auth.service';
 import { ThemeToggleComponent } from '../../../core/theme/theme-toggle.component';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
+import { STORAGE_KEYS } from '../../../core/constants/app.constants';
 
 @Component({
   selector: 'app-public-nav',
@@ -48,7 +49,7 @@ import { ClickOutsideDirective } from '../../../shared/directives/click-outside.
                 <a class="public-nav__dropdown-item" routerLink="/app/perfil" (click)="dropdownOpen.set(false)">
                   <i class="pi pi-user"></i> Mi Perfil
                 </a>
-                <a class="public-nav__dropdown-item" routerLink="/app/settings" (click)="dropdownOpen.set(false)">
+                <a class="public-nav__dropdown-item" routerLink="/app/categories" (click)="dropdownOpen.set(false)" *ngIf="isAdmin">
                   <i class="pi pi-cog"></i> Configuración
                 </a>
                 <div class="public-nav__dropdown-divider"></div>
@@ -327,6 +328,17 @@ export class PublicNavComponent {
   private readonly directAuth = inject(DirectAuthService);
   mobileOpen = false;
   readonly dropdownOpen = signal(false);
+
+  get isAdmin(): boolean {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.USER_ROLES);
+      if (!raw) return false;
+      const roles: string[] = JSON.parse(raw);
+      return roles.includes('admin');
+    } catch {
+      return false;
+    }
+  }
 
   logout(): void {
     this.directAuth.logout();

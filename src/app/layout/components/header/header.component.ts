@@ -6,6 +6,7 @@ import { DirectAuthService } from '../../../authentication/services/direct-auth.
 import { ThemeToggleComponent } from '../../../core/theme/theme-toggle.component';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import { SidebarStateService } from '../../../core/theme/sidebar-state.service';
+import { STORAGE_KEYS } from '../../../core/constants/app.constants';
 
 @Component({
   selector: 'app-header',
@@ -19,6 +20,17 @@ export class HeaderComponent {
   private readonly directAuth = inject(DirectAuthService);
   readonly sidebarState = inject(SidebarStateService);
   readonly menuOpen = signal(false);
+
+  get isAdmin(): boolean {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.USER_ROLES);
+      if (!raw) return false;
+      const roles: string[] = JSON.parse(raw);
+      return roles.includes('admin');
+    } catch {
+      return false;
+    }
+  }
 
   toggleMenu(): void {
     this.menuOpen.update((v) => !v);
