@@ -24,7 +24,14 @@ export class SidebarComponent {
 
   readonly navItems: NavItem[] = [
     { label: 'Inicio', route: '/app/dashboard', icon: 'pi pi-home' },
-    { label: 'Mis Eventos', route: '/app/events', icon: 'pi pi-calendar' },
+    {
+      label: 'Mis Eventos',
+      icon: 'pi pi-calendar',
+      children: [
+        { label: 'Eventos', route: '/app/events', icon: 'pi pi-calendar' },
+        { label: 'Invitaciones', route: '/app/invitations', icon: 'pi pi-envelope' },
+      ],
+    },
     { label: 'Mis Emprendimientos', route: '/app/entrepreneurships', icon: 'pi pi-briefcase' },
     { label: 'Perfil', route: '/app/profile', icon: 'pi pi-user' },
     {

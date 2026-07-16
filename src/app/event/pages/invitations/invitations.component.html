@@ -1,3 +1,405 @@
-<div class="event-invitations">
-  <h1>Invitaciones</h1>
+<div class="invitations-page">
+  <div class="invitations-page__header">
+    <h1 class="invitations-page__title">Invitaciones</h1>
+    <p class="invitations-page__subtitle">Selecciona un evento para ver sus invitaciones.</p>
+  </div>
+
+  @if (error()) {
+    <div class="invitations-page__error"><i class="pi pi-exclamation-circle"></i> {{ error() }}</div>
+  }
+
+  @if (loadingEvents()) {
+    <div class="invitations-page__loading"><i class="pi pi-spin pi-spinner"></i> Cargando eventos...</div>
+  }
+
+  @if (!loadingEvents() && events().length === 0 && !error()) {
+    <div class="invitations-page__empty">
+      <i class="pi pi-calendar"></i>
+      <h3>No tienes eventos</h3>
+      <p>Crea un evento para empezar a enviar invitaciones.</p>
+    </div>
+  }
+
+  <app-modal
+    [visible]="showResendModal()"
+    title="Reenviar invitación"
+    size="sm"
+    (close)="closeResendModal()"
+  >
+    <div class="action-modal">
+      <p class="action-modal__text">¿Reenviar invitación a <strong>{{ resendingInv()?.entrepreneurship?.name }}</strong>?</p>
+      <div class="action-modal__field">
+        <label class="action-modal__label" for="resendMsg">Mensaje personalizado (opcional)</label>
+        <textarea
+          id="resendMsg"
+          class="action-modal__input"
+          [ngModel]="resendMessage()"
+          (ngModelChange)="resendMessage.set($event)"
+          placeholder="Ej: Te recordamos que tienes una invitación pendiente..."
+          rows="3"
+        ></textarea>
+      </div>
+      <div class="action-modal__actions">
+        <button class="btn btn--ghost" type="button" (click)="closeResendModal()">Cancelar</button>
+        <button class="btn btn--primary" type="button" (click)="confirmResend()" [disabled]="resending()">
+          @if (resending()) {
+            <i class="pi pi-spin pi-spinner"></i> Enviando...
+          } @else {
+            <i class="pi pi-send"></i> Reenviar
+          }
+        </button>
+      </div>
+    </div>
+  </app-modal>
+
+  <app-modal
+    [visible]="showRejectModal()"
+    title="Rechazar invitación"
+    size="sm"
+    (close)="closeRejectModal()"
+  >
+    <div class="action-modal">
+      <p class="action-modal__text">¿Rechazar invitación de <strong>{{ rejectingInv()?.entrepreneurship?.name }}</strong>?</p>
+      <div class="action-modal__field">
+        <label class="action-modal__label" for="rejectMsg">Justificación <span class="action-modal__required">*</span></label>
+        <textarea
+          id="rejectMsg"
+          class="action-modal__input"
+          [class.action-modal__input--error]="!!rejectMessageError()"
+          [ngModel]="rejectMessage()"
+          (ngModelChange)="rejectMessage.set($event); rejectMessageError.set('')"
+          placeholder="Indica el motivo del rechazo..."
+          rows="3"
+        ></textarea>
+        @if (rejectMessageError()) {
+          <span class="action-modal__field-error"><i class="pi pi-exclamation-circle"></i> {{ rejectMessageError() }}</span>
+        }
+      </div>
+      <div class="action-modal__actions">
+        <button class="btn btn--ghost" type="button" (click)="closeRejectModal()">Cancelar</button>
+        <button class="btn btn--danger" type="button" (click)="confirmReject()" [disabled]="rejecting()">
+          @if (rejecting()) {
+            <i class="pi pi-spin pi-spinner"></i> Rechazando...
+          } @else {
+            <i class="pi pi-times"></i> Rechazar
+          }
+        </button>
+      </div>
+    </div>
+  </app-modal>
+
+  <app-modal
+    [visible]="showAppInviteModal()"
+    [title]="'Invitaciones — ' + (invitingEventForModal()?.name || '')"
+    size="lg"
+    (close)="closeInviteModal()"
+  >
+    <div class="invite-modal">
+      <div class="invite-modal__tabs">
+        <button
+          class="invite-modal__tab"
+          [ngClass]="{ 'invite-modal__tab--active': inviteTab() === 'invitar' }"
+          (click)="switchInviteTab('invitar')"
+        >
+          <i class="pi pi-send"></i> Invitar
+        </button>
+        <button
+          class="invite-modal__tab"
+          [ngClass]="{ 'invite-modal__tab--active': inviteTab() === 'ver' }"
+          (click)="switchInviteTab('ver')"
+        >
+          <i class="pi pi-list"></i> Ver invitaciones
+        </button>
+      </div>
+
+      @if (inviteTab() === 'invitar') {
+        @if (inviteSuccess()) {
+          <div class="invite-modal__banner invite-modal__banner--success"><i class="pi pi-check-circle"></i> {{ inviteSuccess() }}</div>
+        }
+        @if (inviteError()) {
+          <div class="invite-modal__banner invite-modal__banner--error"><i class="pi pi-exclamation-circle"></i> {{ inviteError() }}</div>
+        }
+
+        <div class="invite-modal__message">
+          <label class="invite-modal__message-label" for="appInviteMsg">Mensaje personalizado (opcional)</label>
+          <textarea
+            id="appInviteMsg"
+            class="invite-modal__message-input"
+            [ngModel]="inviteMessageText()"
+            (ngModelChange)="inviteMessageText.set($event)"
+            placeholder="Ej: Te invitamos a participar en nuestro evento..."
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="invite-modal__search">
+          <i class="pi pi-search"></i>
+          <input
+            class="invite-modal__input"
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Buscar emprendimientos por nombre..."
+          />
+          @if (searchLoading()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          }
+        </div>
+
+        @if (searchResults().length === 0 && searchQuery() && !searchLoading()) {
+          <div class="invite-modal__empty">
+            <p>No se encontraron emprendimientos con ese nombre.</p>
+          </div>
+        }
+
+        <div class="invite-modal__list">
+          @for (e of searchResults(); track e.entrepreneurshipId) {
+            <label class="invite-modal__item" [class.invite-modal__item--selected]="selectedIds().has(e.entrepreneurshipId)">
+              <input
+                type="checkbox"
+                [checked]="selectedIds().has(e.entrepreneurshipId)"
+                (change)="toggleSelection(e.entrepreneurshipId)"
+              />
+              <div class="invite-modal__info">
+                <strong>{{ e.name }}</strong>
+                @if (e.categoryName) {<span class="invite-modal__category">{{ e.categoryName }}</span>}
+              </div>
+            </label>
+          }
+        </div>
+
+        <div class="invite-modal__footer">
+          <span class="invite-modal__count">
+            {{ selectedIds().size }} emprendimiento{{ selectedIds().size !== 1 ? 's' : '' }} seleccionado{{ selectedIds().size !== 1 ? 's' : '' }}
+          </span>
+          <div class="invite-modal__actions">
+            <button class="btn btn--ghost" type="button" (click)="closeInviteModal()">Cancelar</button>
+            <button
+              class="btn btn--primary"
+              type="button"
+              (click)="sendBulkInvitations()"
+              [disabled]="selectedIds().size === 0 || invitingBulk()"
+            >
+              @if (invitingBulk()) {
+                <i class="pi pi-spin pi-spinner"></i> Enviando...
+              } @else {
+                <i class="pi pi-send"></i> Enviar invitación
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (inviteTab() === 'ver') {
+        @if (modalInvitationSuccess()) {
+          <div class="invite-modal__banner invite-modal__banner--success"><i class="pi pi-check-circle"></i> {{ modalInvitationSuccess() }}</div>
+        }
+        @if (modalInvitationError()) {
+          <div class="invite-modal__banner invite-modal__banner--error"><i class="pi pi-exclamation-circle"></i> {{ modalInvitationError() }}</div>
+        }
+
+        @if (loadingModalInvitations()) {
+          <div class="invite-modal__loading"><i class="pi pi-spin pi-spinner"></i> Cargando invitaciones...</div>
+        } @else if (modalInvitations().length === 0) {
+          <div class="invite-modal__empty">
+            <p>No hay invitaciones para este evento.</p>
+          </div>
+        } @else {
+          <div class="invite-modal__table-wrapper">
+            <table class="invite-modal__table">
+              <thead>
+                <tr>
+                  <th>Emprendimiento</th>
+                  <th>Categoría</th>
+                  <th>Estado</th>
+                  <th>Invitado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (inv of modalInvitations(); track inv.invitationId) {
+                  <tr>
+                    <td data-label="Emprendimiento">
+                      <div class="invite-modal__entrepreneurship">
+                        @if (inv.entrepreneurship?.imageUrl) {
+                          <img [src]="inv.entrepreneurship?.imageUrl" class="invite-modal__avatar" alt="" />
+                        } @else {
+                          <div class="invite-modal__avatar invite-modal__avatar--fallback">
+                            {{ (inv.entrepreneurship?.name || '?')[0] }}
+                          </div>
+                        }
+                        <span>{{ inv.entrepreneurship?.name || '—' }}</span>
+                      </div>
+                    </td>
+                    <td data-label="Categoría">
+                      <span class="invite-modal__category">{{ inv.entrepreneurship?.categoryName || '—' }}</span>
+                    </td>
+                    <td data-label="Estado">
+                      <span class="invite-modal__status" [ngClass]="statusClass(inv.invitationStatusId)">
+                        {{ statusName(inv.invitationStatusId) }}
+                      </span>
+                    </td>
+                    <td data-label="Invitado">{{ inv.sentAt | date:'shortDate' }}</td>
+                    <td data-label="Acciones">
+                      <div class="invite-modal__actions-row">
+                        @if (inv.invitationStatusId !== acceptedStatusId()) {
+                          <button class="btn btn--icon btn--ghost" title="Reenviar" (click)="openResendModal(inv)"><i class="pi pi-send"></i></button>
+                          <button class="btn btn--icon btn--ghost" title="Rechazar" (click)="openRejectModal(inv)"><i class="pi pi-times"></i></button>
+                          <button class="btn btn--icon btn--ghost btn--icon-danger" title="Eliminar" (click)="deleteInvitation(inv.invitationId)" [disabled]="deletingId() === inv.invitationId">
+                            @if (deletingId() === inv.invitationId) { <i class="pi pi-spin pi-spinner"></i> } @else { <i class="pi pi-trash"></i> }
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    </div>
+  </app-modal>
+
+  @if (!loadingEvents() && events().length > 0) {
+    <div class="invitations-page__accordion">
+      @for (event of events(); track event.eventId) {
+        <div class="invitations-page__event-card" [class.invitations-page__event-card--expanded]="expandedEventId() === event.eventId">
+          <button class="invitations-page__event-header" (click)="toggleEvent(event.eventId)">
+            @if (event.imageUrl) {
+              <img class="invitations-page__event-avatar" [src]="event.imageUrl" alt="" />
+            } @else {
+              <div class="invitations-page__event-avatar invitations-page__event-avatar--fallback">
+                {{ eventInitial(event) }}
+              </div>
+            }
+            <div class="invitations-page__event-info">
+              <strong class="invitations-page__event-name">{{ event.name }}</strong>
+              <span class="invitations-page__event-meta">
+                @if (event.eventTypeName) {
+                  <span class="invitations-page__tag">{{ event.eventTypeName }}</span>
+                }
+                @if (event.startDatetime) {
+                  <span><i class="pi pi-calendar"></i> {{ event.startDatetime | date:'shortDate' }}</span>
+                }
+                @if (event.countryName || event.cityName) {
+                  <span><i class="pi pi-map-marker"></i> {{ locationStr(event) }}</span>
+                }
+              </span>
+            </div>
+            <button class="invitations-page__invite-btn" (click)="$event.stopPropagation(); openInviteModal(event)" title="Invitar emprendimientos">
+              <i class="pi pi-plus"></i> Invitar
+            </button>
+            <i class="pi" [ngClass]="expandedEventId() === event.eventId ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+          </button>
+
+          @if (expandedEventId() === event.eventId) {
+            <div class="invitations-page__event-body">
+              <div class="invitations-page__event-detail">
+                @if (event.description) {
+                  <p class="invitations-page__event-desc">{{ event.description }}</p>
+                }
+                <div class="invitations-page__event-detail-meta">
+                  @if (event.organizerName) {
+                    <span><i class="pi pi-user"></i> {{ event.organizerName }}</span>
+                  }
+                  @if (event.startDatetime && event.endDatetime) {
+                    <span><i class="pi pi-clock"></i> {{ event.startDatetime | date:'dd/MM/yyyy HH:mm' }} — {{ event.endDatetime | date:'dd/MM/yyyy HH:mm' }}</span>
+                  }
+                  @if (event.addressLine) {
+                    <span><i class="pi pi-map"></i> {{ event.addressLine }}</span>
+                  }
+                  @if (event.isPaid) {
+                    <span class="invitations-page__tag invitations-page__tag--paid"><i class="pi pi-dollar"></i> {{ event.price ? ('$' + event.price) : 'Pago' }}</span>
+                  }
+                </div>
+              </div>
+              @if (loadingInvitations().has(event.eventId)) {
+                <div class="invitations-page__loading-sm"><i class="pi pi-spin pi-spinner"></i> Cargando invitaciones...</div>
+              } @else {
+                @if (invitationsMap().get(event.eventId); as invitations) {
+                  @if (invitations.length === 0) {
+                    <div class="invitations-page__empty-sm">
+                      <i class="pi pi-inbox"></i>
+                      <p>Este evento no tiene invitaciones aún.</p>
+                    </div>
+                  } @else {
+                    <div class="invitations-page__table-wrapper">
+                      <table class="invitations-page__table">
+                          <thead>
+                            <tr>
+                              <th>Emprendimiento</th>
+                              <th>Categoría</th>
+                              <th>Estado</th>
+                              <th>Enviada</th>
+                              <th>Acciones</th>
+                            </tr>
+                          </thead>
+                        <tbody>
+                          @for (inv of invitations; track inv.invitationId) {
+                            <tr>
+                              <td data-label="Emprendimiento">
+                                <a class="invitations-page__entrepreneurship" [routerLink]="'/entrepreneurships/' + inv.entrepreneurshipId" target="_blank">
+                                  @if (entrepreneurshipImage(inv); as img) {
+                                    <img class="invitations-page__avatar" [src]="img" alt="" />
+                                  } @else {
+                                    <div class="invitations-page__avatar invitations-page__avatar--placeholder">
+                                      <i class="pi pi-briefcase"></i>
+                                    </div>
+                                  }
+                                  <span>{{ entrepreneurshipName(inv) }}</span>
+                                </a>
+                              </td>
+                              <td data-label="Categoría">
+                                <span class="invitations-page__category">{{ inv.entrepreneurship?.categoryName || '—' }}</span>
+                              </td>
+                              <td data-label="Estado">
+                                <span class="badge" [ngClass]="statusClass(inv.invitationStatusId)">
+                                  {{ statusName(inv.invitationStatusId) }}
+                                </span>
+                              </td>
+                              <td data-label="Enviada">{{ inv.sentAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                              <td data-label="Acciones">
+                                <div class="invitations-page__actions">
+                                  @if (inv.invitationStatusId !== acceptedStatusId()) {
+                                    <button
+                                      class="btn btn--ghost btn--sm"
+                                      (click)="openResendModal(inv)"
+                                      title="Reenviar">
+                                      <i class="pi pi-send"></i>
+                                    </button>
+                                    <button
+                                      class="btn btn--ghost btn--sm"
+                                      (click)="openRejectModal(inv)"
+                                      title="Rechazar">
+                                      <i class="pi pi-times"></i>
+                                    </button>
+                                    <button
+                                      class="btn btn--ghost btn--sm btn--danger-ghost"
+                                      (click)="deleteInvitation(inv.invitationId)"
+                                      [disabled]="deletingId() === inv.invitationId"
+                                      title="Eliminar">
+                                      @if (deletingId() === inv.invitationId) {
+                                        <i class="pi pi-spin pi-spinner"></i>
+                                      } @else {
+                                        <i class="pi pi-trash"></i>
+                                      }
+                                    </button>
+                                  }
+                                </div>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
 </div>

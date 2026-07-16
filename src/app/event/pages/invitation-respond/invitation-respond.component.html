@@ -1,0 +1,120 @@
+<div class="respond-page">
+  <div class="respond-page__card">
+    @if (loading()) {
+      <div class="respond-page__loading">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Cargando invitación...</p>
+      </div>
+    } @else if (error()) {
+      <div class="respond-page__error">
+        <i class="pi pi-exclamation-circle"></i>
+        <p>{{ error() }}</p>
+      </div>
+    } @else if (actionDone()) {
+      <div class="respond-page__result">
+        @if (actionResult() === 'accepted') {
+          <div class="respond-page__result-icon respond-page__result-icon--success">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <h2>¡Invitación aceptada!</h2>
+          <p>Has aceptado la invitación para <strong>{{ entrepreneurshipName }}</strong>.</p>
+        } @else if (actionResult() === 'rejected') {
+          <div class="respond-page__result-icon respond-page__result-icon--danger">
+            <i class="pi pi-times-circle"></i>
+          </div>
+          <h2>Invitación rechazada</h2>
+          <p>Has rechazado la invitación para <strong>{{ entrepreneurshipName }}</strong>.</p>
+        }
+        <p class="respond-page__result-hint">Puedes cerrar esta ventana.</p>
+      </div>
+    } @else if (alreadyResponded()) {
+      <div class="respond-page__result">
+        <div class="respond-page__result-icon respond-page__result-icon--info">
+          <i class="pi pi-info-circle"></i>
+        </div>
+        <h2>Invitación ya respondida</h2>
+        <p>Esta invitación ya fue respondida anteriormente.</p>
+      </div>
+    } @else if (invitation(); as inv) {
+      <div class="respond-page__header">
+        <h1 class="respond-page__title">Invitación a evento</h1>
+        <p class="respond-page__subtitle">{{ eventName }}</p>
+      </div>
+
+      <div class="respond-page__info">
+        <div class="respond-page__info-row">
+          <span class="respond-page__label">Emprendimiento</span>
+          <span class="respond-page__value">{{ entrepreneurshipName }}</span>
+        </div>
+        <div class="respond-page__info-row">
+          <span class="respond-page__label">Invitación enviada</span>
+          <span class="respond-page__value">{{ inv.sentAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+
+      <div class="respond-page__actions">
+        <button
+          class="btn btn--primary btn--lg"
+          (click)="accept()"
+          [disabled]="actionLoading()"
+        >
+          @if (actionLoading()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else {
+            <i class="pi pi-check"></i>
+          }
+          Aceptar invitación
+        </button>
+        <button
+          class="btn btn--outline btn--lg"
+          (click)="openRejectModal()"
+          [disabled]="actionLoading()"
+        >
+          <i class="pi pi-times"></i>
+          Rechazar
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="respond-page__error"><i class="pi pi-exclamation-circle"></i> {{ error() }}</div>
+      }
+    }
+
+    <div class="respond-page__footer">
+      <a class="respond-page__back" href="/">← Volver al inicio</a>
+    </div>
+  </div>
+</div>
+
+<div class="respond-page__modal-overlay" [class.respond-page__modal-overlay--open]="showRejectModal()" (click)="closeRejectModal()">
+  <div class="respond-page__modal" (click)="$event.stopPropagation()">
+    <div class="respond-page__modal-header">
+      <h3>Rechazar invitación</h3>
+      <button class="respond-page__modal-close" (click)="closeRejectModal()"><i class="pi pi-times"></i></button>
+    </div>
+    <div class="respond-page__modal-body">
+      <p class="respond-page__modal-text">Indica el motivo del rechazo para <strong>{{ entrepreneurshipName }}</strong>:</p>
+      <textarea
+        class="respond-page__modal-textarea"
+        [class.respond-page__modal-textarea--error]="!!rejectMessageError()"
+        [ngModel]="rejectMessage()"
+        (ngModelChange)="rejectMessage.set($event); rejectMessageError.set('')"
+        placeholder="Ej: No estamos interesados en este momento..."
+        rows="4"
+      ></textarea>
+      @if (rejectMessageError()) {
+        <span class="respond-page__modal-error"><i class="pi pi-exclamation-circle"></i> {{ rejectMessageError() }}</span>
+      }
+    </div>
+    <div class="respond-page__modal-footer">
+      <button class="btn btn--ghost" (click)="closeRejectModal()">Cancelar</button>
+      <button class="btn btn--danger" (click)="confirmReject()" [disabled]="actionLoading()">
+        @if (actionLoading()) {
+          <i class="pi pi-spin pi-spinner"></i> Rechazando...
+        } @else {
+          <i class="pi pi-times"></i> Rechazar
+        }
+      </button>
+    </div>
+  </div>
+</div>
