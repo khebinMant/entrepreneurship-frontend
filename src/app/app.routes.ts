@@ -47,6 +47,14 @@ export const routes: Routes = [
         path: 'entrepreneurships/:id',
         loadComponent: () => import('./entrepreneurship/pages/public-detail/public-detail.component').then((m) => m.PublicDetailComponent),
       },
+      {
+        path: 'invitations/:id/accept',
+        loadComponent: () => import('./event/pages/invitation-respond/invitation-respond.component').then((m) => m.InvitationRespondComponent),
+      },
+      {
+        path: 'invitations/:id/reject',
+        loadComponent: () => import('./event/pages/invitation-respond/invitation-respond.component').then((m) => m.InvitationRespondComponent),
+      },
     ],
   },
   {
@@ -68,6 +76,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard([...ADMIN_ROLES])],
         loadComponent: () => import('./shared-domain/pages/categories/categories.component').then((m) => m.CategoriesComponent),
       },
+      { path: 'invitations', loadComponent: () => import('./event/pages/invitations/invitations.component').then((m) => m.InvitationsComponent) },
       ...userRoutes,
       ...entrepreneurshipRoutes,
       ...eventRoutes,

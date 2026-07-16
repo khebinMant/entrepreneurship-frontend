@@ -6,7 +6,7 @@ import { map } from 'rxjs';
 import type { Observable } from 'rxjs';
 import type { Event, EventSearchFilters } from '../models/event';
 import type { EventSpace, CreateEventSpaceDto, UpdateEventSpaceDto } from '../models/event-space';
-import type { EventInvitation, CreateEventInvitationDto, EventParticipant } from '../models/event-invitation';
+import type { EventInvitation, CreateEventInvitationDto, BulkCreateInvitationDto, EventParticipant } from '../models/event-invitation';
 import type { Page } from '../../shared/models/pagination';
 import { HttpParams } from '@angular/common/http';
 
@@ -118,6 +118,10 @@ export class EventService {
     return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.EVENTS.SPACES}/${id}`);
   }
 
+  getInvitationById(invitationId: number): Observable<EventInvitation> {
+    return this.api.get<EventInvitation>(this.baseUrl, `${API_ENDPOINTS.EVENTS.INVITATIONS}/${invitationId}`);
+  }
+
   getInvitations(eventId: number, statusId?: number): Observable<EventInvitation[]> {
     let params = new HttpParams();
     if (statusId !== undefined) params = params.set('statusId', statusId.toString());
@@ -132,11 +136,18 @@ export class EventService {
     return this.api.post<EventInvitation>(this.baseUrl, API_ENDPOINTS.EVENTS.INVITATIONS, dto);
   }
 
-  updateInvitationStatus(id: number, statusId: number): Observable<EventInvitation> {
+  createInvitationsBulk(dto: BulkCreateInvitationDto): Observable<EventInvitation[]> {
+    return this.api.post<EventInvitation[]>(this.baseUrl, `${API_ENDPOINTS.EVENTS.INVITATIONS}/bulk`, dto);
+  }
+
+  updateInvitationStatus(id: number, statusId: number, message?: string): Observable<EventInvitation> {
+    let params = new HttpParams().set('statusId', statusId.toString());
+    if (message) params = params.set('message', message);
     return this.api.patch<EventInvitation>(
       this.baseUrl,
-      `${API_ENDPOINTS.EVENTS.INVITATIONS}/${id}/status?statusId=${statusId}`,
+      `${API_ENDPOINTS.EVENTS.INVITATIONS}/${id}/status`,
       {},
+      params,
     );
   }
 
