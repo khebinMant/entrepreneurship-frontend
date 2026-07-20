@@ -45,24 +45,6 @@
     </div>
   </div>
 
-  @if (!isEditMode()) {
-    <div class="create-form__section">
-      <h3 class="create-form__section-title">Logo *</h3>
-      <div class="create-form__logo" [class.create-form__field--error]="errors().logo">
-        <div class="create-form__logo-preview" *ngIf="logoPreview()">
-          <img [src]="logoPreview()" alt="Logo preview" />
-          <button class="create-form__logo-remove" type="button" (click)="removeLogo()"><i class="pi pi-times"></i></button>
-        </div>
-        <div class="create-form__logo-upload" *ngIf="!logoPreview()" (click)="logoInput.click()">
-          <i class="pi pi-image"></i>
-          <span>Seleccionar logo</span>
-        </div>
-        <input #logoInput type="file" accept="image/*" (change)="onLogoSelected($event)" style="display: none" />
-        <span class="create-form__error" *ngIf="errors().logo">{{ errors().logo }}</span>
-      </div>
-    </div>
-  }
-
   @if (isEditMode()) {
     <div class="create-form__section">
       <h3 class="create-form__section-title">Galería de imágenes</h3>
@@ -89,6 +71,223 @@
         <div class="create-form__gallery-limit">Has alcanzado el límite de {{ maxImages }} imágenes.</div>
       }
       <input #galleryInput type="file" accept="image/*" (change)="onGalleryImageSelected($event)" style="display: none" />
+    </div>
+  }
+
+  <!-- ===================== LOCATIONS ===================== -->
+  <div class="create-form__section">
+    <div class="create-form__section-header">
+      <h3 class="create-form__section-title">Ubicaciones</h3>
+      <button class="btn btn--outline btn--sm" type="button" (click)="openAddLocation()" [disabled]="showLocationForm()"><i class="pi pi-plus"></i> Añadir ubicación</button>
+    </div>
+
+    @if (locations().length === 0 && !showLocationForm()) {
+      <div class="create-form__empty">
+        <i class="pi pi-map-marker"></i>
+        <span>No has añadido ubicaciones</span>
+      </div>
+    }
+
+    <div class="create-form__list">
+      @for (loc of locations(); track idx; let idx = $index) {
+        <div class="create-form__list-item">
+          <div class="create-form__list-info">
+            <strong>{{ loc.addressLine }}</strong>
+            <span class="create-form__list-meta">{{ getCatalogueName(loc.countryId, locationCountries()) }}</span>
+          </div>
+          <div class="create-form__list-actions">
+            <button class="btn btn--ghost btn--sm" type="button" (click)="openEditLocation(idx)" title="Editar"><i class="pi pi-pencil"></i></button>
+            <button class="btn btn--ghost btn--sm btn--danger-ghost" type="button" (click)="removeLocation(idx)" title="Eliminar"><i class="pi pi-trash"></i></button>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (showLocationForm()) {
+      <div class="inline-form">
+        <div class="inline-form__header">
+          <h4>{{ editingLocationIdx() !== null ? 'Editar ubicación' : 'Nueva ubicación' }}</h4>
+          <button class="btn btn--ghost btn--sm" type="button" (click)="cancelLocationForm()"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="inline-form__grid">
+          <div class="inline-form__field">
+            <label class="inline-form__label">País *</label>
+            <select class="inline-form__select" [ngModel]="locationForm().countryId" (ngModelChange)="locationForm.update(f => ({...f, countryId: $event})); onLocationCountryChange()">
+              <option [ngValue]="null">Seleccionar...</option>
+              @for (c of locationCountries(); track c.catalogueValueId) {
+                <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="inline-form__field">
+            <label class="inline-form__label">Provincia *</label>
+            <select class="inline-form__select" [ngModel]="locationForm().provinceId" (ngModelChange)="locationForm.update(f => ({...f, provinceId: $event})); onLocationProvinceChange()" [disabled]="!locationForm().countryId || loadingProvinces()">
+              <option [ngValue]="null">{{ loadingProvinces() ? 'Cargando...' : 'Seleccionar...' }}</option>
+              @for (p of locationProvinces(); track p.catalogueValueId) {
+                <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="inline-form__field">
+            <label class="inline-form__label">Ciudad *</label>
+            <select class="inline-form__select" [ngModel]="locationForm().cityId" (ngModelChange)="locationForm.update(f => ({...f, cityId: $event})); onLocationCityChange()" [disabled]="!locationForm().provinceId || loadingCities()">
+              <option [ngValue]="null">{{ loadingCities() ? 'Cargando...' : 'Seleccionar...' }}</option>
+              @for (c of locationCities(); track c.catalogueValueId) {
+                <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="inline-form__field">
+            <label class="inline-form__label">Parroquia</label>
+            <select class="inline-form__select" [ngModel]="locationForm().parishId" (ngModelChange)="locationForm.update(f => ({...f, parishId: $event}))" [disabled]="!locationForm().cityId || loadingParishes()">
+              <option [ngValue]="null">{{ loadingParishes() ? 'Cargando...' : 'Seleccionar...' }}</option>
+              @for (p of locationParishes(); track p.catalogueValueId) {
+                <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="inline-form__field inline-form__field--full">
+            <label class="inline-form__label">Dirección *</label>
+            <input class="inline-form__input" type="text" [ngModel]="locationForm().addressLine" (ngModelChange)="locationForm.update(f => ({...f, addressLine: $event}))" maxlength="500" placeholder="Calle, número, sector" />
+          </div>
+          <div class="inline-form__field">
+            <label class="inline-form__label">Latitud</label>
+            <input class="inline-form__input" type="number" step="any" [ngModel]="locationForm().latitude" (ngModelChange)="locationForm.update(f => ({...f, latitude: $event})); locationError.set(null)" placeholder="-90 a 90" />
+          </div>
+          <div class="inline-form__field">
+            <label class="inline-form__label">Longitud</label>
+            <input class="inline-form__input" type="number" step="any" [ngModel]="locationForm().longitude" (ngModelChange)="locationForm.update(f => ({...f, longitude: $event})); locationError.set(null)" placeholder="-180 a 180" />
+          </div>
+          @if (locationError()) {
+            <div class="inline-form__field inline-form__field--full">
+              <span class="inline-form__error">{{ locationError() }}</span>
+            </div>
+          }
+        </div>
+        <div class="inline-form__actions">
+          <button class="btn btn--primary" type="button" (click)="saveLocation()" [disabled]="!locationForm().countryId || !locationForm().provinceId || !locationForm().cityId || !locationForm().addressLine.trim()">
+            {{ editingLocationIdx() !== null ? 'Guardar cambios' : 'Añadir ubicación' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ===================== SOCIAL LINKS ===================== -->
+  <div class="create-form__section">
+    <div class="create-form__section-header">
+      <h3 class="create-form__section-title">Redes Sociales</h3>
+      <button class="btn btn--outline btn--sm" type="button" (click)="openAddSocial()" [disabled]="showSocialForm()"><i class="pi pi-plus"></i> Añadir red social</button>
+    </div>
+
+    @if (socialLinks().length === 0 && !showSocialForm()) {
+      <div class="create-form__empty">
+        <i class="pi pi-share-alt"></i>
+        <span>No has añadido redes sociales</span>
+      </div>
+    }
+
+    <div class="create-form__list">
+      @for (link of socialLinks(); track idx; let idx = $index) {
+        <div class="create-form__list-item">
+          <div class="create-form__list-info">
+            <strong>{{ getPlatformName(link.socialPlatformId) }}</strong>
+            <span class="create-form__list-meta">{{ link.url }}</span>
+          </div>
+          <div class="create-form__list-actions">
+            <button class="btn btn--ghost btn--sm" type="button" (click)="openEditSocial(idx)" title="Editar"><i class="pi pi-pencil"></i></button>
+            <button class="btn btn--ghost btn--sm btn--danger-ghost" type="button" (click)="removeSocialLink(idx)" title="Eliminar"><i class="pi pi-trash"></i></button>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (showSocialForm()) {
+      <div class="inline-form">
+        <div class="inline-form__header">
+          <h4>{{ editingSocialIdx() !== null ? 'Editar red social' : 'Nueva red social' }}</h4>
+          <button class="btn btn--ghost btn--sm" type="button" (click)="cancelSocialForm()"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="inline-form__grid">
+          <div class="inline-form__field">
+            <label class="inline-form__label">Plataforma *</label>
+            <select class="inline-form__select" [ngModel]="socialForm().socialPlatformId" (ngModelChange)="socialForm.update(f => ({...f, socialPlatformId: $event}))">
+              <option [ngValue]="null">Seleccionar...</option>
+              @for (p of socialPlatforms(); track p.catalogueValueId) {
+                <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="inline-form__field">
+            <label class="inline-form__label">URL *</label>
+            <input class="inline-form__input" type="url" [ngModel]="socialForm().url" (ngModelChange)="socialForm.update(f => ({...f, url: $event}))" maxlength="500" placeholder="https://facebook.com/mi-emprendimiento" />
+          </div>
+        </div>
+        <div class="inline-form__actions">
+          <button class="btn btn--primary" type="button" (click)="saveSocialLink()" [disabled]="!socialForm().socialPlatformId || !socialForm().url.trim()">
+            {{ editingSocialIdx() !== null ? 'Guardar cambios' : 'Añadir red social' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ===================== PORTAL ===================== -->
+  <div class="create-form__section">
+    <div class="create-form__section-header">
+      <h3 class="create-form__section-title">Portal</h3>
+      <label class="create-form__toggle">
+        <input type="checkbox" [checked]="showPortalSection()" (change)="showPortalSection.set(!showPortalSection())" />
+        <span>Configurar portal</span>
+      </label>
+    </div>
+
+    @if (showPortalSection()) {
+      <div class="inline-form">
+        <div class="inline-form__grid">
+          <div class="inline-form__field">
+            <label class="inline-form__label">Subdominio / URL</label>
+            <input class="inline-form__input" type="text" [ngModel]="portalForm().subdomain" (ngModelChange)="portalForm.update(p => ({...p, subdomain: $event}))" maxlength="200" placeholder="mi-emprendimiento" />
+          </div>
+          <div class="inline-form__field">
+            <label class="inline-form__label">Tema</label>
+            <select class="inline-form__select" [ngModel]="portalForm().themeId" (ngModelChange)="portalForm.update(p => ({...p, themeId: $event}))">
+              <option [ngValue]="null">Seleccionar tema</option>
+              @for (t of themes(); track t.catalogueValueId) {
+                <option [ngValue]="t.catalogueValueId">{{ t.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="inline-form__field inline-form__field--full">
+            <label class="inline-form__label">Contenido HTML</label>
+            <textarea class="inline-form__textarea" rows="5" [ngModel]="portalForm().htmlContent" (ngModelChange)="portalForm.update(p => ({...p, htmlContent: $event}))" placeholder="<h1>Bienvenido a mi emprendimiento</h1><p>Contenido personalizado...</p>"></textarea>
+          </div>
+          <div class="inline-form__field">
+            <div class="create-form__checkbox">
+              <input type="checkbox" id="portal-active" [ngModel]="portalForm().isActive" (ngModelChange)="portalForm.update(p => ({...p, isActive: $event}))" />
+              <label for="portal-active">Portal activo</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (!isEditMode()) {
+    <div class="create-form__section">
+      <h3 class="create-form__section-title">Logo *</h3>
+      <div class="create-form__logo" [class.create-form__field--error]="errors().logo">
+        <div class="create-form__logo-preview" *ngIf="logoPreview()">
+          <img [src]="logoPreview()" alt="Logo preview" />
+          <button class="create-form__logo-remove" type="button" (click)="removeLogo()"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="create-form__logo-upload" *ngIf="!logoPreview()" (click)="logoInput.click()">
+          <i class="pi pi-image"></i>
+          <span>Seleccionar logo</span>
+        </div>
+        <input #logoInput type="file" accept="image/*" (change)="onLogoSelected($event)" style="display: none" />
+        <span class="create-form__error" *ngIf="errors().logo">{{ errors().logo }}</span>
+      </div>
     </div>
   }
 

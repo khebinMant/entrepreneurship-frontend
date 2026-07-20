@@ -4,11 +4,11 @@ import { API_ENDPOINTS } from '../../core/constants/app.constants';
 import { AppConfigService } from '../../core/config/services/app-config.service';
 import { map } from 'rxjs';
 import type { Observable } from 'rxjs';
-import type { Entrepreneurship, EntrepreneurshipSearchFilters } from '../models/entrepreneurship';
+import type { Entrepreneurship, EntrepreneurshipSearchFilters, CreateEntrepreneurshipDto } from '../models/entrepreneurship';
 import type { Category, CreateCategoryDto, UpdateCategoryDto } from '../models/category';
 import type { EntrepreneurshipLocation, CreateEntrepreneurshipLocationDto, UpdateEntrepreneurshipLocationDto } from '../models/entrepreneurship-location';
-import type { EntrepreneurshipSocialLink, CreateEntrepreneurshipSocialLinkDto, UpdateEntrepreneurshipSocialLinkDto } from '../models/entrepreneurship-social-link';
-import type { EntrepreneurshipPortal, CreateEntrepreneurshipPortalDto, UpdateEntrepreneurshipPortalDto } from '../models/entrepreneurship-portal';
+import type { EntitySocialLink, CreateEntitySocialLinkDto, UpdateEntitySocialLinkDto } from '../models/entrepreneurship-social-link';
+import type { EntityPortal, CreateEntityPortalDto, UpdateEntityPortalDto } from '../models/entrepreneurship-portal';
 import type { Page } from '../../shared/models/pagination';
 import { HttpParams } from '@angular/common/http';
 
@@ -58,7 +58,7 @@ export class EntrepreneurshipService {
     return this.api.get<Page<Entrepreneurship>>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.BY_USER(userId), params);
   }
 
-  create(data: { userId: number; categoryId: number; name: string; description: string; isPhysical: boolean; isDigital: boolean }): Observable<Entrepreneurship> {
+  create(data: CreateEntrepreneurshipDto): Observable<Entrepreneurship> {
     return this.api.post<Entrepreneurship>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.BASE, data);
   }
 
@@ -97,41 +97,41 @@ export class EntrepreneurshipService {
     return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.LOCATIONS}/${id}`);
   }
 
-  getSocialLinks(entrepreneurshipId: number): Observable<EntrepreneurshipSocialLink[]> {
-    return this.api.get<EntrepreneurshipSocialLink[]>(
+  getSocialLinks(entityId: number): Observable<EntitySocialLink[]> {
+    return this.api.get<EntitySocialLink[]>(
       this.baseUrl,
-      `${API_ENDPOINTS.ENTREPRENEURSHIPS.SOCIAL_LINKS}/entrepreneurship/${entrepreneurshipId}`,
+      `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_SOCIAL_LINKS}/by-entity/${entityId}`,
     );
   }
 
-  createSocialLink(dto: CreateEntrepreneurshipSocialLinkDto): Observable<EntrepreneurshipSocialLink> {
-    return this.api.post<EntrepreneurshipSocialLink>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.SOCIAL_LINKS, dto);
+  createSocialLink(dto: CreateEntitySocialLinkDto): Observable<EntitySocialLink> {
+    return this.api.post<EntitySocialLink>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_SOCIAL_LINKS, dto);
   }
 
-  updateSocialLink(id: number, dto: UpdateEntrepreneurshipSocialLinkDto): Observable<EntrepreneurshipSocialLink> {
-    return this.api.put<EntrepreneurshipSocialLink>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.SOCIAL_LINKS}/${id}`, dto);
+  updateSocialLink(id: number, dto: UpdateEntitySocialLinkDto): Observable<EntitySocialLink> {
+    return this.api.put<EntitySocialLink>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_SOCIAL_LINKS}/${id}`, dto);
   }
 
   deleteSocialLink(id: number): Observable<void> {
-    return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.SOCIAL_LINKS}/${id}`);
+    return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_SOCIAL_LINKS}/${id}`);
   }
 
-  getPortal(entrepreneurshipId: number): Observable<EntrepreneurshipPortal> {
-    return this.api.get<EntrepreneurshipPortal>(
+  getPortal(entityId: number): Observable<EntityPortal> {
+    return this.api.get<EntityPortal>(
       this.baseUrl,
-      `${API_ENDPOINTS.ENTREPRENEURSHIPS.PORTALS}/entrepreneurship/${entrepreneurshipId}`,
+      `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_PORTALS}/by-entity/${entityId}`,
     );
   }
 
-  createPortal(dto: CreateEntrepreneurshipPortalDto): Observable<EntrepreneurshipPortal> {
-    return this.api.post<EntrepreneurshipPortal>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.PORTALS, dto);
+  createPortal(dto: CreateEntityPortalDto): Observable<EntityPortal> {
+    return this.api.post<EntityPortal>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_PORTALS, dto);
   }
 
-  updatePortal(id: number, dto: UpdateEntrepreneurshipPortalDto): Observable<EntrepreneurshipPortal> {
-    return this.api.put<EntrepreneurshipPortal>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.PORTALS}/${id}`, dto);
+  updatePortal(id: number, dto: UpdateEntityPortalDto): Observable<EntityPortal> {
+    return this.api.put<EntityPortal>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_PORTALS}/${id}`, dto);
   }
 
   deletePortal(id: number): Observable<void> {
-    return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.PORTALS}/${id}`);
+    return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_PORTALS}/${id}`);
   }
 }

@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
     BASE: `${API_PREFIX}/users`,
     BY_KEYCLOAK_ID: (keycloakId: string) => `${API_PREFIX}/users/keycloak/${keycloakId}`,
     CHANGE_PASSWORD: (userId: number) => `${API_PREFIX}/users/${userId}/change-password`,
+    UPDATE_EMAIL: (userId: number) => `${API_PREFIX}/users/${userId}/email`,
     CONTACTS: `${API_PREFIX}/user-contacts`,
     CONTACTS_BY_USER: (userId: number) => `${API_PREFIX}/user-contacts/user/${userId}`,
     ADDRESSES: `${API_PREFIX}/user-addresses`,
@@ -35,8 +36,8 @@ export const API_ENDPOINTS = {
     BY_USER: (userId: number) => `${API_PREFIX}/entrepreneurships/user/${userId}`,
     SEARCH: `${API_PREFIX}/entrepreneurships/search`,
     LOCATIONS: `${API_PREFIX}/entrepreneurship-locations`,
-    SOCIAL_LINKS: `${API_PREFIX}/entrepreneurship-social-links`,
-    PORTALS: `${API_PREFIX}/entrepreneurship-portals`,
+    ENTITY_SOCIAL_LINKS: `${API_PREFIX}/entity-social-links`,
+    ENTITY_PORTALS: `${API_PREFIX}/entity-portals`,
     CATEGORIES: `${API_PREFIX}/categories`,
   },
   EVENTS: {
@@ -100,6 +101,7 @@ export const CATALOGUE_CODES = {
   EVENT_TYPE: 'EVENT_TYPE',
   EVENT_VISIBILITY: 'EVENT_VISIBILITY',
   INVITATION_STATUS: 'INVITATION_STATUS',
+  EVENT_PARTICIPATION_STATUS: 'EVENT_PARTICIPATION_STATUS',
   SOCIAL_PLATFORM: 'SOCIAL_PLATFORM',
   THEME_TYPE: 'THEME_TYPE',
 } as const;

@@ -7,6 +7,9 @@
     (click)="sidebarState.closeMobile()"
   ></div>
   <main class="shell__content">
+    <button class="shell__back-btn" type="button" (click)="goBack()" title="Volver">
+      <i class="pi pi-arrow-left"></i>
+    </button>
     <router-outlet />
   </main>
 </div>

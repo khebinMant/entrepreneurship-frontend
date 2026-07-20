@@ -1,18 +1,19 @@
-export interface EntrepreneurshipSocialLink {
-  entrepreneurshipSocialLinkId: number;
-  entrepreneurshipId: number;
+export interface EntitySocialLink {
+  entitySocialLinkId: number;
+  entityId: number;
   socialPlatformId: number;
   socialPlatformName?: string;
   url: string;
 }
 
-export interface CreateEntrepreneurshipSocialLinkDto {
-  entrepreneurshipId: number;
+export interface CreateEntitySocialLinkDto {
+  entityId: number;
   socialPlatformId: number;
   url: string;
 }
 
-export interface UpdateEntrepreneurshipSocialLinkDto {
+export interface UpdateEntitySocialLinkDto {
+  entityId?: number;
   socialPlatformId?: number;
   url?: string;
 }

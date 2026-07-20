@@ -1,23 +1,27 @@
-export interface EntrepreneurshipPortal {
-  entrepreneurshipPortalId: number;
-  entrepreneurshipId: number;
-  subdomain: string;
-  themeId: number;
+export interface EntityPortal {
+  entityPortalId: number;
+  entityId: number;
+  subdomain?: string;
+  themeId?: number;
   themeName?: string;
-  isActive: boolean;
+  isActive?: boolean;
+  htmlContent?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateEntrepreneurshipPortalDto {
-  entrepreneurshipId: number;
-  subdomain: string;
-  themeId: number;
-  isActive: boolean;
-}
-
-export interface UpdateEntrepreneurshipPortalDto {
+export interface CreateEntityPortalDto {
+  entityId: number;
   subdomain?: string;
   themeId?: number;
   isActive?: boolean;
+  htmlContent?: string;
+}
+
+export interface UpdateEntityPortalDto {
+  entityId?: number;
+  subdomain?: string;
+  themeId?: number;
+  isActive?: boolean;
+  htmlContent?: string;
 }
