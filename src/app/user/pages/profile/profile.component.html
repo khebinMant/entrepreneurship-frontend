@@ -73,7 +73,7 @@
             </div>
             <div class="profile-page__field">
               <label class="profile-page__label">Correo electrónico</label>
-              <input class="profile-page__input" type="email" [value]="editEmail" disabled />
+              <input class="profile-page__input" type="email" [(ngModel)]="editEmail" placeholder="tu@correo.com" />
             </div>
             <button class="btn btn--primary" (click)="saveProfile()" [disabled]="saving()">
               {{ saving() ? 'Guardando...' : 'Guardar Cambios' }}
@@ -413,12 +413,14 @@
               <span class="modal-form__error">{{ contactValueError() }}</span>
             }
           </div>
-          <div class="modal-form__checkbox">
-            <input type="checkbox" id="contact-primary"
-              [ngModel]="contactForm().isPrimary"
-              (ngModelChange)="onContactFieldChange('isPrimary', $event)" />
-            <label for="contact-primary">Contacto principal</label>
-          </div>
+          @if (editingContact(); as ec) {
+            @if (ec.isPrimary) {
+              <div class="modal-form__checkbox">
+                <input type="checkbox" id="contact-primary" checked disabled />
+                <label for="contact-primary">Contacto principal</label>
+              </div>
+            }
+          }
           <div class="modal-form__actions">
             <button class="btn btn--ghost" type="button" (click)="closeContactModal()">Cancelar</button>
             <button class="btn btn--primary" type="button" (click)="saveContact()" [disabled]="savingContact()">
@@ -469,6 +471,28 @@
             <button class="btn btn--ghost" type="button" (click)="closeIdentificationModal()">Cancelar</button>
             <button class="btn btn--primary" type="button" (click)="saveIdentification()" [disabled]="savingIdentification()">
               {{ savingIdentification() ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </div>
+      </app-modal>
+
+      <app-modal [visible]="showEmailConfirmModal()" title="Cambiar correo de acceso" size="sm" (close)="cancelEmailChange()">
+        <div class="delete-confirm">
+          <div class="delete-confirm__icon"><i class="pi pi-exclamation-triangle"></i></div>
+          <p class="delete-confirm__text">
+            ¿Estás seguro de que deseas cambiar tu correo electrónico a <strong>{{ pendingEmail() }}</strong>?
+          </p>
+          <p class="delete-confirm__hint">
+            Este es el correo con el que inicias sesión. Deberás volver a iniciar sesión después del cambio.
+          </p>
+          <div class="delete-confirm__actions">
+            <button class="btn btn--ghost" type="button" (click)="cancelEmailChange()" [disabled]="emailChanging()">Cancelar</button>
+            <button class="btn btn--primary" type="button" (click)="confirmEmailChange()" [disabled]="emailChanging()">
+              @if (emailChanging()) {
+                <i class="pi pi-spin pi-spinner"></i> Cambiando...
+              } @else {
+                Sí, cambiar correo
+              }
             </button>
           </div>
         </div>

@@ -57,6 +57,10 @@ export class UserService {
     return this.api.post<void>(this.baseUrl, API_ENDPOINTS.USERS.CHANGE_PASSWORD(userId), dto);
   }
 
+  updateEmail(userId: number, email: string): Observable<void> {
+    return this.api.put<void>(this.baseUrl, API_ENDPOINTS.USERS.UPDATE_EMAIL(userId), { email });
+  }
+
   getContactsByUser(userId: number): Observable<UserContact[]> {
     return this.api.get<UserContact[]>(this.baseUrl, API_ENDPOINTS.USERS.CONTACTS_BY_USER(userId));
   }

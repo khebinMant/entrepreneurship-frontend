@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NgIf } from '@angular/common';
+import { NgIf, Location } from '@angular/common';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { FooterComponent } from '../footer/footer.component';
@@ -18,9 +18,16 @@ import { SessionExpiredModalComponent } from '../../../core/authentication/compo
 export class ShellComponent implements OnInit {
   readonly sidebarState = inject(SidebarStateService);
   private readonly sessionTimeout = inject(SessionTimeoutService);
+  private readonly location = inject(Location);
+
+  readonly showBackButton = signal(false);
 
   ngOnInit(): void {
     this.sessionTimeout.configure(30);
     this.sessionTimeout.startTracking();
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 }

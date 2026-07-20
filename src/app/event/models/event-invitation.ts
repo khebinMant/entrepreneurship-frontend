@@ -29,17 +29,29 @@ export interface BulkCreateInvitationDto {
   invitations: CreateEventInvitationDto[];
 }
 
+export interface ParticipantEntrepreneurship {
+  entrepreneurshipId: number;
+  userId?: number;
+  categoryId?: number;
+  categoryName?: string;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  isPhysical?: boolean;
+  isDigital?: boolean;
+  imageUrl?: string;
+  imageId?: number;
+}
+
 export interface EventParticipant {
-  eventEntrepreneurshipParticipantId: number;
+  eventParticipantId: number;
   eventId: number;
   eventName?: string;
   entrepreneurshipId: number;
-  entrepreneurshipName?: string;
-  entrepreneurshipImageUrl?: string;
-  entrepreneurshipImageId?: number;
+  entrepreneurship?: ParticipantEntrepreneurship;
+  spaceCode?: string;
   participationStatusId: number;
   participationStatusName?: string;
-  spaceCode?: string;
   invitedAt: string;
   respondedAt?: string;
 }

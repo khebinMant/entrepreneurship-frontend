@@ -10,13 +10,14 @@ import { Category } from '../../models/category';
 import { Entrepreneurship, EntrepreneurshipSearchFilters } from '../../models/entrepreneurship';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
 import { CreateComponent } from '../create/create.component';
+import { EditComponent } from '../edit/edit.component';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import type { Page } from '../../../shared/models/pagination';
 
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [NgIf, NgClass, RouterLink, FormsModule, ModalComponent, CreateComponent, ClickOutsideDirective],
+  imports: [NgIf, NgClass, RouterLink, FormsModule, ModalComponent, CreateComponent, EditComponent, ClickOutsideDirective],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
 })

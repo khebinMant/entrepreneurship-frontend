@@ -23,11 +23,11 @@
   <app-modal
     [visible]="showEditModal()"
     title="Editar Emprendimiento"
-    size="md"
+    size="lg"
     (close)="closeEditModal()"
   >
     @if (editingEntrepreneurship(); as e) {
-      <app-entrepreneurship-create [editingEntrepreneurship]="e" (created)="closeEditModal()" (cancelled)="closeEditModal()" />
+      <app-edit [editingEntrepreneurship]="e" (saved)="closeEditModal()" (cancelled)="closeEditModal()" />
     }
   </app-modal>
 

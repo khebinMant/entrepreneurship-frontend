@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { CatalogueService } from '../../../shared-domain/services/catalogue.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
+import { KeycloakService } from '../../../authentication/services/keycloak.service';
 import { ENTITY_TYPE, CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import type { User } from '../../models/user';
 import type { ImageGallery } from '../../../shared-domain/models/image-gallery';
@@ -25,6 +26,7 @@ export class ProfileComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly userService = inject(UserService);
   private readonly catalogueService = inject(CatalogueService);
+  private readonly keycloakService = inject(KeycloakService);
   readonly imageService = inject(ImageService);
 
   readonly activeTab = signal<'info' | 'password' | 'addresses' | 'contacts' | 'identifications'>('info');
@@ -48,6 +50,11 @@ export class ProfileComponent implements OnInit {
   newPassword = '';
   repeatPassword = '';
   readonly changingPassword = signal(false);
+
+  // --- Email change state ---
+  readonly showEmailConfirmModal = signal(false);
+  readonly pendingEmail = signal('');
+  readonly emailChanging = signal(false);
 
   // --- Addresses state ---
   readonly addresses = signal<UserAddress[]>([]);
@@ -196,6 +203,39 @@ export class ProfileComponent implements OnInit {
       this.error.set('Error al actualizar el perfil');
     } finally {
       this.saving.set(false);
+    }
+
+    const newEmail = this.editEmail.trim().toLowerCase();
+    const oldEmail = (this.authService.authState().email || '').toLowerCase();
+    if (newEmail && newEmail !== oldEmail) {
+      this.pendingEmail.set(newEmail);
+      this.showEmailConfirmModal.set(true);
+    }
+  }
+
+  cancelEmailChange(): void {
+    this.showEmailConfirmModal.set(false);
+    this.pendingEmail.set('');
+  }
+
+  async confirmEmailChange(): Promise<void> {
+    const u = this.user();
+    const email = this.pendingEmail();
+    if (!u || !email) return;
+    this.emailChanging.set(true);
+    this.error.set('');
+    this.success.set('');
+    try {
+      await lastValueFrom(this.userService.updateEmail(u.userId, email));
+      this.showEmailConfirmModal.set(false);
+      this.success.set('Correo electrónico cambiado con éxito. Serás redirigido para iniciar sesión nuevamente.');
+      setTimeout(() => this.keycloakService.logout(), 3000);
+    } catch {
+      this.error.set('Error al cambiar el correo electrónico');
+      this.showEmailConfirmModal.set(false);
+      this.pendingEmail.set('');
+    } finally {
+      this.emailChanging.set(false);
     }
   }
 
@@ -518,7 +558,7 @@ export class ProfileComponent implements OnInit {
           userId: u.userId,
           contactTypeId: f.contactTypeId,
           contactValue: f.contactValue.trim(),
-          isPrimary: f.isPrimary,
+          isPrimary: editing.isPrimary,
         };
         await lastValueFrom(this.userService.updateContact(editing.userContactId, dto));
       } else {
@@ -526,7 +566,7 @@ export class ProfileComponent implements OnInit {
           userId: u.userId,
           contactTypeId: f.contactTypeId,
           contactValue: f.contactValue.trim(),
-          isPrimary: f.isPrimary,
+          isPrimary: false,
         };
         await lastValueFrom(this.userService.createContact(dto));
       }
