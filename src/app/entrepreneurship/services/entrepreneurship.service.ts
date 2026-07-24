@@ -10,6 +10,7 @@ import type { EntrepreneurshipLocation, CreateEntrepreneurshipLocationDto, Updat
 import type { EntitySocialLink, CreateEntitySocialLinkDto, UpdateEntitySocialLinkDto } from '../models/entrepreneurship-social-link';
 import type { EntityPortal, CreateEntityPortalDto, UpdateEntityPortalDto } from '../models/entrepreneurship-portal';
 import type { Page } from '../../shared/models/pagination';
+import type { EntrepreneurshipGlobalAnalytics, UserEntrepreneurshipStats } from '../../shared/models/analytics';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -133,5 +134,13 @@ export class EntrepreneurshipService {
 
   deletePortal(id: number): Observable<void> {
     return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_PORTALS}/${id}`);
+  }
+
+  getAnalyticsGlobal(): Observable<EntrepreneurshipGlobalAnalytics> {
+    return this.api.get<EntrepreneurshipGlobalAnalytics>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.ANALYTICS_GLOBAL);
+  }
+
+  getStatsByUser(userId: number): Observable<UserEntrepreneurshipStats> {
+    return this.api.get<UserEntrepreneurshipStats>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.STATS_USER(userId));
   }
 }

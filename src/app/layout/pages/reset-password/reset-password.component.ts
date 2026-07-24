@@ -1,46 +1,62 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Component({
-  selector: 'app-forgot-password',
+  selector: 'app-reset-password',
   standalone: true,
   imports: [FormsModule, NgIf, RouterLink],
   template: `
-    <div class="forgot-page">
-      <div class="forgot-card">
-        <div class="forgot-header">
-          <h1 class="forgot-title">¿Olvidaste tu contraseña?</h1>
-          <p class="forgot-subtitle">Ingresa tu correo y te enviaremos un enlace para restablecerla</p>
+    <div class="reset-page">
+      <div class="reset-card">
+        <div class="reset-header">
+          <h1 class="reset-title">Restablecer contraseña</h1>
+          <p class="reset-subtitle">Ingresa tu nueva contraseña</p>
         </div>
 
-        <div *ngIf="sent()" class="forgot-success">
+        <div *ngIf="success()" class="reset-success">
           <i class="pi pi-check-circle"></i>
-          <h3>Correo enviado</h3>
-          <p>Revisa tu bandeja de entrada. Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.</p>
-          <a routerLink="/login" class="auth-btn auth-btn--primary" style="display:inline-flex;margin-top:var(--spacing-md)">Volver al inicio de sesión</a>
+          <h3>Contraseña actualizada</h3>
+          <p>Tu contraseña se ha restablecido correctamente.</p>
+          <a routerLink="/login" class="auth-btn auth-btn--primary" style="display:inline-flex;margin-top:var(--spacing-md)">Iniciar sesión</a>
         </div>
 
-        <form class="forgot-form" (ngSubmit)="onSubmit()" *ngIf="!sent()">
-          <div class="forgot-field">
-            <label class="forgot-label" for="email">Correo electrónico</label>
+        <form class="reset-form" (ngSubmit)="onSubmit()" *ngIf="!success()">
+          <div class="reset-field">
+            <label class="reset-label" for="newPassword">Nueva contraseña</label>
             <input
-              id="email"
-              class="forgot-input"
-              type="email"
-              [(ngModel)]="email"
-              name="email"
-              placeholder="tu@correo.com"
+              id="newPassword"
+              class="reset-input"
+              type="password"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              placeholder="Mínimo 8 caracteres"
               required
-              autocomplete="email"
+              minlength="8"
+              autocomplete="new-password"
             />
           </div>
 
-          <div class="forgot-error" *ngIf="errorMessage()">
+          <div class="reset-field">
+            <label class="reset-label" for="confirmPassword">Confirmar contraseña</label>
+            <input
+              id="confirmPassword"
+              class="reset-input"
+              type="password"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              placeholder="Repite la contraseña"
+              required
+              minlength="8"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="reset-error" *ngIf="errorMessage()">
             <i class="pi pi-exclamation-circle"></i>
             {{ errorMessage() }}
           </div>
@@ -51,25 +67,25 @@ import { environment } from '../../../../environments/environment';
             [disabled]="loading()"
             style="width:100%"
           >
-            {{ loading() ? 'Enviando...' : 'Enviar enlace de recuperación' }}
+            {{ loading() ? 'Restableciendo...' : 'Restablecer contraseña' }}
           </button>
         </form>
 
-        <p class="forgot-footer" *ngIf="!sent()">
+        <p class="reset-footer">
           <a routerLink="/login" class="auth-link">Volver al inicio de sesión</a>
         </p>
       </div>
     </div>
   `,
   styles: [`
-    .forgot-page {
+    .reset-page {
       min-height: calc(100vh - 64px);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: var(--spacing-lg);
     }
-    .forgot-card {
+    .reset-card {
       width: 100%;
       max-width: 420px;
       padding: var(--spacing-xl);
@@ -77,38 +93,38 @@ import { environment } from '../../../../environments/environment';
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-md);
     }
-    .forgot-header {
+    .reset-header {
       text-align: center;
       margin-bottom: var(--spacing-xl);
     }
-    .forgot-title {
+    .reset-title {
       font-size: var(--font-size-xl);
       font-weight: 700;
       color: var(--color-text-primary);
       margin: 0;
     }
-    .forgot-subtitle {
+    .reset-subtitle {
       color: var(--color-text-secondary);
       margin: var(--spacing-xs) 0 0;
       font-size: var(--font-size-sm);
       line-height: 1.5;
     }
-    .forgot-form {
+    .reset-form {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-md);
     }
-    .forgot-field {
+    .reset-field {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-xs);
     }
-    .forgot-label {
+    .reset-label {
       font-size: var(--font-size-sm);
       font-weight: 600;
       color: var(--color-text-primary);
     }
-    .forgot-input {
+    .reset-input {
       padding: 10px 14px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -119,15 +135,15 @@ import { environment } from '../../../../environments/environment';
       width: 100%;
       box-sizing: border-box;
     }
-    .forgot-input:focus {
+    .reset-input:focus {
       outline: none;
       border-color: var(--color-primary);
       box-shadow: 0 0 0 3px var(--color-primary-light);
     }
-    .forgot-input::placeholder {
+    .reset-input::placeholder {
       color: var(--color-text-muted);
     }
-    .forgot-error {
+    .reset-error {
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
@@ -138,21 +154,21 @@ import { environment } from '../../../../environments/environment';
       color: #b91c1c;
       font-size: var(--font-size-sm);
     }
-    .forgot-success {
+    .reset-success {
       text-align: center;
       padding: var(--spacing-lg) 0;
     }
-    .forgot-success i {
+    .reset-success i {
       font-size: 48px;
       color: #16a34a;
       margin-bottom: var(--spacing-md);
     }
-    .forgot-success h3 {
+    .reset-success h3 {
       font-size: var(--font-size-lg);
       color: var(--color-text-primary);
       margin: 0 0 var(--spacing-sm);
     }
-    .forgot-success p {
+    .reset-success p {
       font-size: var(--font-size-sm);
       color: var(--color-text-secondary);
       margin: 0;
@@ -190,41 +206,63 @@ import { environment } from '../../../../environments/environment';
     .auth-link:hover {
       text-decoration: underline;
     }
-    .forgot-footer {
+    .reset-footer {
       text-align: center;
       font-size: var(--font-size-sm);
       color: var(--color-text-secondary);
       margin: var(--spacing-lg) 0 0;
     }
-    @media (max-width: 768px) {
-      .forgot-image-side { display: none; }
-      .forgot-form-side { padding: var(--spacing-lg); }
-    }
   `],
 })
-export class ForgotPasswordComponent {
+export class ResetPasswordComponent {
   private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
-  email = '';
+  newPassword = '';
+  confirmPassword = '';
   loading = signal(false);
   errorMessage = signal('');
-  sent = signal(false);
+  success = signal(false);
+
+  private get token(): string | null {
+    return this.route.snapshot.queryParamMap.get('token');
+  }
 
   async onSubmit(): Promise<void> {
-    if (!this.email) return;
-    this.loading.set(true);
     this.errorMessage.set('');
+
+    if (!this.token) {
+      this.errorMessage.set('Token inválido o expirado.');
+      return;
+    }
+
+    if (this.newPassword.length < 8) {
+      this.errorMessage.set('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    if (this.newPassword !== this.confirmPassword) {
+      this.errorMessage.set('Las contraseñas no coinciden.');
+      return;
+    }
+
+    this.loading.set(true);
 
     try {
       await lastValueFrom(
         this.http.post(
-          `${environment.services.user}/api/v1/auth/forgot-password`,
-          { email: this.email },
+          `${environment.services.user}/api/v1/auth/reset-password`,
+          { token: this.token, newPassword: this.newPassword },
         ),
       );
-      this.sent.set(true);
-    } catch {
-      this.sent.set(true);
+      this.success.set(true);
+    } catch (err: any) {
+      if (err.status === 400) {
+        this.errorMessage.set('El token es inválido o ha expirado.');
+      } else {
+        this.errorMessage.set('Ocurrió un error. Intenta de nuevo.');
+      }
     } finally {
       this.loading.set(false);
     }

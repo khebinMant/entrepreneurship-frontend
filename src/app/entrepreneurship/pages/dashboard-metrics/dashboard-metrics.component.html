@@ -3,7 +3,7 @@
     <div class="dashboard-metrics__hero-content">
       <h1 class="dashboard-metrics__title">Panel de Control</h1>
       <p class="dashboard-metrics__subtitle">
-        Bienvenido de nuevo, {{ authService.authState().username }}. Aquí tienes un resumen de tu plataforma.
+        Bienvenido de nuevo, {{ username() }}. Aquí tienes un resumen completo de tu plataforma.
       </p>
     </div>
     <div class="dashboard-metrics__hero-icon">
@@ -11,44 +11,233 @@
     </div>
   </div>
 
-  <div class="dashboard-metrics__cards">
-    <a *ngFor="let card of metrics(); let i = index" class="metric-card" [routerLink]="card.route">
-      <div class="metric-card__icon" [class]="'metric-card__icon metric-card__icon--' + i">
-        <i class="{{ card.icon }}"></i>
-      </div>
-      <div class="metric-card__info">
-        <span class="metric-card__label">{{ card.label }}</span>
-        <span class="metric-card__value">{{ card.value }}</span>
-      </div>
-      <div class="metric-card__trend">
-        <i class="pi pi-arrow-right"></i>
-      </div>
-    </a>
-  </div>
-
-  <div class="dashboard-metrics__charts">
-    <div class="dashboard-metrics__chart-card">
-      <div class="dashboard-metrics__chart-header">
-        <h3>Actividad Mensual</h3>
-        <span class="dashboard-metrics__chart-badge">2026</span>
-      </div>
-      <div class="chart-bar">
-        <div class="chart-bar__item" *ngFor="let bar of chartData()">
-          <div class="chart-bar__bar-container">
-            <div
-              class="chart-bar__bar"
-              [style.height.%]="bar.value"
-              [style.background]="bar.color"
-            ></div>
+  @if (loading()) {
+    <div class="dashboard-metrics__loading">
+      <i class="pi pi-spin pi-spinner"></i> Cargando datos...
+    </div>
+  } @else {
+    <!-- Metric Cards -->
+    <div class="dashboard-metrics__cards">
+      @for (card of metrics(); track card.label) {
+        <a class="metric-card" [routerLink]="card.route">
+          <div class="metric-card__icon" [style.background]="card.color + '20'" [style.color]="card.color">
+            <i class="{{ card.icon }}"></i>
           </div>
-          <span class="chart-bar__label">{{ bar.label }}</span>
-        </div>
-      </div>
-      <p class="dashboard-metrics__chart-empty" *ngIf="chartData().every(b => b.value === 0)">
-        Los datos aparecerán cuando haya actividad registrada.
-      </p>
+          <div class="metric-card__info">
+            <span class="metric-card__label">{{ card.label }}</span>
+            <span class="metric-card__value">{{ card.value }}</span>
+          </div>
+          <div class="metric-card__trend">
+            <i class="pi pi-arrow-right"></i>
+          </div>
+        </a>
+      }
     </div>
 
+    <!-- Charts Row 1: Monthly Activity (full width) -->
+    <div class="dashboard-metrics__chart-card dashboard-metrics__chart-card--wide">
+      <div class="dashboard-metrics__chart-header">
+        <h3>Actividad Mensual</h3>
+        <div class="dashboard-metrics__chart-legend">
+          <span class="legend-dot legend-dot--purple"></span> Emprendimientos
+          <span class="legend-dot legend-dot--cyan" style="margin-left:12px"></span> Eventos
+        </div>
+      </div>
+      <div class="chart-container chart-container--lg">
+        <canvas #monthlyChart></canvas>
+      </div>
+    </div>
+
+    <!-- Charts Row 2: 3 mini charts side by side -->
+    <div class="dashboard-metrics__charts-row">
+      <!-- Emprendimiento Type -->
+      <div class="dashboard-metrics__chart-card">
+        <div class="dashboard-metrics__chart-header">
+          <h3>Tipo de Emprendimiento</h3>
+        </div>
+        <div class="chart-container chart-container--sm">
+          <canvas #typeChart></canvas>
+        </div>
+        @if (!byTypeData()) {
+          <p class="dashboard-metrics__chart-empty">Sin datos</p>
+        }
+      </div>
+
+      <!-- Category Distribution -->
+      <div class="dashboard-metrics__chart-card">
+        <div class="dashboard-metrics__chart-header">
+          <h3>Por Categoría</h3>
+        </div>
+        <div class="chart-container chart-container--sm">
+          <canvas #categoryChart></canvas>
+        </div>
+        @if (!byCategory().length) {
+          <p class="dashboard-metrics__chart-empty">Sin datos</p>
+        }
+      </div>
+
+      <!-- Event Type -->
+      <div class="dashboard-metrics__chart-card">
+        <div class="dashboard-metrics__chart-header">
+          <h3>Eventos por Tipo</h3>
+        </div>
+        <div class="chart-container chart-container--sm">
+          <canvas #eventTypeChart></canvas>
+        </div>
+        @if (!eventByType().length) {
+          <p class="dashboard-metrics__chart-empty">Sin datos</p>
+        }
+      </div>
+
+      <!-- Event Visibility -->
+      <div class="dashboard-metrics__chart-card">
+        <div class="dashboard-metrics__chart-header">
+          <h3>Visibilidad de Eventos</h3>
+        </div>
+        <div class="chart-container chart-container--sm">
+          <canvas #eventVisChart></canvas>
+        </div>
+        @if (!eventByVisibility().length) {
+          <p class="dashboard-metrics__chart-empty">Sin datos</p>
+        }
+      </div>
+    </div>
+
+    <!-- Stats Row: 3 stat comparison cards -->
+    <div class="dashboard-metrics__stats-row">
+      <!-- Upcoming vs Past -->
+      <div class="stat-card">
+        <div class="stat-card__header">
+          <i class="pi pi-calendar"></i>
+          <h4>Eventos</h4>
+        </div>
+        <div class="stat-card__bars">
+          <div class="stat-bar">
+            <span class="stat-bar__label">Próximos</span>
+            <div class="stat-bar__track">
+              <div class="stat-bar__fill stat-bar__fill--cyan" [style.width.%]="totalEventsPercent(upcomingEvents(), pastEvents())"></div>
+            </div>
+            <span class="stat-bar__value">{{ upcomingEvents() }}</span>
+          </div>
+          <div class="stat-bar">
+            <span class="stat-bar__label">Pasados</span>
+            <div class="stat-bar__track">
+              <div class="stat-bar__fill stat-bar__fill--amber" [style.width.%]="totalEventsPercent(pastEvents(), upcomingEvents())"></div>
+            </div>
+            <span class="stat-bar__value">{{ pastEvents() }}</span>
+          </div>
+        </div>
+        <div class="stat-card__total">
+          <span>Total: {{ upcomingEvents() + pastEvents() }}</span>
+        </div>
+      </div>
+
+      <!-- Invitations vs Participants -->
+      <div class="stat-card">
+        <div class="stat-card__header">
+          <i class="pi pi-send"></i>
+          <h4>Invitaciones vs Participantes</h4>
+        </div>
+        <div class="stat-card__bars">
+          <div class="stat-bar">
+            <span class="stat-bar__label">Invitaciones</span>
+            <div class="stat-bar__track">
+              <div class="stat-bar__fill stat-bar__fill--purple" [style.width.%]="participationPercent(totalInvitationsSent(), totalParticipants())"></div>
+            </div>
+            <span class="stat-bar__value">{{ totalInvitationsSent() }}</span>
+          </div>
+          <div class="stat-bar">
+            <span class="stat-bar__label">Participantes</span>
+            <div class="stat-bar__track">
+              <div class="stat-bar__fill stat-bar__fill--green" [style.width.%]="participationPercent(totalParticipants(), totalInvitationsSent())"></div>
+            </div>
+            <span class="stat-bar__value">{{ totalParticipants() }}</span>
+          </div>
+        </div>
+        <div class="stat-card__total">
+          <span>Participación: {{ participationRate() }}%</span>
+        </div>
+      </div>
+
+      <!-- Emprendimiento Type Summary -->
+      <div class="stat-card">
+        <div class="stat-card__header">
+          <i class="pi pi-briefcase"></i>
+          <h4>Distribución de Emprendimientos</h4>
+        </div>
+        <div class="stat-card__bars">
+          <div class="stat-bar">
+            <span class="stat-bar__label">Físico</span>
+            <div class="stat-bar__track">
+              <div class="stat-bar__fill stat-bar__fill--purple" [style.width.%]="typePercent('physical')"></div>
+            </div>
+            <span class="stat-bar__value">{{ byTypeData()?.physical ?? 0 }}</span>
+          </div>
+          <div class="stat-bar">
+            <span class="stat-bar__label">Digital</span>
+            <div class="stat-bar__track">
+              <div class="stat-bar__fill stat-bar__fill--cyan" [style.width.%]="typePercent('digital')"></div>
+            </div>
+            <span class="stat-bar__value">{{ byTypeData()?.digital ?? 0 }}</span>
+          </div>
+          <div class="stat-bar">
+            <span class="stat-bar__label">Ambos</span>
+            <div class="stat-bar__track">
+              <div class="stat-bar__fill stat-bar__fill--green" [style.width.%]="typePercent('both')"></div>
+            </div>
+            <span class="stat-bar__value">{{ byTypeData()?.both ?? 0 }}</span>
+          </div>
+        </div>
+        <div class="stat-card__total">
+          <span>Total: {{ typeTotal() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="dashboard-metrics__chart-card">
+      <div class="dashboard-metrics__chart-header">
+        <h3>Actividad Reciente</h3>
+      </div>
+      <div class="recent-grid">
+        @if (recentEntrepreneurships().length) {
+          <div class="recent-grid__col">
+            <span class="recent-grid__title"><i class="pi pi-briefcase"></i> Emprendimientos</span>
+            @for (item of recentEntrepreneurships(); track item.entrepreneurshipId) {
+              <a class="recent-item" [routerLink]="'/app/entrepreneurships/' + item.entrepreneurshipId">
+                <span class="recent-item__name">{{ item.name }}</span>
+                <span class="recent-item__meta">
+                  <span class="recent-item__type" [class.recent-item__type--mix]="item.isPhysical && item.isDigital"
+                        [class.recent-item__type--physical]="item.isPhysical && !item.isDigital"
+                        [class.recent-item__type--digital]="!item.isPhysical && item.isDigital">
+                    {{ item.isPhysical && item.isDigital ? 'Mixto' : item.isPhysical ? 'Físico' : 'Digital' }}
+                  </span>
+                  <span class="recent-item__date">{{ item.createdAt | date:'dd/MM/yyyy' }}</span>
+                </span>
+              </a>
+            }
+          </div>
+        }
+        @if (recentEvents().length) {
+          <div class="recent-grid__col">
+            <span class="recent-grid__title"><i class="pi pi-calendar"></i> Eventos</span>
+            @for (item of recentEvents(); track item.eventId) {
+              <a class="recent-item" [routerLink]="'/app/events/' + item.eventId">
+                <span class="recent-item__name">{{ item.name }}</span>
+                <span class="recent-item__meta">
+                  <span class="recent-item__date">{{ item.startDatetime ? (item.startDatetime | date:'dd/MM/yyyy') : (item.createdAt | date:'dd/MM/yyyy') }}</span>
+                </span>
+              </a>
+            }
+          </div>
+        }
+        @if (!recentEntrepreneurships().length && !recentEvents().length) {
+          <p class="dashboard-metrics__chart-empty">Sin actividad reciente.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
     <div class="dashboard-metrics__quick-actions">
       <h3>Acciones Rápidas</h3>
       <div class="dashboard-metrics__actions">
@@ -70,5 +259,5 @@
         </a>
       </div>
     </div>
-  </div>
+  }
 </div>

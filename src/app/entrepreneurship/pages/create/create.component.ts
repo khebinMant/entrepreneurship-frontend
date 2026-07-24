@@ -24,6 +24,7 @@ interface LocationForm {
   addressLine: string;
   latitude: number | null;
   longitude: number | null;
+  mapsUrl: string;
 }
 
 interface SocialLinkForm {
@@ -119,6 +120,7 @@ export class CreateComponent implements OnInit {
     addressLine: '',
     latitude: null,
     longitude: null,
+    mapsUrl: '',
   });
 
   // --- Social Links ---
@@ -264,7 +266,7 @@ export class CreateComponent implements OnInit {
 
   openAddLocation(): void {
     this.editingLocationIdx.set(null);
-    this.locationForm.set({ countryId: null, provinceId: null, cityId: null, parishId: null, addressLine: '', latitude: null, longitude: null });
+    this.locationForm.set({ countryId: null, provinceId: null, cityId: null, parishId: null, addressLine: '', latitude: null, longitude: null, mapsUrl: '' });
     this.locationProvinces.set([]);
     this.locationCities.set([]);
     this.locationParishes.set([]);
@@ -274,7 +276,7 @@ export class CreateComponent implements OnInit {
   openEditLocation(idx: number): void {
     this.editingLocationIdx.set(idx);
     const loc = this.locations()[idx];
-    this.locationForm.set({ ...loc });
+    this.locationForm.set({ ...loc, mapsUrl: loc.mapsUrl ?? '' });
     this.locationProvinces.set([]);
     this.locationCities.set([]);
     this.locationParishes.set([]);
@@ -352,7 +354,7 @@ export class CreateComponent implements OnInit {
       this.locationError.set('Longitud debe estar entre -180 y 180');
       return;
     }
-    const loc = {
+    const loc: LocationForm = {
       countryId: f.countryId,
       provinceId: f.provinceId,
       cityId: f.cityId,
@@ -360,6 +362,7 @@ export class CreateComponent implements OnInit {
       addressLine: f.addressLine.trim(),
       latitude: f.latitude,
       longitude: f.longitude,
+      mapsUrl: f.mapsUrl || '',
     };
     this.locations.update(list => {
       const next = [...list];
@@ -443,14 +446,45 @@ export class CreateComponent implements OnInit {
     try {
       if (this.isEditMode()) {
         const entrepreneurship = this.editingEntrepreneurship()!;
-        await lastValueFrom(this.entrepreneurshipService.update(entrepreneurship.entrepreneurshipId, {
+        const updatePayload: any = {
           userId: currentUser!.userId,
           name: f.name,
           description: f.description,
           categoryId: f.categoryId!,
           isPhysical: f.isPhysical,
           isDigital: f.isDigital,
+        };
+
+        const updateSocials = this.socialLinks().map(l => ({
+          socialPlatformId: l.socialPlatformId!,
+          url: l.url,
         }));
+        if (updateSocials.length) updatePayload.socialLinks = updateSocials;
+
+        const updateLocs = this.locations().map(l => ({
+          countryId: l.countryId!,
+          provinceId: l.provinceId!,
+          cityId: l.cityId!,
+          parishId: l.parishId ?? undefined,
+          addressLine: l.addressLine,
+          latitude: l.latitude ?? undefined,
+          longitude: l.longitude ?? undefined,
+          mapsUrl: l.mapsUrl || undefined,
+        }));
+        if (updateLocs.length) updatePayload.locations = updateLocs;
+
+        const updateSubdomain = portal.subdomain.trim();
+        const updateHtmlContent = portal.htmlContent.trim();
+        if (updateSubdomain || updateHtmlContent || portal.themeId) {
+          updatePayload.portal = {
+            subdomain: updateSubdomain || undefined,
+            themeId: portal.themeId ?? undefined,
+            isActive: portal.isActive,
+            htmlContent: updateHtmlContent || undefined,
+          };
+        }
+
+        await lastValueFrom(this.entrepreneurshipService.update(entrepreneurship.entrepreneurshipId, updatePayload));
 
         if (this.logoFile()) {
           await lastValueFrom(this.imageService.upload(
@@ -489,6 +523,7 @@ export class CreateComponent implements OnInit {
           addressLine: l.addressLine,
           latitude: l.latitude ?? undefined,
           longitude: l.longitude ?? undefined,
+          mapsUrl: l.mapsUrl || undefined,
         }));
         if (locs.length) payload.locations = locs;
 

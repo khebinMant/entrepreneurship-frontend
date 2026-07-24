@@ -16,7 +16,28 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
   template: `
     <!-- HERO CAROUSEL -->
     <section class="carousel-section">
-      <app-hero-carousel [items]="events()" [template]="eventSlide" />
+      @if (loadingEvents()) {
+        <div class="carousel-skeleton">
+          <div class="carousel-skeleton__slide">
+            <div class="carousel-skeleton__img skeleton"></div>
+            <div class="carousel-skeleton__info">
+              <div class="skeleton skeleton--chip"></div>
+              <div class="skeleton skeleton--title skeleton--w-60"></div>
+              <div class="skeleton skeleton--text"></div>
+              <div class="skeleton skeleton--text skeleton--w-40"></div>
+              <div class="skeleton skeleton--text skeleton--w-70"></div>
+              <div class="skeleton skeleton--btn"></div>
+            </div>
+          </div>
+        </div>
+      } @else if (events().length > 0) {
+        <app-hero-carousel [items]="events()" [template]="eventSlide" />
+      } @else {
+        <div class="carousel-empty">
+          <i class="pi pi-calendar"></i>
+          <p>No hay eventos próximos</p>
+        </div>
+      }
 
       <ng-template #eventSlide let-event>
         <div class="slide">
@@ -35,13 +56,6 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
           </div>
         </div>
       </ng-template>
-
-      @if (events().length === 0) {
-        <div class="carousel-empty">
-          <i class="pi pi-calendar"></i>
-          <p>No hay eventos próximos</p>
-        </div>
-      }
     </section>
 
     <!-- EMPRENDIMIENTOS -->
@@ -51,7 +65,22 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
         <p class="section-subtitle">Explora los proyectos innovadores de nuestra comunidad</p>
       </div>
 
-      @if (entrepreneurships().length > 0) {
+      @if (loadingEntrepreneurships()) {
+        <div class="ents">
+          @for (_ of [1,2,3]; track $index) {
+            <div class="ent-card ent-card--skeleton">
+              <div class="ent-card__img skeleton"></div>
+              <div class="ent-card__body">
+                <div class="skeleton skeleton--chip"></div>
+                <div class="skeleton skeleton--title"></div>
+                <div class="skeleton skeleton--text"></div>
+                <div class="skeleton skeleton--text skeleton--w-40"></div>
+                <div class="skeleton skeleton--text-sm"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (entrepreneurships().length > 0) {
         <div class="ents">
           @for (ent of entrepreneurships(); track ent.entrepreneurshipId) {
             <a class="ent-card" [routerLink]="'/entrepreneurships/' + ent.entrepreneurshipId">
@@ -121,6 +150,27 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
     </footer>
   `,
   styles: [`
+    /* ===== SKELETON ===== */
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-surface-alt) 25%, var(--color-border) 50%, var(--color-surface-alt) 75%);
+      background-size: 400% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: var(--radius-md);
+    }
+    .skeleton--chip { width: 80px; height: 24px; border-radius: 999px; }
+    .skeleton--title { height: 28px; width: 80%; }
+    .skeleton--text { height: 14px; width: 100%; margin: 4px 0; }
+    .skeleton--text-sm { height: 12px; width: 50%; }
+    .skeleton--w-40 { width: 40%; }
+    .skeleton--w-60 { width: 60%; }
+    .skeleton--w-70 { width: 70%; }
+    .skeleton--btn { height: 44px; width: 150px; border-radius: 999px; }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
     /* ===== CAROUSEL SECTION ===== */
     .carousel-section {
       background: var(--color-surface-alt);
@@ -134,6 +184,30 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
       color: var(--color-text-muted);
     }
     .carousel-empty i { font-size: 48px; margin-bottom: var(--spacing-md); }
+
+    .carousel-skeleton {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .carousel-skeleton__slide {
+      display: flex;
+      height: 480px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+    .carousel-skeleton__img {
+      width: 55%;
+      flex-shrink: 0;
+      border-radius: 0;
+    }
+    .carousel-skeleton__info {
+      flex: 1;
+      padding: var(--spacing-xxl);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: var(--spacing-md);
+    }
 
     /* ===== SLIDE CONTENT (template) ===== */
     .slide {
@@ -493,6 +567,8 @@ export class HomeComponent implements OnInit {
 
   readonly events = signal<Event[]>([]);
   readonly entrepreneurships = signal<Entrepreneurship[]>([]);
+  readonly loadingEvents = signal(true);
+  readonly loadingEntrepreneurships = signal(true);
 
   async ngOnInit(): Promise<void> {
     await Promise.all([
@@ -502,6 +578,7 @@ export class HomeComponent implements OnInit {
   }
 
   private async loadEvents(): Promise<void> {
+    this.loadingEvents.set(true);
     try {
       const results = await lastValueFrom(this.eventService.search({ page: 0, size: 20 }));
       if (results && results.length > 0) {
@@ -509,10 +586,13 @@ export class HomeComponent implements OnInit {
       }
     } catch {
       // fallback
+    } finally {
+      this.loadingEvents.set(false);
     }
   }
 
   private async loadEntrepreneurships(): Promise<void> {
+    this.loadingEntrepreneurships.set(true);
     try {
       const results = await lastValueFrom(this.entrepreneurshipService.search({ page: 0, size: 15 }));
       if (results && results.length > 0) {
@@ -520,6 +600,8 @@ export class HomeComponent implements OnInit {
       }
     } catch {
       // fallback
+    } finally {
+      this.loadingEntrepreneurships.set(false);
     }
   }
 }

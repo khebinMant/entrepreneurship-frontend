@@ -4,7 +4,15 @@
   </div>
 
   @if (loading()) {
-    <div class="edit-form__loading">Cargando...</div>
+    <div class="edit-form__skeleton">
+      <div class="skeleton skeleton--form-field"></div>
+      <div class="skeleton skeleton--form-field skeleton--form-field--tall"></div>
+      <div class="edit-form__skeleton-row">
+        <div class="skeleton skeleton--form-field"></div>
+        <div class="skeleton skeleton--form-field"></div>
+      </div>
+      <div class="skeleton skeleton--form-field skeleton--form-field--tall"></div>
+    </div>
   } @else {
     <!-- Tabs -->
     <div class="edit-form__tabs">
@@ -99,7 +107,11 @@
         </div>
 
         @if (locationsLoading()) {
-          <div class="edit-form__loading-sm">Cargando direcciones...</div>
+          <div class="edit-form__skeleton-list">
+            @for (_ of [1,2]; track $index) {
+              <div class="skeleton skeleton--list-item"></div>
+            }
+          </div>
         } @else if (locations().length === 0 && !showLocationForm()) {
           <div class="edit-form__empty">
             <i class="pi pi-map-marker"></i>
@@ -177,6 +189,10 @@
                 <label class="inline-form__label">Longitud</label>
                 <input class="inline-form__input" type="number" step="any" [ngModel]="locationForm().longitude" (ngModelChange)="locationForm.update(f => ({...f, longitude: $event})); locationError.set(null)" placeholder="-180 a 180" />
               </div>
+              <div class="inline-form__field inline-form__field--full">
+                <label class="inline-form__label">URL Google Maps</label>
+                <input class="inline-form__input" type="url" [ngModel]="locationForm().mapsUrl" (ngModelChange)="locationForm.update(f => ({...f, mapsUrl: $event}))" maxlength="500" placeholder="https://maps.google.com/?q=-0.123456,-78.54321" />
+              </div>
               @if (locationError()) {
                 <div class="inline-form__field inline-form__field--full">
                   <span class="inline-form__error">{{ locationError() }}</span>
@@ -203,7 +219,11 @@
         </div>
 
         @if (socialLinksLoading()) {
-          <div class="edit-form__loading-sm">Cargando redes sociales...</div>
+          <div class="edit-form__skeleton-list">
+            @for (_ of [1,2]; track $index) {
+              <div class="skeleton skeleton--list-item"></div>
+            }
+          </div>
         } @else if (socialLinks().length === 0 && !showSocialForm()) {
           <div class="edit-form__empty">
             <i class="pi pi-share-alt"></i>
@@ -211,8 +231,15 @@
           </div>
         }
 
+        @if (socialLinkFeedback(); as fb) {
+          <div class="edit-form__feedback" [class.edit-form__feedback--success]="fb.type === 'success'" [class.edit-form__feedback--error]="fb.type === 'error'">
+            <i class="pi" [class.pi-check-circle]="fb.type === 'success'" [class.pi-exclamation-circle]="fb.type === 'error'"></i>
+            <span>{{ fb.message }}</span>
+          </div>
+        }
+
         <div class="edit-form__list">
-          @for (link of socialLinks(); track link.entitySocialLinkId) {
+          @for (link of socialLinks(); track $index) {
             <div class="edit-form__list-item">
               <div class="edit-form__list-info">
                 <strong>{{ getPlatformName(link.socialPlatformId) }}</strong>
@@ -266,7 +293,9 @@
         </div>
 
         @if (portalLoading()) {
-          <div class="edit-form__loading-sm">Cargando portal...</div>
+          <div class="edit-form__skeleton-portal">
+            <div class="skeleton skeleton--portal-card"></div>
+          </div>
         } @else {
           <div class="edit-form__portal-card">
             <div class="edit-form__portal-icon">

@@ -1,0 +1,16 @@
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        SHARED_API_URL: ${SHARED_API_URL}
+        USER_API_URL: ${USER_API_URL}
+        ENTREPRENEURSHIP_API_URL: ${ENTREPRENEURSHIP_API_URL}
+        EVENT_API_URL: ${EVENT_API_URL}
+        KEYCLOAK_URL: ${KEYCLOAK_URL}
+        KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+        KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+    ports:
+      - "4200:80"
+    restart: unless-stopped

@@ -12,8 +12,14 @@ import { CATALOGUE_CODES, ENTITY_TYPE } from '../../../core/constants/app.consta
 import { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
 import { Event as EventModel } from '../../models/event';
 import { ImageGallery } from '../../../shared-domain/models/image-gallery';
+import type { EntityPortal, CreateEntityPortalDto, UpdateEntityPortalDto } from '../../../entrepreneurship/models/entrepreneurship-portal';
 
 const MAX_IMAGES = 20;
+
+interface SocialLinkItem {
+  socialPlatformId: number;
+  url: string;
+}
 
 @Component({
   selector: 'app-event-create',
@@ -69,9 +75,37 @@ export class CreateComponent implements OnInit {
     provinceId: null as number | null,
     cityId: null as number | null,
     addressLine: '',
+    mapsUrl: '',
   });
 
   readonly user = signal<{ userId: number } | null>(null);
+
+  // --- Social Links ---
+  readonly socialLinks = signal<SocialLinkItem[]>([]);
+  readonly socialLinksLoading = signal(false);
+  readonly showSocialForm = signal(false);
+  readonly editingSocialIdx = signal<number | null>(null);
+  readonly socialPlatforms = signal<CatalogueValue[]>([]);
+  readonly savingSocialLink = signal(false);
+
+  readonly socialForm = signal({
+    socialPlatformId: null as number | null,
+    url: '',
+  });
+
+  // --- Portal ---
+  readonly showPortalForm = signal(false);
+  readonly portal = signal<EntityPortal | null>(null);
+  readonly portalLoading = signal(false);
+  readonly savingPortal = signal(false);
+  readonly themes = signal<CatalogueValue[]>([]);
+
+  readonly portalForm = signal({
+    subdomain: '',
+    themeId: null as number | null,
+    isActive: true,
+    htmlContent: '',
+  });
 
   readonly errors = computed(() => {
     const f = this.form();
@@ -130,12 +164,54 @@ export class CreateComponent implements OnInit {
         if (event) this.afterCountriesLoaded(event);
       },
     });
+    this.catalogueService.getValuesByType(CATALOGUE_CODES.SOCIAL_PLATFORM).subscribe({
+      next: (platforms) => this.socialPlatforms.set(platforms),
+    });
+    this.catalogueService.getValuesByType(CATALOGUE_CODES.THEME_TYPE).subscribe({
+      next: (themes) => this.themes.set(themes),
+    });
   }
 
   private afterCountriesLoaded(event: EventModel): void {
     this.populateForm(event);
     if (event.countryId) this.loadProvinces(event.countryId, event.provinceId);
-    if (event.eventId) this.loadExistingImages(event.eventId);
+    if (event.eventId) {
+      this.loadExistingImages(event.eventId);
+      this.loadFullEvent(event.eventId);
+    }
+  }
+
+  private async loadFullEvent(eventId: number): Promise<void> {
+    try {
+      const full: any = await lastValueFrom(this.eventService.getById(eventId));
+      console.log('[CREATE] full event:', full);
+      if (full.socialLinks?.length) {
+        this.socialLinks.set(full.socialLinks.map((l: any) => ({ socialPlatformId: l.socialPlatformId, url: l.url })));
+      }
+      console.log('[CREATE] full.portal value:', full.portal, 'truthy?', !!full.portal);
+      if (full.portal) {
+        const p = full.portal;
+        this.portal.set(p);
+        console.log('[CREATE] portal signal after set:', this.portal());
+        this.portalForm.set({
+          subdomain: p.subdomain || '',
+          themeId: p.themeId ?? null,
+          isActive: p.isActive ?? true,
+          htmlContent: p.htmlContent || '',
+        });
+        console.log('[CREATE] portalForm after set:', this.portalForm());
+      } else {
+        console.log('[CREATE] portal was falsy, not overwriting portal signal');
+      }
+      if (full.socialPlatforms?.length) {
+        this.socialPlatforms.set(full.socialPlatforms);
+      }
+      if (full.themes?.length) {
+        this.themes.set(full.themes);
+      }
+    } catch (e: any) {
+      console.log('[CREATE] loadFullEvent error:', e?.message || e);
+    }
   }
 
   private populateForm(event: EventModel): void {
@@ -155,6 +231,7 @@ export class CreateComponent implements OnInit {
       provinceId: event.provinceId || null,
       cityId: event.cityId || null,
       addressLine: event.addressLine || '',
+      mapsUrl: event.mapsUrl || '',
     });
   }
 
@@ -304,6 +381,128 @@ export class CreateComponent implements OnInit {
     });
   }
 
+  // ========== Social Links ==========
+
+  private async loadSocialLinks(eventId: number): Promise<void> {
+    this.socialLinksLoading.set(true);
+    try {
+      const links: any[] = await lastValueFrom(this.eventService.getSocialLinks(eventId));
+      console.log('[CREATE] loadSocialLinks raw:', links);
+      this.socialLinks.set(links.map(l => ({ socialPlatformId: l.socialPlatformId, url: l.url })));
+    } catch (e: any) {
+      console.log('[CREATE] loadSocialLinks error:', e?.message || e);
+    }
+    finally { this.socialLinksLoading.set(false); }
+  }
+
+  openAddSocial(): void {
+    this.editingSocialIdx.set(null);
+    this.socialForm.set({ socialPlatformId: null, url: '' });
+    this.showSocialForm.set(true);
+  }
+
+  openEditSocial(idx: number): void {
+    this.editingSocialIdx.set(idx);
+    const link = this.socialLinks()[idx];
+    this.socialForm.set({ socialPlatformId: link.socialPlatformId, url: link.url });
+    this.showSocialForm.set(true);
+  }
+
+  cancelSocialForm(): void {
+    this.showSocialForm.set(false);
+    this.editingSocialIdx.set(null);
+  }
+
+  getPlatformName(platformId: number): string {
+    return this.socialPlatforms().find(p => p.catalogueValueId === platformId)?.name || 'Red social';
+  }
+
+  saveSocialLink(): void {
+    const sf = this.socialForm();
+    if (!sf.socialPlatformId || !sf.url.trim()) return;
+    const link: SocialLinkItem = { socialPlatformId: sf.socialPlatformId, url: sf.url.trim() };
+    this.socialLinks.update(list => {
+      const next = [...list];
+      const idx = this.editingSocialIdx();
+      if (idx !== null && idx < next.length) next[idx] = link;
+      else next.push(link);
+      return next;
+    });
+    this.cancelSocialForm();
+  }
+
+  removeSocialLink(idx: number): void {
+    this.socialLinks.update(list => list.filter((_, i) => i !== idx));
+  }
+
+  // ========== Portal ==========
+
+  private async loadPortal(eventId: number): Promise<void> {
+    this.portalLoading.set(true);
+    try {
+      const portal = await lastValueFrom(this.eventService.getPortal(eventId));
+      if (portal) {
+        this.portal.set(portal);
+        this.portalForm.set({
+          subdomain: portal.subdomain || '',
+          themeId: portal.themeId ?? null,
+          isActive: portal.isActive ?? true,
+          htmlContent: portal.htmlContent || '',
+        });
+      }
+    } catch { /* fallback */ }
+    finally { this.portalLoading.set(false); }
+  }
+
+  togglePortalForm(): void {
+    this.showPortalForm.update(v => !v);
+  }
+
+  async savePortal(): Promise<void> {
+    const pf = this.portalForm();
+    if (!pf.subdomain.trim()) return;
+    this.savingPortal.set(true);
+    try {
+      const existing = this.portal();
+      const eventId = this.editingEvent()?.eventId;
+      if (eventId && existing) {
+        const dto: UpdateEntityPortalDto = {
+          subdomain: pf.subdomain.trim(),
+          themeId: pf.themeId ?? undefined,
+          isActive: pf.isActive,
+          htmlContent: pf.htmlContent || undefined,
+        };
+        const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
+        await lastValueFrom(this.eventService.updatePortal(id, dto));
+      } else if (eventId) {
+        const dto: CreateEntityPortalDto = {
+          entityId: eventId,
+          subdomain: pf.subdomain.trim(),
+          themeId: pf.themeId ?? undefined,
+          isActive: pf.isActive,
+          htmlContent: pf.htmlContent || undefined,
+        };
+        await lastValueFrom(this.eventService.createPortal(dto));
+      }
+      this.showPortalForm.set(false);
+    } catch { /* fallback */ }
+    finally { this.savingPortal.set(false); }
+  }
+
+  async deletePortal(): Promise<void> {
+    const existing = this.portal();
+    if (!existing) return;
+    this.savingPortal.set(true);
+    try {
+      const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
+      await lastValueFrom(this.eventService.deletePortal(id));
+      this.portal.set(null);
+      this.portalForm.set({ subdomain: '', themeId: null, isActive: true, htmlContent: '' });
+      this.showPortalForm.set(false);
+    } catch { /* fallback */ }
+    finally { this.savingPortal.set(false); }
+  }
+
   async onSubmit(): Promise<void> {
     this.submitted.set(true);
     const allFields = this.isEditMode()
@@ -322,7 +521,7 @@ export class CreateComponent implements OnInit {
     try {
       if (this.isEditMode()) {
         const event = this.editingEvent()!;
-        await lastValueFrom(this.eventService.update(event.eventId, {
+        const updatePayload: any = {
           createdByUserId: event.createdByUserId,
           name: f.name,
           description: f.description,
@@ -338,7 +537,28 @@ export class CreateComponent implements OnInit {
           provinceId: f.provinceId ?? undefined,
           cityId: f.cityId ?? undefined,
           addressLine: f.addressLine || undefined,
+          mapsUrl: f.mapsUrl || undefined,
+        };
+
+        const updateSocials = this.socialLinks().map(l => ({
+          socialPlatformId: l.socialPlatformId,
+          url: l.url,
         }));
+        if (updateSocials.length) updatePayload.socialLinks = updateSocials;
+
+        const pf = this.portalForm();
+        const upSubdomain = pf.subdomain.trim();
+        const upHtml = pf.htmlContent.trim();
+        if (upSubdomain || upHtml || pf.themeId) {
+          updatePayload.portal = {
+            subdomain: upSubdomain || undefined,
+            themeId: pf.themeId ?? undefined,
+            isActive: pf.isActive,
+            htmlContent: upHtml || undefined,
+          };
+        }
+
+        await lastValueFrom(this.eventService.update(event.eventId, updatePayload));
 
         if (this.coverFile()) {
           await lastValueFrom(this.imageService.upload(
@@ -354,7 +574,7 @@ export class CreateComponent implements OnInit {
         this.created.emit();
         this.router.navigate(['/app/events', event.eventId]);
       } else {
-        const event = await lastValueFrom(this.eventService.create({
+        const createPayload: any = {
           createdByUserId: currentUser?.userId ?? 0,
           name: f.name,
           description: f.description,
@@ -370,7 +590,28 @@ export class CreateComponent implements OnInit {
           provinceId: f.provinceId ?? 0,
           cityId: f.cityId ?? 0,
           addressLine: f.addressLine || undefined,
+          mapsUrl: f.mapsUrl || undefined,
+        };
+
+        const createSocials = this.socialLinks().map(l => ({
+          socialPlatformId: l.socialPlatformId,
+          url: l.url,
         }));
+        if (createSocials.length) createPayload.socialLinks = createSocials;
+
+        const cpf = this.portalForm();
+        const cSubdomain = cpf.subdomain.trim();
+        const cHtml = cpf.htmlContent.trim();
+        if (cSubdomain || cHtml || cpf.themeId) {
+          createPayload.portal = {
+            subdomain: cSubdomain || undefined,
+            themeId: cpf.themeId ?? undefined,
+            isActive: cpf.isActive,
+            htmlContent: cHtml || undefined,
+          };
+        }
+
+        const event = await lastValueFrom(this.eventService.create(createPayload));
 
         if (this.coverFile()) {
           await lastValueFrom(this.imageService.upload(

@@ -52,6 +52,7 @@ export interface Event {
   cityName?: string;
   city?: CatalogueValueBrief;
   addressLine?: string;
+  mapsUrl?: string;
   maxAttendees?: number;
   maxEntrepreneurships?: number;
   createdByUserId: number;
@@ -59,6 +60,15 @@ export interface Event {
   organizerName?: string;
   imageUrl?: string;
   imageId?: number;
+  socialLinks?: Array<{ socialPlatformId: number; socialPlatformName?: string | null; url: string }>;
+  portal?: {
+    entityPortalId?: number;
+    subdomain?: string;
+    themeId?: number;
+    themeName?: string;
+    isActive?: boolean;
+    htmlContent?: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }

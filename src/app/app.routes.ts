@@ -32,6 +32,10 @@ export const routes: Routes = [
         loadComponent: () => import('./layout/pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
       },
       {
+        path: 'reset-password',
+        loadComponent: () => import('./layout/pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+      },
+      {
         path: 'events',
         loadComponent: () => import('./event/pages/list/list.component').then((m) => m.ListComponent),
       },

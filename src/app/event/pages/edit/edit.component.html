@@ -1,3 +1,301 @@
-<div class="event-edit">
-  <h1>Editar Evento</h1>
+<div class="edit-form">
+  <div class="edit-form__header">
+    <h1>Editar Evento</h1>
+    <button class="btn btn--ghost" type="button" (click)="cancel()"><i class="pi pi-arrow-left"></i> Volver</button>
+  </div>
+
+  @if (loading()) {
+    <div class="edit-form__skeleton">
+      <div class="skeleton skeleton--form-field"></div>
+      <div class="skeleton skeleton--form-field skeleton--form-field--tall"></div>
+      <div class="edit-form__skeleton-row">
+        <div class="skeleton skeleton--form-field"></div>
+        <div class="skeleton skeleton--form-field"></div>
+      </div>
+    </div>
+  } @else {
+    <!-- Tabs -->
+    <div class="edit-form__tabs">
+      @for (tab of tabs; track tab.id) {
+        <button class="edit-form__tab" [class.edit-form__tab--active]="activeTab() === tab.id" type="button" (click)="setTab(tab.id)">
+          {{ tab.label }}
+        </button>
+      }
+    </div>
+
+    <!-- ===================== TAB: INFO ===================== -->
+    @if (activeTab() === 'info') {
+      <div class="edit-form__tab-content">
+        <div class="edit-form__grid">
+          <div class="edit-form__field edit-form__field--full">
+            <label class="edit-form__label">Nombre *</label>
+            <input class="edit-form__input" [(ngModel)]="form().name" (ngModelChange)="form.update(f => ({...f, name: $event}))" maxlength="150" />
+          </div>
+          <div class="edit-form__field edit-form__field--full">
+            <label class="edit-form__label">Descripción *</label>
+            <textarea class="edit-form__textarea" [(ngModel)]="form().description" (ngModelChange)="form.update(f => ({...f, description: $event}))" rows="3" maxlength="2000"></textarea>
+          </div>
+          <div class="edit-form__field">
+            <label class="edit-form__label">Tipo de evento *</label>
+            <select class="select" style="width: 100%" [(ngModel)]="form().eventTypeId" (ngModelChange)="form.update(f => ({...f, eventTypeId: $event}))">
+              <option [ngValue]="null">Seleccionar...</option>
+              @for (t of eventTypes(); track t.catalogueValueId) {
+                <option [ngValue]="t.catalogueValueId">{{ t.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="edit-form__field">
+            <label class="edit-form__label">Visibilidad *</label>
+            <select class="select" style="width: 100%" [(ngModel)]="form().eventVisibilityId" (ngModelChange)="form.update(f => ({...f, eventVisibilityId: $event}))">
+              <option [ngValue]="null">Seleccionar...</option>
+              @for (v of visibilities(); track v.catalogueValueId) {
+                <option [ngValue]="v.catalogueValueId">{{ v.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="edit-form__field">
+            <label class="edit-form__label">Enlace virtual</label>
+            <input class="edit-form__input" type="url" [(ngModel)]="form().virtualLink" (ngModelChange)="form.update(f => ({...f, virtualLink: $event}))" maxlength="500" placeholder="https://meet.google.com/..." />
+          </div>
+          <div class="edit-form__field">
+            <div class="edit-form__checkbox">
+              <input type="checkbox" id="isPaid" [checked]="form().isPaid" (change)="form.update(f => ({...f, isPaid: !f.isPaid, price: !f.isPaid ? f.price : null}))" />
+              <label for="isPaid">Evento de pago</label>
+            </div>
+          </div>
+          @if (form().isPaid) {
+            <div class="edit-form__field">
+              <label class="edit-form__label">Precio</label>
+              <input class="edit-form__input" type="number" min="0" step="0.01" [(ngModel)]="form().price" (ngModelChange)="form.update(f => ({...f, price: $event}))" />
+            </div>
+          }
+          <div class="edit-form__field">
+            <label class="edit-form__label">Máx. asistentes</label>
+            <input class="edit-form__input" type="number" min="0" [(ngModel)]="form().maxAttendees" (ngModelChange)="form.update(f => ({...f, maxAttendees: $event}))" />
+          </div>
+          <div class="edit-form__field">
+            <label class="edit-form__label">Cupos emprendedores</label>
+            <input class="edit-form__input" type="number" min="0" [(ngModel)]="form().maxEntrepreneurships" (ngModelChange)="form.update(f => ({...f, maxEntrepreneurships: $event}))" />
+          </div>
+        </div>
+
+        <div class="edit-form__section">
+          <h3 class="edit-form__section-title">Fecha y hora</h3>
+          <div class="edit-form__grid">
+            <div class="edit-form__field">
+              <label class="edit-form__label">Inicio *</label>
+              <input class="edit-form__input" type="datetime-local" [(ngModel)]="form().startDatetime" (ngModelChange)="form.update(f => ({...f, startDatetime: $event}))" />
+            </div>
+            <div class="edit-form__field">
+              <label class="edit-form__label">Fin *</label>
+              <input class="edit-form__input" type="datetime-local" [(ngModel)]="form().endDatetime" (ngModelChange)="form.update(f => ({...f, endDatetime: $event}))" />
+            </div>
+          </div>
+        </div>
+
+        <div class="edit-form__section">
+          <h3 class="edit-form__section-title">Ubicación</h3>
+          <div class="edit-form__grid">
+            <div class="edit-form__field">
+              <label class="edit-form__label">País</label>
+              <select class="select" style="width: 100%" [(ngModel)]="form().countryId" (ngModelChange)="form.update(f => ({...f, countryId: $event})); onCountryChange()">
+                <option [ngValue]="null">Seleccionar...</option>
+                @for (c of countries(); track c.catalogueValueId) {
+                  <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="edit-form__field">
+              <label class="edit-form__label">Provincia</label>
+              <select class="select" style="width: 100%" [(ngModel)]="form().provinceId" (ngModelChange)="form.update(f => ({...f, provinceId: $event})); onProvinceChange()" [disabled]="!form().countryId">
+                <option [ngValue]="null">{{ loadingProvinces() ? 'Cargando...' : 'Seleccionar...' }}</option>
+                @for (p of provinces(); track p.catalogueValueId) {
+                  <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="edit-form__field">
+              <label class="edit-form__label">Ciudad</label>
+              <select class="select" style="width: 100%" [(ngModel)]="form().cityId" (ngModelChange)="form.update(f => ({...f, cityId: $event}))" [disabled]="!form().provinceId">
+                <option [ngValue]="null">{{ loadingCities() ? 'Cargando...' : 'Seleccionar...' }}</option>
+                @for (c of cities(); track c.catalogueValueId) {
+                  <option [ngValue]="c.catalogueValueId">{{ c.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="edit-form__field">
+              <label class="edit-form__label">Dirección</label>
+              <input class="edit-form__input" type="text" [(ngModel)]="form().addressLine" (ngModelChange)="form.update(f => ({...f, addressLine: $event}))" maxlength="500" />
+            </div>
+            <div class="edit-form__field edit-form__field--full">
+              <label class="edit-form__label">URL Google Maps</label>
+              <input class="edit-form__input" type="url" [(ngModel)]="form().mapsUrl" (ngModelChange)="form.update(f => ({...f, mapsUrl: $event}))" maxlength="500" placeholder="https://maps.google.com/?q=-0.123456,-78.54321" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Images -->
+        <div class="edit-form__section">
+          <h3 class="edit-form__section-title">Galería de imágenes</h3>
+          <div class="edit-form__images-info">{{ existingImages().length }} / {{ maxImages }} imágenes</div>
+          <div class="edit-form__gallery">
+            @for (img of existingImages(); track img.imageId) {
+              <div class="edit-form__gallery-item">
+                <img [src]="img.imageUrl" [alt]="img.altText || 'Imagen del evento'" />
+                <button class="edit-form__gallery-item-remove" type="button" (click)="deleteImage(img.imageId)" title="Eliminar imagen">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            }
+            @if (canAddMoreImages()) {
+              <div class="edit-form__gallery-add" (click)="galleryInput.click()">
+                <i class="pi pi-plus"></i>
+                <span>{{ uploadingImage() ? 'Subiendo...' : 'Añadir imagen' }}</span>
+              </div>
+            }
+            @if (!canAddMoreImages()) {
+              <div class="edit-form__gallery-limit">Has alcanzado el límite de {{ maxImages }} imágenes.</div>
+            }
+          </div>
+          <input #galleryInput type="file" accept="image/*" (change)="onGalleryImageSelected($event)" style="display: none" />
+        </div>
+
+        <div class="edit-form__actions">
+          <button class="btn btn--primary" type="button" (click)="saveInfo()" [disabled]="saving()">
+            <i class="pi pi-spin pi-spinner" *ngIf="saving()"></i>
+            {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ===================== TAB: SOCIAL LINKS ===================== -->
+    @if (activeTab() === 'socials') {
+      <div class="edit-form__tab-content">
+        <div class="edit-form__section-header">
+          <h3>Redes Sociales</h3>
+          <button class="btn btn--outline btn--sm" type="button" (click)="openAddSocial()" [disabled]="showSocialForm()"><i class="pi pi-plus"></i> Añadir red social</button>
+        </div>
+
+        @if (socialLinksLoading()) {
+          <div class="edit-form__skeleton-list">
+            @for (_ of [1,2]; track $index) {
+              <div class="skeleton skeleton--list-item"></div>
+            }
+          </div>
+        } @else if (socialLinks().length === 0 && !showSocialForm()) {
+          <div class="edit-form__empty">
+            <i class="pi pi-share-alt"></i>
+            <span>No hay redes sociales registradas</span>
+          </div>
+        }
+
+        <div class="edit-form__list">
+          @for (link of socialLinks(); track $index) {
+            <div class="edit-form__list-item">
+              <div class="edit-form__list-info">
+                <strong>{{ getPlatformName(link.socialPlatformId) }}</strong>
+                <span class="edit-form__list-meta">{{ link.url }}</span>
+              </div>
+              <div class="edit-form__list-actions">
+                <button class="btn btn--ghost btn--sm" type="button" (click)="openEditSocial(link)" title="Editar"><i class="pi pi-pencil"></i></button>
+                <button class="btn btn--ghost btn--sm btn--danger-ghost" type="button" (click)="deleteSocialLink(link)" title="Eliminar"><i class="pi pi-trash"></i></button>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (showSocialForm()) {
+          <div class="inline-form">
+            <div class="inline-form__header">
+              <h4>{{ editingSocialLink() ? 'Editar red social' : 'Nueva red social' }}</h4>
+              <button class="btn btn--ghost btn--sm" type="button" (click)="cancelSocialForm()"><i class="pi pi-times"></i></button>
+            </div>
+            <div class="inline-form__grid">
+              <div class="inline-form__field">
+                <label class="inline-form__label">Plataforma *</label>
+                <select class="inline-form__select" [ngModel]="socialForm().socialPlatformId" (ngModelChange)="socialForm.update(f => ({...f, socialPlatformId: $event}))">
+                  <option [ngValue]="null">Seleccionar...</option>
+                  @for (p of socialPlatforms(); track p.catalogueValueId) {
+                    <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="inline-form__field">
+                <label class="inline-form__label">URL *</label>
+                <input class="inline-form__input" type="url" [ngModel]="socialForm().url" (ngModelChange)="socialForm.update(f => ({...f, url: $event}))" maxlength="500" placeholder="https://facebook.com/mi-evento" />
+              </div>
+            </div>
+            <div class="inline-form__actions">
+              <button class="btn btn--primary" type="button" (click)="saveSocialLink()" [disabled]="!socialForm().socialPlatformId || !socialForm().url.trim() || savingSocialLink()">
+                <i class="pi pi-spin pi-spinner" *ngIf="savingSocialLink()"></i>
+                {{ editingSocialLink() ? 'Guardar cambios' : 'Añadir red social' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ===================== TAB: PORTAL ===================== -->
+    @if (activeTab() === 'portal') {
+      <div class="edit-form__tab-content">
+        <div class="edit-form__section-header">
+          <h3>Portal Web</h3>
+        </div>
+
+        @if (portalLoading()) {
+          <div class="edit-form__skeleton-portal">
+            <div class="skeleton skeleton--portal-card"></div>
+          </div>
+        } @else {
+          <div class="edit-form__portal-card">
+            <div class="edit-form__portal-icon">
+              <i class="pi pi-globe"></i>
+            </div>
+            <div class="edit-form__portal-form">
+              <div class="edit-form__grid">
+                <div class="edit-form__field">
+                  <label class="edit-form__label">Subdominio</label>
+                  <input class="edit-form__input" type="text" [ngModel]="portalForm().subdomain" (ngModelChange)="portalForm.update(p => ({...p, subdomain: $event}))" maxlength="200" placeholder="mi-evento" />
+                  <span class="edit-form__field-hint">Ej: mi-evento.emprendia.com</span>
+                </div>
+                <div class="edit-form__field">
+                  <label class="edit-form__label">Tema visual</label>
+                  <select class="select" style="width: 100%" [ngModel]="portalForm().themeId" (ngModelChange)="portalForm.update(p => ({...p, themeId: $event}))">
+                    <option [ngValue]="null">Seleccionar tema</option>
+                    @for (t of themes(); track t.catalogueValueId) {
+                      <option [ngValue]="t.catalogueValueId">{{ t.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="edit-form__field edit-form__field--full">
+                  <label class="edit-form__label">Contenido HTML</label>
+                  <textarea class="edit-form__textarea edit-form__textarea--code" rows="6" [ngModel]="portalForm().htmlContent" (ngModelChange)="portalForm.update(p => ({...p, htmlContent: $event}))" placeholder="&lt;h1&gt;Bienvenido a mi evento&lt;/h1&gt;"></textarea>
+                  <span class="edit-form__field-hint">Puedes usar HTML para personalizar la página del portal</span>
+                </div>
+                <div class="edit-form__field">
+                  <div class="edit-form__checkbox">
+                    <input type="checkbox" id="portal-active" [ngModel]="portalForm().isActive" (ngModelChange)="portalForm.update(p => ({...p, isActive: $event}))" />
+                    <label for="portal-active">Portal activo</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="edit-form__portal-actions">
+              <button class="btn btn--primary" type="button" (click)="savePortal()" [disabled]="savingPortal()">
+                <i class="pi pi-spin pi-spinner" *ngIf="savingPortal()"></i>
+                {{ savingPortal() ? 'Guardando...' : portal() ? 'Guardar cambios' : 'Crear portal' }}
+              </button>
+              @if (portal()) {
+                <button class="btn btn--danger btn--sm" type="button" (click)="deletePortal()">
+                  <i class="pi pi-trash"></i> Eliminar portal
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
 </div>

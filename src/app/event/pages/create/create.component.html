@@ -113,10 +113,120 @@
         <label class="create-form__label">Dirección</label>
         <input class="create-form__input" [(ngModel)]="form().addressLine" (ngModelChange)="form.update(f => ({...f, addressLine: $event}))" placeholder="Av. Amazonas N35-17 y Juan Pablo Sanz, Quito" maxlength="300" />
       </div>
+      <div class="create-form__field create-form__field--full">
+        <label class="create-form__label">URL Google Maps</label>
+        <input class="create-form__input" type="url" [(ngModel)]="form().mapsUrl" (ngModelChange)="form.update(f => ({...f, mapsUrl: $event}))" maxlength="500" placeholder="https://maps.google.com/?q=-0.123456,-78.54321" />
+      </div>
     </div>
   </div>
+    <!-- Portal -->
+    <div class="create-form__section">
+      <div class="create-form__section-header">
+        <h3 class="create-form__section-title">Portal Web</h3>
+        <button class="btn btn--outline btn--sm" type="button" (click)="togglePortalForm()">
+          {{ showPortalForm() ? 'Ocultar' : portal() ? 'Editar portal' : 'Agregar portal web' }}
+        </button>
+      </div>
+      @if (showPortalForm()) {
+        <div class="create-form__portal-card">
+          <div class="create-form__portal-form">
+            <div class="create-form__grid">
+              <div class="create-form__field">
+                <label class="create-form__label">Subdominio</label>
+                <input class="create-form__input" type="text" [ngModel]="portalForm().subdomain" (ngModelChange)="portalForm.update(p => ({...p, subdomain: $event}))" maxlength="200" placeholder="mi-evento" />
+                <span class="create-form__field-hint">Ej: mi-evento.emprendia.com</span>
+              </div>
+              <div class="create-form__field">
+                <label class="create-form__label">Tema visual</label>
+                <select class="select" style="width: 100%" [ngModel]="portalForm().themeId" (ngModelChange)="portalForm.update(p => ({...p, themeId: $event}))">
+                  <option [ngValue]="null">Seleccionar tema</option>
+                  @for (t of themes(); track t.catalogueValueId) {
+                    <option [ngValue]="t.catalogueValueId">{{ t.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="create-form__field create-form__field--full">
+                <label class="create-form__label">Contenido HTML</label>
+                <textarea class="create-form__textarea create-form__textarea--code" rows="6" [ngModel]="portalForm().htmlContent" (ngModelChange)="portalForm.update(p => ({...p, htmlContent: $event}))" placeholder="&lt;h1&gt;Bienvenido a mi evento&lt;/h1&gt;"></textarea>
+                <span class="create-form__field-hint">Puedes usar HTML para personalizar la página del portal</span>
+              </div>
+              <div class="create-form__field">
+                <div class="create-form__checkbox">
+                  <input type="checkbox" id="portal-active" [ngModel]="portalForm().isActive" (ngModelChange)="portalForm.update(p => ({...p, isActive: $event}))" />
+                  <label for="portal-active">Portal activo</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="create-form__portal-actions">
+            <button class="btn btn--primary btn--sm" type="button" (click)="savePortal()" [disabled]="savingPortal()">
+              <i class="pi pi-spin pi-spinner" *ngIf="savingPortal()"></i>
+              {{ savingPortal() ? 'Guardando...' : portal() ? 'Guardar cambios' : 'Crear portal' }}
+            </button>
+            @if (portal()) {
+              <button class="btn btn--danger btn--sm" type="button" (click)="deletePortal()">
+                <i class="pi pi-trash"></i> Eliminar
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
 
-  @if (!isEditMode()) {
+    <!-- Social Links -->
+    <div class="create-form__section">
+      <div class="create-form__section-header">
+        <h3 class="create-form__section-title">Redes Sociales</h3>
+        <button class="btn btn--outline btn--sm" type="button" (click)="openAddSocial()" [disabled]="showSocialForm()"><i class="pi pi-plus"></i> Añadir</button>
+      </div>
+      @if (socialLinks().length > 0) {
+        <div class="create-form__list">
+          @for (link of socialLinks(); track idx; let idx = $index) {
+        <div class="create-form__list-item">
+          <div class="create-form__list-info">
+            <strong>{{ getPlatformName(link.socialPlatformId) }}</strong>
+            <span class="create-form__list-meta">{{ link.url }}</span>
+          </div>
+          <div class="create-form__list-actions">
+            <button class="btn btn--ghost btn--sm" type="button" (click)="openEditSocial(idx)" title="Editar"><i class="pi pi-pencil"></i></button>
+            <button class="btn btn--ghost btn--sm btn--danger-ghost" type="button" (click)="removeSocialLink(idx)" title="Eliminar"><i class="pi pi-trash"></i></button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+  @if (showSocialForm()) {
+    <div class="inline-form">
+      <div class="inline-form__header">
+        <h4>{{ editingSocialIdx() !== null ? 'Editar red social' : 'Nueva red social' }}</h4>
+        <button class="btn btn--ghost btn--sm" type="button" (click)="cancelSocialForm()"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="inline-form__grid">
+        <div class="inline-form__field">
+          <label class="inline-form__label">Plataforma *</label>
+          <select class="inline-form__select" [ngModel]="socialForm().socialPlatformId" (ngModelChange)="socialForm.update(f => ({...f, socialPlatformId: $event}))">
+            <option [ngValue]="null">Seleccionar...</option>
+            @for (p of socialPlatforms(); track p.catalogueValueId) {
+              <option [ngValue]="p.catalogueValueId">{{ p.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="inline-form__field">
+          <label class="inline-form__label">URL *</label>
+          <input class="inline-form__input" type="url" [ngModel]="socialForm().url" (ngModelChange)="socialForm.update(f => ({...f, url: $event}))" maxlength="500" placeholder="https://facebook.com/mi-evento" />
+        </div>
+      </div>
+      <div class="inline-form__actions">
+        <button class="btn btn--primary" type="button" (click)="saveSocialLink()" [disabled]="!socialForm().socialPlatformId || !socialForm().url.trim() || savingSocialLink()">
+          <i class="pi pi-spin pi-spinner" *ngIf="savingSocialLink()"></i>
+          {{ editingSocialIdx() !== null ? 'Guardar cambios' : 'Añadir' }}
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+@if (!isEditMode()) {
     <div class="create-form__section">
       <h3 class="create-form__section-title">Imagen de Portada *</h3>
       <div class="create-form__cover" [class.create-form__field--error]="errors().cover">

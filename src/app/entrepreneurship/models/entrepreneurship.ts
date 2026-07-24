@@ -1,3 +1,21 @@
+export interface UserContact {
+  userContactId: number;
+  userId: number;
+  contactTypeId: number;
+  contactValue: string;
+  isPrimary: boolean;
+}
+
+export interface CreatedByUser {
+  userId: number;
+  keycloakId?: string;
+  firstName: string;
+  lastName: string;
+  profilePictureUrl?: string;
+  email?: string;
+  contacts?: UserContact[];
+}
+
 export interface Entrepreneurship {
   entrepreneurshipId: number;
   userId: number;
@@ -10,6 +28,7 @@ export interface Entrepreneurship {
   isDigital: boolean;
   imageUrl?: string;
   imageId?: number;
+  createdByUser?: CreatedByUser;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +53,7 @@ export interface CreateEntrepreneurshipDto {
     addressLine: string;
     latitude?: number;
     longitude?: number;
+    mapsUrl?: string;
   }[];
   portal?: {
     subdomain?: string;

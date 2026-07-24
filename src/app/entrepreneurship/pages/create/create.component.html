@@ -158,6 +158,10 @@
             <label class="inline-form__label">Longitud</label>
             <input class="inline-form__input" type="number" step="any" [ngModel]="locationForm().longitude" (ngModelChange)="locationForm.update(f => ({...f, longitude: $event})); locationError.set(null)" placeholder="-180 a 180" />
           </div>
+          <div class="inline-form__field inline-form__field--full">
+            <label class="inline-form__label">URL Google Maps</label>
+            <input class="inline-form__input" type="url" [ngModel]="locationForm().mapsUrl" (ngModelChange)="locationForm.update(f => ({...f, mapsUrl: $event}))" maxlength="500" placeholder="https://maps.google.com/?q=-0.123456,-78.54321" />
+          </div>
           @if (locationError()) {
             <div class="inline-form__field inline-form__field--full">
               <span class="inline-form__error">{{ locationError() }}</span>

@@ -9,7 +9,11 @@
   }
 
   @if (loadingEvents()) {
-    <div class="invitations-page__loading"><i class="pi pi-spin pi-spinner"></i> Cargando eventos...</div>
+    <div class="invitations-page__skeleton">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="skeleton skeleton--accordion-item"></div>
+      }
+    </div>
   }
 
   @if (!loadingEvents() && events().length === 0 && !error()) {
@@ -199,7 +203,11 @@
         }
 
         @if (loadingModalInvitations()) {
-          <div class="invite-modal__loading"><i class="pi pi-spin pi-spinner"></i> Cargando invitaciones...</div>
+          <div class="invite-modal__skeleton">
+            @for (_ of [1,2,3]; track $index) {
+              <div class="skeleton skeleton--table-row"></div>
+            }
+          </div>
         } @else if (modalInvitations().length === 0) {
           <div class="invite-modal__empty">
             <p>No hay invitaciones para este evento.</p>
@@ -315,7 +323,11 @@
                 </div>
               </div>
               @if (loadingInvitations().has(event.eventId)) {
-                <div class="invitations-page__loading-sm"><i class="pi pi-spin pi-spinner"></i> Cargando invitaciones...</div>
+                <div class="invitations-page__skeleton-table">
+                  @for (_ of [1,2]; track $index) {
+                    <div class="skeleton skeleton--table-row"></div>
+                  }
+                </div>
               } @else {
                 @if (invitationsMap().get(event.eventId); as invitations) {
                   @if (invitations.length === 0) {
