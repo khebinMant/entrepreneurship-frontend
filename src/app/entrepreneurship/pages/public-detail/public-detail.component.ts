@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+
 import { lastValueFrom } from 'rxjs';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -22,7 +23,24 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
   standalone: true,
   imports: [ClickOutsideDirective],
   template: `
-    @if (entrepreneurship(); as e) {
+    @if (loading()) {
+      <div class="hero-skeleton">
+        <div class="hero-skeleton__content">
+          <div class="skeleton skeleton--chip"></div>
+          <div class="skeleton skeleton--title skeleton--w-80"></div>
+          <div class="skeleton skeleton--text skeleton--w-60"></div>
+        </div>
+      </div>
+      <div class="page">
+        <div class="skeleton skeleton--card skeleton--about"></div>
+        <div class="sections-grid">
+          <div class="skeleton skeleton--card skeleton--collapsible-block"></div>
+          <div class="skeleton skeleton--card skeleton--collapsible-block"></div>
+          <div class="skeleton skeleton--card skeleton--collapsible-block"></div>
+          <div class="skeleton skeleton--card skeleton--collapsible-block"></div>
+        </div>
+      </div>
+    } @else if (entrepreneurship(); as e) {
       <!-- ===== HERO ===== -->
       <div class="hero">
         <img [src]="coverUrl() || imageService.getEntityImageUrl(e, 'ENTREPRENEURSHIP', e.entrepreneurshipId)"
@@ -156,11 +174,14 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
               </button>
               @if (expandedSections().has('sociales')) {
                 <div class="card__body">
-                  <div class="social-list">
-                    @for (link of socialLinks(); track link.entitySocialLinkId) {
-                      <a class="social-link" [href]="link.url" target="_blank" rel="noopener noreferrer">
-                        <i class="pi pi-external-link"></i>
-                        <span>{{ link.socialPlatformName || 'Red social' }}</span>
+                  <div class="social-grid">
+                    @for (link of socialLinks(); track $index) {
+                      <a class="social-card" [href]="link.url" target="_blank" rel="noopener noreferrer" [title]="link.url">
+                        <div class="social-card__icon" [style.background]="platformColor(link.socialPlatformName ?? undefined, link.url)">
+                          <i [class]="platformIcon(link.socialPlatformName ?? undefined, link.url)"></i>
+                        </div>
+                        <span class="social-card__name">{{ platformDisplayName(link.socialPlatformName ?? undefined, link.url) }}</span>
+                        <span class="social-card__url">{{ link.url }}</span>
                       </a>
                     }
                   </div>
@@ -211,29 +232,76 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
         </div>
 
         <!-- ===== GALLERY ===== -->
-        @if (galleryImages().length > 0) {
+        @if (galleryLoading() || galleryImages().length > 0) {
           <section class="gallery-section">
             <div class="gallery-section__inner">
               <div class="gallery-section__header">
                 <i class="pi pi-images"></i>
                 <h2 class="gallery-section__title">Galería</h2>
-                <span class="gallery-section__count">{{ galleryImages().length }} fotos</span>
-              </div>
-              <div class="gallery-section__carousel" #carousel>
-                @for (img of galleryImages(); track img.imageId) {
-                  <button class="gallery-section__slide" (click)="openGallery(img)">
-                    <img [src]="img.imageUrl" [alt]="img.altText || ''" loading="lazy" />
-                  </button>
+                @if (galleryLoading()) {
+                  <span class="gallery-section__skeleton skeleton skeleton--text skeleton--w-20"></span>
+                } @else {
+                  <span class="gallery-section__count">{{ galleryImages().length }} fotos</span>
                 }
               </div>
-              @if (galleryImages().length > 2) {
-                <button class="gallery-section__arrow gallery-section__arrow--left" (click)="scrollGallery(-1)">
-                  <i class="pi pi-chevron-left"></i>
-                </button>
-                <button class="gallery-section__arrow gallery-section__arrow--right" (click)="scrollGallery(1)">
-                  <i class="pi pi-chevron-right"></i>
-                </button>
+              @if (galleryLoading()) {
+                <div class="gallery-section__carousel">
+                  @for (_ of [1,2,3,4]; track $index) {
+                    <div class="gallery-section__skeleton skeleton skeleton--slide"></div>
+                  }
+                </div>
+              } @else {
+                <div class="gallery-section__carousel" #carousel>
+                  @for (img of galleryImages(); track img.imageId) {
+                    <button class="gallery-section__slide" (click)="openGallery(img)">
+                      <img [src]="img.imageUrl" [alt]="img.altText || ''" loading="lazy" />
+                    </button>
+                  }
+                </div>
+                @if (galleryImages().length > 2) {
+                  <button class="gallery-section__arrow gallery-section__arrow--left" (click)="scrollGallery(-1)">
+                    <i class="pi pi-chevron-left"></i>
+                  </button>
+                  <button class="gallery-section__arrow gallery-section__arrow--right" (click)="scrollGallery(1)">
+                    <i class="pi pi-chevron-right"></i>
+                  </button>
+                }
               }
+            </div>
+          </section>
+        }
+
+        <!-- ===== ORGANIZADOR (full-width) ===== -->
+        @if (orgName()) {
+          <section class="org-section">
+            <div class="org-section__inner">
+              <div class="org-section__card">
+                <div class="org-section__avatar">
+                  @if (orgAvatar()) {
+                    <img [src]="orgAvatar()" alt="" />
+                  } @else {
+                    <span class="org-section__initials">{{ orgName()[0] }}</span>
+                  }
+                </div>
+                <div class="org-section__info">
+                  <span class="org-section__label">Organizado por</span>
+                  <strong class="org-section__name">{{ orgName() }}</strong>
+                  <div class="org-section__contacts">
+                    @if (orgEmail()) {
+                      <a class="org-section__contact" [href]="'mailto:' + orgEmail()">
+                        <i class="pi pi-envelope"></i>
+                        <span>{{ orgEmail() }}</span>
+                      </a>
+                    }
+                    @if (orgPhone()) {
+                      <a class="org-section__contact org-section__contact--wa" [href]="whatsappUrl(orgPhone())" target="_blank" rel="noopener">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>{{ orgPhone() }}</span>
+                      </a>
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         }
@@ -447,23 +515,85 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
       font-size: 10px;
     }
 
-    /* ===== SOCIAL LIST ===== */
-    .social-list {
-      display: flex; flex-wrap: wrap; gap: var(--spacing-sm);
+    /* ===== SOCIAL GRID ===== */
+    .social-grid {
+      display: flex; flex-wrap: wrap; gap: var(--spacing-md);
     }
-    .social-link {
-      display: inline-flex; align-items: center; gap: var(--spacing-sm);
-      padding: 8px 14px; border-radius: var(--radius-md);
+    .social-card {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-radius: var(--radius-xl);
       border: 1px solid var(--color-border);
-      color: var(--color-text-primary); text-decoration: none;
-      font-size: var(--font-size-sm); font-weight: 500;
+      background: var(--color-surface);
+      text-decoration: none;
+      min-width: 120px;
       transition: all var(--transition-fast);
-      i { font-size: 13px; color: var(--color-primary); }
+      position: relative;
       &:hover {
-        border-color: var(--color-primary);
-        color: var(--color-primary);
-        background: var(--color-primary-light);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        border-color: transparent;
       }
+    }
+    .social-card__icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: #fff;
+      transition: transform var(--transition-fast);
+      .social-card:hover & { transform: scale(1.1); }
+    }
+    .social-card__name {
+      font-size: var(--font-size-xs); font-weight: 600;
+      color: var(--color-text-primary); text-align: center;
+    }
+    .social-card__url {
+      font-size: 10px; color: var(--color-text-muted);
+      max-width: 140px; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; text-align: center;
+    }
+
+    /* ===== SKELETON ===== */
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-surface-alt) 25%, var(--color-border) 50%, var(--color-surface-alt) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: var(--radius-md);
+    }
+    .skeleton--text { height: 14px; }
+    .skeleton--chip { width: 100px; height: 28px; border-radius: 999px; }
+    .skeleton--title { height: 32px; }
+    .skeleton--w-20 { width: 80px; }
+    .skeleton--w-40 { width: 40%; }
+    .skeleton--w-60 { width: 60%; }
+    .skeleton--w-80 { width: 80%; }
+    .skeleton--slide {
+      flex: 0 0 320px;
+      aspect-ratio: 16 / 10;
+      border-radius: var(--radius-xl);
+    }
+    .skeleton--card {
+      height: 200px;
+      border-radius: var(--radius-xl);
+    }
+    .skeleton--about { height: 180px; }
+    .skeleton--collapsible-block { height: 56px; }
+
+    .hero-skeleton {
+      width: 100%; height: 520px;
+      background: var(--color-surface-alt);
+      display: flex; align-items: flex-end;
+      padding: var(--spacing-xxl);
+    }
+    .hero-skeleton__content {
+      max-width: 1200px; width: 100%; margin: 0 auto;
+      display: flex; flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
 
     /* ===== GALLERY SECTION ===== */
@@ -570,6 +700,58 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* ===== ORGANIZADOR SECTION (full-width, elegant) ===== */
+    .org-section {
+      margin-top: var(--spacing-xxl); padding: 0 var(--spacing-xxl);
+    }
+    .org-section__inner {
+      max-width: 1200px; margin: 0 auto; width: 100%;
+    }
+    .org-section__card {
+      display: flex; align-items: center; gap: var(--spacing-xl);
+      background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      padding: var(--spacing-xl) var(--spacing-xxl);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: box-shadow var(--transition-normal);
+      &:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+    }
+    .org-section__avatar {
+      width: 80px; height: 80px; border-radius: 50%; overflow: hidden;
+      flex-shrink: 0; border: 3px solid var(--color-primary); box-shadow: 0 0 0 4px var(--color-surface);
+      img { width: 100%; height: 100%; object-fit: cover; }
+    }
+    .org-section__initials {
+      width: 100%; height: 100%; display: flex; align-items: center;
+      justify-content: center; background: var(--color-primary);
+      color: #fff; font-size: 30px; font-weight: 700;
+    }
+    .org-section__info {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .org-section__label {
+      font-size: var(--font-size-xs); font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--color-text-tertiary);
+    }
+    .org-section__name {
+      font-size: var(--font-size-lg); font-weight: 700;
+      color: var(--color-text-primary); line-height: 1.3;
+    }
+    .org-section__contacts {
+      display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-sm);
+    }
+    .org-section__contact {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: var(--font-size-sm); color: var(--color-text-secondary); text-decoration: none;
+      padding: 8px 16px; border-radius: var(--radius-md);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      transition: all var(--transition-fast);
+      i { font-size: 16px; color: var(--color-primary); }
+      &:hover { border-color: var(--color-primary); color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 4%, transparent); }
+    }
+    .org-section__contact--wa i { color: #25D366; }
+    .org-section__contact--wa:hover { border-color: #25D366; color: #25D366; }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 1024px) {
       .sections-grid { grid-template-columns: 1fr; }
@@ -583,6 +765,8 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
       .card--about .card__accent { display: none; }
       .info-row { flex-direction: column; align-items: flex-start; gap: 2px; }
       .info-row__value { text-align: left; max-width: 100%; }
+      .social-card { min-width: 90px; padding: var(--spacing-sm) var(--spacing-md); }
+      .social-card__icon { width: 40px; height: 40px; font-size: 18px; border-radius: 12px; }
       .gallery-section__slide { flex: 0 0 260px; }
       .gallery-section { padding: var(--spacing-lg) 0; }
       .lightbox__nav { width: 40px; height: 40px; font-size: 18px; }
@@ -602,11 +786,13 @@ export class PublicDetailComponent implements OnInit {
     return this.router.url.startsWith('/app');
   }
 
+  readonly loading = signal(true);
   readonly entrepreneurship = signal<Entrepreneurship | null>(null);
   readonly locations = signal<EntrepreneurshipLocation[]>([]);
   readonly socialLinks = signal<EntitySocialLink[]>([]);
   readonly portal = signal<EntityPortal | null>(null);
   readonly galleryImages = signal<ImageGallery[]>([]);
+  readonly galleryLoading = signal(false);
 
   readonly coverMenuOpen = signal(false);
   readonly coverUrl = signal<string | null>(null);
@@ -615,7 +801,12 @@ export class PublicDetailComponent implements OnInit {
   readonly selectedImage = signal<ImageGallery | null>(null);
   readonly galleryIdx = signal(-1);
 
-  readonly expandedSections = signal<Set<string>>(new Set(['info', 'ubicaciones', 'sociales', 'portal']));
+  readonly orgName = signal('');
+  readonly orgAvatar = signal('');
+  readonly orgEmail = signal('');
+  readonly orgPhone = signal('');
+
+  readonly expandedSections = signal<Set<string>>(new Set(['info', 'ubicaciones', 'sociales', 'portal', 'org']));
 
   readonly typeDisplay = computed(() => {
     const e = this.entrepreneurship();
@@ -624,6 +815,103 @@ export class PublicDetailComponent implements OnInit {
          : e.isPhysical ? 'Físico'
          : 'Digital';
   });
+
+  platformDisplayName(name: string | undefined, url: string): string {
+    if (name) return name;
+    const u = url.toLowerCase();
+    if (u.includes('facebook')) return 'Facebook';
+    if (u.includes('instagram')) return 'Instagram';
+    if (u.includes('twitter') || u.includes('x.com')) return 'X';
+    if (u.includes('linkedin')) return 'LinkedIn';
+    if (u.includes('youtube')) return 'YouTube';
+    if (u.includes('whatsapp')) return 'WhatsApp';
+    if (u.includes('tiktok')) return 'TikTok';
+    if (u.includes('telegram')) return 'Telegram';
+    if (u.includes('github')) return 'GitHub';
+    if (u.includes('pinterest')) return 'Pinterest';
+    if (u.includes('twitch')) return 'Twitch';
+    if (u.includes('discord')) return 'Discord';
+    if (u.includes('medium')) return 'Medium';
+    if (u.includes('slack')) return 'Slack';
+    if (u.includes('snapchat')) return 'Snapchat';
+    if (u.includes('reddit')) return 'Reddit';
+    if (u.includes('tumblr')) return 'Tumblr';
+    if (u.includes('vimeo')) return 'Vimeo';
+    if (u.includes('dribbble')) return 'Dribbble';
+    if (u.includes('behance')) return 'Behance';
+    if (u.includes('spotify')) return 'Spotify';
+    return 'Red social';
+  }
+
+  private resolvePlatformName(name: string | undefined, url: string): string {
+    if (name) return name;
+    const u = url.toLowerCase();
+    if (u.includes('facebook')) return 'facebook';
+    if (u.includes('instagram')) return 'instagram';
+    if (u.includes('twitter') || u.includes('x.com')) return 'x';
+    if (u.includes('linkedin')) return 'linkedin';
+    if (u.includes('youtube')) return 'youtube';
+    if (u.includes('whatsapp')) return 'whatsapp';
+    if (u.includes('tiktok')) return 'tiktok';
+    if (u.includes('telegram')) return 'telegram';
+    if (u.includes('github')) return 'github';
+    if (u.includes('pinterest')) return 'pinterest';
+    if (u.includes('twitch')) return 'twitch';
+    if (u.includes('discord')) return 'discord';
+    if (u.includes('medium')) return 'medium';
+    if (u.includes('slack')) return 'slack';
+    if (u.includes('snapchat')) return 'snapchat';
+    if (u.includes('reddit')) return 'reddit';
+    if (u.includes('tumblr')) return 'tumblr';
+    if (u.includes('vimeo')) return 'vimeo';
+    if (u.includes('dribbble')) return 'dribbble';
+    if (u.includes('behance')) return 'behance';
+    if (u.includes('spotify')) return 'spotify';
+    return '';
+  }
+
+  platformIcon(name: string | undefined, url?: string): string {
+    const n = name || (url ? this.resolvePlatformName(undefined, url) : '') || '';
+    const lower = n.toLowerCase();
+    if (lower.includes('facebook')) return 'fab fa-facebook';
+    if (lower.includes('instagram')) return 'fab fa-instagram';
+    if (lower.includes('twitter') || lower.includes('x')) return 'fab fa-x-twitter';
+    if (lower.includes('linkedin')) return 'fab fa-linkedin-in';
+    if (lower.includes('youtube')) return 'fab fa-youtube';
+    if (lower.includes('whatsapp')) return 'fab fa-whatsapp';
+    if (lower.includes('tiktok')) return 'fab fa-tiktok';
+    if (lower.includes('telegram')) return 'fab fa-telegram';
+    if (lower.includes('github')) return 'fab fa-github';
+    if (lower.includes('pinterest')) return 'fab fa-pinterest';
+    if (lower.includes('twitch')) return 'fab fa-twitch';
+    if (lower.includes('discord')) return 'fab fa-discord';
+    if (lower.includes('medium')) return 'fab fa-medium';
+    if (lower.includes('slack')) return 'fab fa-slack';
+    if (lower.includes('snapchat')) return 'fab fa-snapchat';
+    if (lower.includes('reddit')) return 'fab fa-reddit';
+    if (lower.includes('tumblr')) return 'fab fa-tumblr';
+    if (lower.includes('vimeo')) return 'fab fa-vimeo';
+    if (lower.includes('dribbble')) return 'fab fa-dribbble';
+    if (lower.includes('behance')) return 'fab fa-behance';
+    if (lower.includes('spotify')) return 'fab fa-spotify';
+    return 'fas fa-globe';
+  }
+
+  platformColor(name: string | undefined, url?: string): string {
+    const n = name || (url ? this.resolvePlatformName(undefined, url) : '') || '';
+    const lower = n.toLowerCase();
+    if (lower.includes('facebook')) return '#1877F2';
+    if (lower.includes('instagram')) return '#E4405F';
+    if (lower.includes('twitter') || lower.includes('x')) return '#1DA1F2';
+    if (lower.includes('linkedin')) return '#0A66C2';
+    if (lower.includes('youtube')) return '#FF0000';
+    if (lower.includes('whatsapp')) return '#25D366';
+    if (lower.includes('tiktok')) return '#000000';
+    if (lower.includes('telegram')) return '#26A5E4';
+    if (lower.includes('github')) return '#333333';
+    if (lower.includes('pinterest')) return '#E60023';
+    return '#6366F1';
+  }
 
   readonly locationDisplay = computed(() => {
     const locs = this.locations();
@@ -669,12 +957,32 @@ export class PublicDetailComponent implements OnInit {
   }
 
   private async loadEntrepreneurship(id: number): Promise<void> {
+    this.loading.set(true);
     try {
       const result = await lastValueFrom(this.entrepreneurshipService.getById(id));
       this.entrepreneurship.set(result);
+      const user = (result as any).createdByUser;
+      if (user) {
+        const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ') || '';
+        this.orgName.set(fullName);
+        this.orgAvatar.set(user.profilePictureUrl || '');
+        if (user.contacts?.length) {
+          const emailContact = user.contacts.find((c: any) => c.contactTypeId === 75);
+          const phoneContact = user.contacts.find((c: any) => c.contactTypeId === 74);
+          this.orgEmail.set(emailContact?.contactValue || '');
+          this.orgPhone.set(phoneContact?.contactValue || '');
+        }
+      }
     } catch {
       // fallback
+    } finally {
+      this.loading.set(false);
     }
+  }
+
+  whatsappUrl(phone: string): string {
+    const cleaned = phone.replace(/[^0-9]/g, '');
+    return `https://wa.me/${cleaned}`;
   }
 
   private async loadLocations(id: number): Promise<void> {
@@ -705,12 +1013,14 @@ export class PublicDetailComponent implements OnInit {
   }
 
   private async loadGallery(id: number): Promise<void> {
+    this.galleryLoading.set(true);
     try {
       const images = await lastValueFrom(this.imageService.list('ENTREPRENEURSHIP', id));
       this.galleryImages.set(images.filter(img => img.displayOrder !== 0));
     } catch {
       // fallback
     }
+    finally { this.galleryLoading.set(false); }
   }
 
   openGallery(img: ImageGallery): void {

@@ -202,7 +202,7 @@ import { environment } from '../../../../environments/environment';
         </div>
 
         <div class="auth-image-side">
-          <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600&q=80" alt="Emprendimiento" />
+          <img src="https://thumbs.dreamstime.com/b/la-gente-estudia-alfabetizaci%C3%B3n-financiera-y-contabilidad-para-crear-conciencia-sobre-el-esp%C3%ADritu-empresarial-aumentar-del-293918030.jpg" alt="Emprendimiento" />
           <div class="auth-image-overlay">
             <h2>Emprendia</h2>
             <p>Conecta, crece y haz realidad tu emprendimiento</p>
@@ -410,6 +410,13 @@ import { environment } from '../../../../environments/environment';
       align-items: center;
       justify-content: center;
     }
+    .auth-image-side::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(135deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 100%);
+    }
     .auth-image-side img {
       position: absolute;
       inset: 0;
@@ -419,22 +426,22 @@ import { environment } from '../../../../environments/environment';
     }
     .auth-image-overlay {
       position: relative;
-      z-index: 1;
+      z-index: 2;
       text-align: center;
       padding: var(--spacing-xl);
-      color: #fef2f2;
+      color: #fff;
     }
     .auth-image-overlay h2 {
       font-size: var(--font-size-xxl);
       font-weight: 700;
       margin: 0 0 var(--spacing-sm);
-      color: #fef2f2;
+      color: #fff;
     }
     .auth-image-overlay p {
       font-size: var(--font-size-md);
-      opacity: 0.9;
+      opacity: 0.95;
       margin: 0;
-      color: #fef2f2;
+      color: #fff;
     }
 
     @media (max-width: 768px) {

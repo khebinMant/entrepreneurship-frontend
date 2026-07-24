@@ -7,7 +7,10 @@ import type { Observable } from 'rxjs';
 import type { Event, EventSearchFilters } from '../models/event';
 import type { EventSpace, CreateEventSpaceDto, UpdateEventSpaceDto } from '../models/event-space';
 import type { EventInvitation, CreateEventInvitationDto, BulkCreateInvitationDto, EventParticipant } from '../models/event-invitation';
+import type { EntitySocialLink, CreateEntitySocialLinkDto, UpdateEntitySocialLinkDto } from '../../entrepreneurship/models/entrepreneurship-social-link';
+import type { EntityPortal, CreateEntityPortalDto, UpdateEntityPortalDto } from '../../entrepreneurship/models/entrepreneurship-portal';
 import type { Page } from '../../shared/models/pagination';
+import type { EventGlobalAnalytics, UserEventStats } from '../../shared/models/analytics';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -163,5 +166,41 @@ export class EventService {
       `${API_ENDPOINTS.EVENTS.PARTICIPANTS}/event/${eventId}`,
       params,
     );
+  }
+
+  // --- Social Links ---
+  getSocialLinks(entityId: number): Observable<EntitySocialLink[]> {
+    return this.api.get<EntitySocialLink[]>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_SOCIAL_LINKS}/by-entity/${entityId}`);
+  }
+  createSocialLink(dto: CreateEntitySocialLinkDto): Observable<EntitySocialLink> {
+    return this.api.post<EntitySocialLink>(this.baseUrl, API_ENDPOINTS.SHARED.ENTITY_SOCIAL_LINKS, dto);
+  }
+  updateSocialLink(id: number, dto: UpdateEntitySocialLinkDto): Observable<EntitySocialLink> {
+    return this.api.put<EntitySocialLink>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_SOCIAL_LINKS}/${id}`, dto);
+  }
+  deleteSocialLink(id: number): Observable<void> {
+    return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_SOCIAL_LINKS}/${id}`);
+  }
+
+  // --- Portal ---
+  getPortal(entityId: number): Observable<EntityPortal> {
+    return this.api.get<EntityPortal>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_PORTALS}/by-entity/${entityId}`);
+  }
+  createPortal(dto: CreateEntityPortalDto): Observable<EntityPortal> {
+    return this.api.post<EntityPortal>(this.baseUrl, API_ENDPOINTS.SHARED.ENTITY_PORTALS, dto);
+  }
+  updatePortal(id: number, dto: UpdateEntityPortalDto): Observable<EntityPortal> {
+    return this.api.put<EntityPortal>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_PORTALS}/${id}`, dto);
+  }
+  deletePortal(id: number): Observable<void> {
+    return this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_PORTALS}/${id}`);
+  }
+
+  getAnalyticsGlobal(): Observable<EventGlobalAnalytics> {
+    return this.api.get<EventGlobalAnalytics>(this.baseUrl, API_ENDPOINTS.EVENTS.ANALYTICS_GLOBAL);
+  }
+
+  getStatsByCreator(userId: number): Observable<UserEventStats> {
+    return this.api.get<UserEventStats>(this.baseUrl, API_ENDPOINTS.EVENTS.STATS_CREATOR(userId));
   }
 }

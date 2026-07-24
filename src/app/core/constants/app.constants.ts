@@ -18,6 +18,8 @@ export const API_ENDPOINTS = {
     CATALOGUE_VALUES: `${API_PREFIX}/catalogue-values`,
     IMAGES: `${IMAGE_API_PREFIX}`,
     FILES: `${FILE_API_PREFIX}`,
+    ENTITY_SOCIAL_LINKS: `${API_PREFIX}/entity-social-links`,
+    ENTITY_PORTALS: `${API_PREFIX}/entity-portals`,
   },
   USERS: {
     BASE: `${API_PREFIX}/users`,
@@ -39,6 +41,8 @@ export const API_ENDPOINTS = {
     ENTITY_SOCIAL_LINKS: `${API_PREFIX}/entity-social-links`,
     ENTITY_PORTALS: `${API_PREFIX}/entity-portals`,
     CATEGORIES: `${API_PREFIX}/categories`,
+    ANALYTICS_GLOBAL: `${API_PREFIX}/entrepreneurships/analytics/global`,
+    STATS_USER: (userId: number) => `${API_PREFIX}/entrepreneurships/stats/user/${userId}`,
   },
   EVENTS: {
     BASE: `${API_PREFIX}/events`,
@@ -47,6 +51,8 @@ export const API_ENDPOINTS = {
     SPACES: `${API_PREFIX}/event-spaces`,
     INVITATIONS: `${API_PREFIX}/event-invitations`,
     PARTICIPANTS: `${API_PREFIX}/event-participants`,
+    ANALYTICS_GLOBAL: `${API_PREFIX}/events/analytics/global`,
+    STATS_CREATOR: (userId: number) => `${API_PREFIX}/events/stats/creator/${userId}`,
   },
 } as const;
 

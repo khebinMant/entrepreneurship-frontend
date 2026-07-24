@@ -28,6 +28,7 @@ interface LocationFormValue {
   addressLine: string;
   latitude: number | null;
   longitude: number | null;
+  mapsUrl: string;
 }
 
 interface SocialFormValue {
@@ -109,7 +110,7 @@ export class EditComponent implements OnInit {
 
   readonly locationForm = signal<LocationFormValue>({
     countryId: null, provinceId: null, cityId: null, parishId: null,
-    addressLine: '', latitude: null, longitude: null,
+    addressLine: '', latitude: null, longitude: null, mapsUrl: '',
   });
 
   // --- Social Links ---
@@ -123,6 +124,11 @@ export class EditComponent implements OnInit {
   readonly socialForm = signal<SocialFormValue>({
     socialPlatformId: null, url: '',
   });
+  readonly socialLinkFeedback = signal<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  private clearSocialFeedback(): void {
+    setTimeout(() => this.socialLinkFeedback.set(null), 3000);
+  }
 
   // --- Portal ---
   readonly portal = signal<EntityPortal | null>(null);
@@ -324,16 +330,48 @@ export class EditComponent implements OnInit {
   async saveInfo(): Promise<void> {
     const id = this.entrepreneurshipId!;
     const f = this.form();
+    const portal = this.portalForm();
     this.saving.set(true);
     try {
-      await lastValueFrom(this.entrepreneurshipService.update(id, {
+      const payload: any = {
         userId: this.entrepreneurship()!.userId,
         name: f.name,
         description: f.description,
         categoryId: f.categoryId!,
         isPhysical: f.isPhysical,
         isDigital: f.isDigital,
+      };
+
+      const socials = this.socialLinks().map(l => ({
+        socialPlatformId: l.socialPlatformId,
+        url: l.url,
       }));
+      if (socials.length) payload.socialLinks = socials;
+
+      const locs = this.locations().map(l => ({
+        countryId: l.countryId,
+        provinceId: l.provinceId,
+        cityId: l.cityId,
+        parishId: l.parishId ?? undefined,
+        addressLine: l.addressLine,
+        latitude: l.latitude ?? undefined,
+        longitude: l.longitude ?? undefined,
+        mapsUrl: l.mapsUrl || undefined,
+      }));
+      if (locs.length) payload.locations = locs;
+
+      const subdomain = portal.subdomain.trim();
+      const htmlContent = portal.htmlContent.trim();
+      if (subdomain || htmlContent || portal.themeId) {
+        payload.portal = {
+          subdomain: subdomain || undefined,
+          themeId: portal.themeId ?? undefined,
+          isActive: portal.isActive,
+          htmlContent: htmlContent || undefined,
+        };
+      }
+
+      await lastValueFrom(this.entrepreneurshipService.update(id, payload));
 
       if (this.logoFile()) {
         await lastValueFrom(this.imageService.upload(
@@ -359,7 +397,7 @@ export class EditComponent implements OnInit {
 
   openAddLocation(): void {
     this.editingLocation.set(null);
-    this.locationForm.set({ countryId: null, provinceId: null, cityId: null, parishId: null, addressLine: '', latitude: null, longitude: null });
+    this.locationForm.set({ countryId: null, provinceId: null, cityId: null, parishId: null, addressLine: '', latitude: null, longitude: null, mapsUrl: '' });
     this.locationProvinces.set([]);
     this.locationCities.set([]);
     this.locationParishes.set([]);
@@ -376,6 +414,7 @@ export class EditComponent implements OnInit {
       addressLine: loc.addressLine,
       latitude: loc.latitude ?? null,
       longitude: loc.longitude ?? null,
+      mapsUrl: loc.mapsUrl ?? '',
     });
     this.locationProvinces.set([]);
     this.locationCities.set([]);
@@ -464,6 +503,7 @@ export class EditComponent implements OnInit {
       addressLine: f.addressLine.trim(),
       latitude: lat ?? undefined,
       longitude: lon ?? undefined,
+      mapsUrl: f.mapsUrl || undefined,
     };
     try {
       const obs$ = editing
@@ -516,6 +556,7 @@ export class EditComponent implements OnInit {
     const f = this.socialForm();
     if (!f.socialPlatformId || !f.url.trim()) return;
     this.savingSocialLink.set(true);
+    this.socialLinkFeedback.set(null);
     const editing = this.editingSocialLink();
     try {
       if (editing) {
@@ -531,10 +572,13 @@ export class EditComponent implements OnInit {
           url: f.url.trim(),
         }));
       }
+      this.socialLinkFeedback.set({ type: 'success', message: editing ? 'Red social actualizada correctamente.' : 'Red social añadida correctamente.' });
+      this.clearSocialFeedback();
       this.loadSocialLinks();
       this.cancelSocialForm();
-    } catch (err) {
-      console.error('Error saving social link:', err);
+    } catch {
+      this.socialLinkFeedback.set({ type: 'error', message: 'Error al guardar la red social. Intenta de nuevo.' });
+      this.clearSocialFeedback();
     } finally {
       this.savingSocialLink.set(false);
     }
@@ -560,10 +604,11 @@ export class EditComponent implements OnInit {
     const id = this.entrepreneurshipId!;
     const f = this.portalForm();
     const existing = this.portal();
+    const portalId = existing?.entityPortalId ?? (existing as any)?.portalId ?? (existing as any)?.id;
     this.savingPortal.set(true);
     try {
-      if (existing) {
-        await lastValueFrom(this.entrepreneurshipService.updatePortal(existing.entityPortalId, {
+      if (portalId) {
+        await lastValueFrom(this.entrepreneurshipService.updatePortal(portalId, {
           entityId: id,
           subdomain: f.subdomain.trim() || undefined,
           themeId: f.themeId ?? undefined,

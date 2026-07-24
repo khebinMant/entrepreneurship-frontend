@@ -19,7 +19,11 @@
 
   <div class="catalogue-page__section">
     @if (loading()) {
-      <div class="catalogue-page__loading"><i class="pi pi-spin pi-spinner"></i> Cargando...</div>
+      <div class="catalogue-page__skeleton">
+        @for (_ of [1,2,3]; track $index) {
+          <div class="skeleton skeleton--type-card"></div>
+        }
+      </div>
     } @else {
       <div class="catalogue-page__list">
         @for (type of types(); track type.catalogueTypeId) {
@@ -58,7 +62,11 @@
             @if (expandedTypeId() === type.catalogueTypeId) {
               <div class="type-card__values">
                 @if (valuesLoading()) {
-                  <div class="type-card__values-loading"><i class="pi pi-spin pi-spinner"></i> Cargando valores...</div>
+                  <div class="type-card__values-skeleton">
+                    @for (_ of [1,2]; track $index) {
+                      <div class="skeleton skeleton--value-row"></div>
+                    }
+                  </div>
                 } @else {
                   <div class="type-card__values-form">
                     <input class="type-card__input type-card__input--sm" [(ngModel)]="newValueForm().code" (ngModelChange)="newValueForm.update(f => ({...f, code: $event}))" placeholder="Código" />

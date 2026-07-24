@@ -12,6 +12,7 @@ export interface EntrepreneurshipLocation {
   addressLine: string;
   latitude?: number;
   longitude?: number;
+  mapsUrl?: string;
 }
 
 export interface CreateEntrepreneurshipLocationDto {
@@ -23,6 +24,7 @@ export interface CreateEntrepreneurshipLocationDto {
   addressLine: string;
   latitude?: number;
   longitude?: number;
+  mapsUrl?: string;
 }
 
 export interface UpdateEntrepreneurshipLocationDto {
@@ -33,4 +35,5 @@ export interface UpdateEntrepreneurshipLocationDto {
   addressLine?: string;
   latitude?: number;
   longitude?: number;
+  mapsUrl?: string;
 }
