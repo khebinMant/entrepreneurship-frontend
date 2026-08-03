@@ -1,13 +1,13 @@
 export const environment = {
   production: true,
   services: {
-    shared: 'https://2.28.4.207:8443',
-    user: 'https://2.28.4.207:8443',
-    entrepreneurship: 'https://2.28.4.207:8443',
-    event: 'https://2.28.4.207:8443',
+    shared: 'https://emprendia.duckdns.org/shared',
+    user: 'https://emprendia.duckdns.org/user',
+    entrepreneurship: 'https://emprendia.duckdns.org/entrepreneurship',
+    event: 'https://emprendia.duckdns.org/event',
   },
   keycloak: {
-    url: 'https://2.28.4.207:8443/auth',
+    url: 'https://emprendia.duckdns.org',
     realm: 'emprendia',
     clientId: 'emprendia-app',
   },
