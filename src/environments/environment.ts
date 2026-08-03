@@ -10,10 +10,10 @@ function getEnv(key: string, defaultValue: string): string {
 export const environment = {
   production: false,
   services: {
-    shared: getEnv('SHARED_API_URL', 'http://localhost:8084'),
-    user: getEnv('USER_API_URL', 'http://localhost:8081'),
-    entrepreneurship: getEnv('ENTREPRENEURSHIP_API_URL', 'http://localhost:8082'),
-    event: getEnv('EVENT_API_URL', 'http://localhost:8083'),
+    shared: getEnv('SHARED_API_URL', 'http://localhost:8090/api/shared'),
+    user: getEnv('USER_API_URL', 'http://localhost:8090/api/user'),
+    entrepreneurship: getEnv('ENTREPRENEURSHIP_API_URL', 'http://localhost:8090/api/entrepreneurship'),
+    event: getEnv('EVENT_API_URL', 'http://localhost:8090/api/event'),
   },
   keycloak: {
     url: getEnv('KEYCLOAK_URL', 'http://localhost:8080'),

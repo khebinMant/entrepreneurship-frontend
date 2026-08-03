@@ -1,10 +1,10 @@
 export const environment = {
   production: false,
   services: {
-    shared: 'http://localhost:8084',
-    user: 'http://localhost:8081',
-    entrepreneurship: 'http://localhost:8082',
-    event: 'http://localhost:8083',
+    shared: 'http://localhost:8090/api/shared',
+    user: 'http://localhost:8090/api/user',
+    entrepreneurship: 'http://localhost:8090/api/entrepreneurship',
+    event: 'http://localhost:8090/api/event',
   },
   keycloak: {
     url: 'http://localhost:8080',
