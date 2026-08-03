@@ -1,10 +1,10 @@
 export const environment = {
   production: true,
   services: {
-    shared: 'https://emprendia.duckdns.org/shared',
-    user: 'https://emprendia.duckdns.org/user',
-    entrepreneurship: 'https://emprendia.duckdns.org/entrepreneurship',
-    event: 'https://emprendia.duckdns.org/event',
+    shared: 'https://emprendia.duckdns.org/api/shared',
+    user: 'https://emprendia.duckdns.org/api/user',
+    entrepreneurship: 'https://emprendia.duckdns.org/api/entrepreneurship',
+    event: 'https://emprendia.duckdns.org/api/event',
   },
   keycloak: {
     url: 'https://emprendia.duckdns.org',

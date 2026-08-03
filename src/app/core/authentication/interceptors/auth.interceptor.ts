@@ -4,14 +4,12 @@ import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { KeycloakService } from '../../../authentication/services/keycloak.service';
 import { DirectAuthService } from '../../../authentication/services/direct-auth.service';
-import { environment } from '../../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const keycloakService = inject(KeycloakService);
   const directAuth = inject(DirectAuthService);
 
-  const keycloakUrl = environment.keycloak.url;
-  if (req.url.startsWith(keycloakUrl)) {
+  if (req.url.includes('/realms/')) {
     return next(req);
   }
 
