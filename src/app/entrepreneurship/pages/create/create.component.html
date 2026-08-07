@@ -266,6 +266,30 @@
             <label class="inline-form__label">Contenido HTML</label>
             <textarea class="inline-form__textarea" rows="5" [ngModel]="portalForm().htmlContent" (ngModelChange)="portalForm.update(p => ({...p, htmlContent: $event}))" placeholder="<h1>Bienvenido a mi emprendimiento</h1><p>Contenido personalizado...</p>"></textarea>
           </div>
+          <div class="inline-form__field inline-form__field--full">
+            <button class="btn btn--ghost btn--sm" type="button" (click)="portalPreviewOpen.update(v => !v)">
+              <i class="pi" [class]="portalPreviewOpen() ? 'pi-eye-slash' : 'pi-eye'"></i>
+              {{ portalPreviewOpen() ? 'Ocultar vista previa' : 'Vista previa en vivo' }}
+            </button>
+            @if (portalPreviewOpen()) {
+              <div class="inline-form__portal-preview">
+                <iframe class="inline-form__portal-frame" [srcdoc]="safePortalHtml()" title="Vista previa del portal" sandbox="allow-scripts allow-popups"></iframe>
+              </div>
+            }
+          </div>
+          <div class="inline-form__field inline-form__field--full">
+            <div class="create-form__ai">
+              <div class="create-form__ai-head">
+                <span><i class="pi pi-sparkles"></i> Generar con IA</span>
+                <span class="create-form__ai-tag">Próximamente</span>
+              </div>
+              <textarea class="inline-form__textarea" rows="3" [ngModel]="aiPrompt()" (ngModelChange)="aiPrompt.set($event)" placeholder="Describe cómo quieres tu página: colores, secciones, mensaje principal..." [disabled]="true"></textarea>
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="true" title="Disponible próximamente">
+                <i class="pi pi-sparkles"></i> Generar
+              </button>
+              <span class="create-form__hint">Escribe una descripción y la IA armará el portal por ti.</span>
+            </div>
+          </div>
           <div class="inline-form__field">
             <div class="create-form__checkbox">
               <input type="checkbox" id="portal-active" [ngModel]="portalForm().isActive" (ngModelChange)="portalForm.update(p => ({...p, isActive: $event}))" />

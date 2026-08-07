@@ -1,6 +1,7 @@
 import { Component, inject, input, OnInit, output, signal, computed } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { EventService } from '../../services/event.service';
@@ -37,6 +38,7 @@ export class CreateComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly created = output<void>();
   readonly cancelled = output<void>();
@@ -101,6 +103,12 @@ export class CreateComponent implements OnInit {
   readonly portalLoading = signal(false);
   readonly savingPortal = signal(false);
   readonly themes = signal<CatalogueValue[]>([]);
+  readonly portalPreviewOpen = signal(false);
+  readonly aiPrompt = signal('');
+
+  readonly safePortalHtml = computed<SafeHtml>(() => {
+    return this.sanitizer.bypassSecurityTrustHtml(this.portalForm().htmlContent || '<p style="font-family:sans-serif">Tu portal aparecerá aquí.</p>');
+  });
 
   readonly portalForm = signal({
     subdomain: '',

@@ -327,6 +327,56 @@
 
   &__portal-form { flex: 1; min-width: 0; }
 
+  &__portal-preview {
+    margin-top: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  &__portal-frame {
+    width: 100%;
+    height: 320px;
+    border: none;
+    display: block;
+  }
+
+  &__ai {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+    border: 1px dashed color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-primary) 4%, var(--color-surface));
+
+    .create-form__textarea { min-height: 70px; }
+  }
+
+  &__ai-head {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+
+    i { color: var(--color-primary); }
+  }
+
+  &__ai-tag {
+    margin-left: auto;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--color-text-muted);
+    background: var(--color-surface-alt);
+  }
+
   &__portal-actions {
     display: flex;
     align-items: center;
