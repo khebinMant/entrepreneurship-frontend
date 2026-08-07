@@ -1,4 +1,4 @@
-<div class="portal-editor">
+<div class="portal-editor" [class.portal-editor--fullscreen]="fullscreen()">
   @if (loading()) {
     <div class="portal-editor__skeleton">
       <div class="skeleton skeleton--line"></div>
@@ -46,8 +46,26 @@
       </div>
     </div>
 
-    <div class="portal-editor__workspace">
-      <section class="portal-editor__panel portal-editor__panel--code">
+    <div class="portal-editor__viewbar">
+      <div class="portal-editor__layout-switch">
+        <button type="button" [class.portal-editor__layout-btn--active]="layout() === 'split'" (click)="setLayout('split')">
+          <i class="pi pi-columns"></i> Dividir
+        </button>
+        <button type="button" [class.portal-editor__layout-btn--active]="layout() === 'code'" (click)="setLayout('code')">
+          <i class="pi pi-code"></i> Código
+        </button>
+        <button type="button" [class.portal-editor__layout-btn--active]="layout() === 'preview'" (click)="setLayout('preview')">
+          <i class="pi pi-eye"></i> Vista previa
+        </button>
+      </div>
+      <button class="portal-editor__expand" type="button" (click)="toggleFullscreen()">
+        <i class="pi" [class]="fullscreen() ? 'pi-window-minimize' : 'pi-window-maximize'"></i>
+        {{ fullscreen() ? 'Salir' : 'Expandir' }}
+      </button>
+    </div>
+
+    <div class="portal-editor__workspace" [class]="'portal-editor__workspace--' + layout()">
+      <section class="portal-editor__panel portal-editor__panel--code" [class.portal-editor__panel--hidden]="layout() === 'preview'">
         <header class="portal-editor__panel-head">
           <span class="portal-editor__panel-title"><i class="pi pi-code"></i> HTML / CSS / JS</span>
         </header>
@@ -59,7 +77,7 @@
           placeholder="<h1>Bienvenido a mi página</h1>&#10;<style>body { font-family: sans-serif }</style>"
         ></textarea>
       </section>
-      <section class="portal-editor__panel portal-editor__panel--preview">
+      <section class="portal-editor__panel portal-editor__panel--preview" [class.portal-editor__panel--hidden]="layout() === 'code'">
         <header class="portal-editor__panel-head">
           <span class="portal-editor__panel-title"><i class="pi pi-eye"></i> Vista previa en vivo</span>
           <button class="portal-editor__preview-toggle" type="button" (click)="previewOpen.update(v => !v)">

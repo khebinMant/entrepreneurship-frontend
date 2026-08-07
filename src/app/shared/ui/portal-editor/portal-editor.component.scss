@@ -83,11 +83,86 @@
     gap: var(--spacing-xs);
   }
 
+  &__viewbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+
+  &__layout-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-surface);
+    overflow-x: auto;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: none;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+
+      &:hover { color: var(--color-primary); }
+
+      i { font-size: 12px; }
+    }
+  }
+
+  &__layout-btn--active {
+    background: var(--color-primary) !important;
+    color: #fff !important;
+  }
+
+  &__expand {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+
+    &:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    i { font-size: 13px; }
+  }
+
   &__workspace {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-md);
     align-items: stretch;
+
+    &--code {
+      grid-template-columns: 1fr;
+    }
+
+    &--preview {
+      grid-template-columns: 1fr;
+    }
   }
 
   &__panel {
@@ -98,6 +173,10 @@
     overflow: hidden;
     background: var(--color-surface);
     min-height: 320px;
+
+    &--hidden {
+      display: none;
+    }
 
     &--code {
       .portal-editor__panel-head {
@@ -241,6 +320,35 @@
     border-radius: var(--radius-md);
 
     i { font-size: 12px; }
+  }
+
+  &--fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: var(--color-surface);
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+
+    .portal-editor__bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      box-shadow: 0 10px 30px -18px color-mix(in srgb, var(--color-text-primary) 45%, transparent);
+    }
+
+    .portal-editor__workspace {
+      min-height: calc(100vh - 320px);
+    }
+
+    .portal-editor__code,
+    .portal-editor__frame {
+      min-height: 60vh;
+    }
+
+    .portal-editor__panel {
+      min-height: 60vh;
+    }
   }
 }
 

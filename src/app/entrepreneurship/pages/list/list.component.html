@@ -1,24 +1,32 @@
 <div class="entrepreneurship-list">
   <div class="entrepreneurship-list__header">
     <div>
+      <span class="entrepreneurship-list__eyebrow">
+        <i class="pi" [class]="isAppRoute ? 'pi-sliders-h' : 'pi-compass'"></i>
+        {{ isAppRoute ? 'Mi panel' : 'Explora la comunidad' }}
+      </span>
       <h1 class="entrepreneurship-list__title">Emprendimientos</h1>
       <p class="entrepreneurship-list__subtitle">
-        Explora y gestiona todos los emprendimientos registrados en la plataforma.
+        {{
+          isAppRoute
+            ? 'Explora y gestiona todos los emprendimientos registrados en la plataforma.'
+            : 'Descubre iniciativas innovadoras, conecta con sus creadores y apoya ideas con impacto.'
+        }}
       </p>
     </div>
-    <div class="entrepreneurship-list__header-actions">
-      @if (isAppRoute) {
+    @if (isAppRoute) {
+      <div class="entrepreneurship-list__header-actions">
         <a class="btn btn--outline" routerLink="/app/invitations">
           <i class="pi pi-envelope"></i> Invitaciones
         </a>
         <a class="btn btn--outline" routerLink="/app/events">
           <i class="pi pi-calendar"></i> Eventos
         </a>
-      }
-      <button class="btn btn--primary" (click)="openCreateModal()">
-        <i class="pi pi-plus"></i> Nuevo
-      </button>
-    </div>
+        <button class="btn btn--primary" (click)="openCreateModal()">
+          <i class="pi pi-plus"></i> Nuevo
+        </button>
+      </div>
+    }
   </div>
 
   <app-modal

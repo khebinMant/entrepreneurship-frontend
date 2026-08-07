@@ -1,24 +1,32 @@
 <div class="event-list">
   <div class="event-list__header">
     <div>
+      <span class="event-list__eyebrow">
+        <i class="pi" [class]="isAppRoute() ? 'pi-sliders-h' : 'pi-compass'"></i>
+        {{ isAppRoute() ? 'Mi panel' : 'Explora la comunidad' }}
+      </span>
       <h1 class="event-list__title">Eventos</h1>
       <p class="event-list__subtitle">
-        Explora y gestiona todos los eventos registrados en la plataforma.
+        {{
+          isAppRoute()
+            ? 'Explora y gestiona todos los eventos registrados en la plataforma.'
+            : 'Encuentra eventos únicos, conecta con organizadores y vive nuevas experiencias.'
+        }}
       </p>
     </div>
-    <div class="event-list__header-actions">
-      @if (isAppRoute()) {
+    @if (isAppRoute()) {
+      <div class="event-list__header-actions">
         <a class="btn btn--outline" routerLink="/app/invitations">
           <i class="pi pi-envelope"></i> Invitaciones
         </a>
         <a class="btn btn--outline" routerLink="/app/entrepreneurships">
           <i class="pi pi-briefcase"></i> Emprendimientos
         </a>
-      }
-      <button class="btn btn--primary" (click)="openCreateModal()">
-        <i class="pi pi-plus"></i> Nuevo
-      </button>
-    </div>
+        <button class="btn btn--primary" (click)="openCreateModal()">
+          <i class="pi pi-plus"></i> Nuevo
+        </button>
+      </div>
+    }
   </div>
 
   <app-modal

@@ -18,6 +18,24 @@
       margin: 0;
     }
 
+    &__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+      border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+      color: var(--color-primary);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--spacing-sm);
+
+      i { font-size: 11px; }
+    }
+
     &__subtitle {
       color: var(--color-text-secondary);
       margin: var(--spacing-xs) 0 0;

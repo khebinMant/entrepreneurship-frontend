@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, HostListener } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -53,6 +53,8 @@ export class PortalEditorComponent {
     htmlContent: '',
   });
   readonly previewOpen = signal(true);
+  readonly fullscreen = signal(false);
+  readonly layout = signal<'split' | 'code' | 'preview'>('split');
   readonly aiPrompt = signal('');
   readonly aiKey = signal(this.readStorage(AI_KEY_STORAGE));
   readonly aiModel = signal(this.readStorage(AI_MODEL_STORAGE) || OPENROUTER_MODELS[0].id);
@@ -89,6 +91,22 @@ export class PortalEditorComponent {
 
   onDelete(): void {
     this.delete.emit();
+  }
+
+  toggleFullscreen(): void {
+    this.fullscreen.update(v => !v);
+    document.body.style.overflow = this.fullscreen() ? 'hidden' : '';
+  }
+
+  setLayout(layout: 'split' | 'code' | 'preview'): void {
+    this.layout.set(layout);
+  }
+
+  @HostListener('window:keydown.escape')
+  onEscape(): void {
+    if (this.fullscreen()) {
+      this.toggleFullscreen();
+    }
   }
 
   saveAiKey(): void {
