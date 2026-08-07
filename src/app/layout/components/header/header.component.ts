@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
@@ -22,6 +22,14 @@ export class HeaderComponent {
   private readonly toastService = inject(ToastService);
   readonly sidebarState = inject(SidebarStateService);
   readonly menuOpen = signal(false);
+
+  readonly roleLabel = computed(() => {
+    const roles = this.authService.authState().roles;
+    if (roles.some((r) => r === 'admin' || r === 'ADMIN' || r === 'default-roles-emprendia')) {
+      return 'Administrador';
+    }
+    return 'Eventos y Emprendimiento';
+  });
 
   get isAdmin(): boolean {
     try {

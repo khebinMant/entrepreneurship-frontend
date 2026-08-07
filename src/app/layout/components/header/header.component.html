@@ -33,6 +33,7 @@
           <div class="header__dropdown-info">
             <span class="header__dropdown-name">{{ authService.authState().username }}</span>
             <span class="header__dropdown-email">{{ authService.authState().username }}@emprendia.com</span>
+            <span class="header__dropdown-role"><i class="pi pi-shield"></i> {{ roleLabel() }}</span>
           </div>
         </div>
         <a class="header__dropdown-item" routerLink="/app/profile" (click)="closeMenu()">

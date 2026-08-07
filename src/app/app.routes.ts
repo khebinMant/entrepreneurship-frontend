@@ -88,6 +88,10 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'portal/:subdomain',
+    loadComponent: () => import('./shared/ui/portal-viewer/portal-viewer-page.component').then((m) => m.PortalViewerPageComponent),
+  },
+  {
     path: 'unauthorized',
     loadComponent: () => import('./layout/pages/unauthorized/unauthorized.component').then((m) => m.UnauthorizedComponent),
   },

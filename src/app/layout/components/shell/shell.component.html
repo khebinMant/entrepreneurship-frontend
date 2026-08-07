@@ -6,7 +6,7 @@
     *ngIf="sidebarState.isMobileOpen()"
     (click)="sidebarState.closeMobile()"
   ></div>
-  <main class="shell__content">
+  <main class="shell__content" [class.shell__content--folded]="sidebarState.isCollapsed()">
     <button class="shell__back-btn" type="button" (click)="goBack()" title="Volver">
       <i class="pi pi-arrow-left"></i>
     </button>

@@ -61,6 +61,9 @@ function fmtTime(d: string | Date): string {
             @if (coverMenuOpen()) {
               <div class="hero__dropdown">
                 <button class="hero__dropdown-item" (click)="openCoverPicker()"><i class="pi pi-image"></i> Editar portada</button>
+                <a class="hero__dropdown-item" [routerLink]="['/app', 'events', e.eventId, 'edit']" (click)="coverMenuOpen.set(false)" appClickOutside>
+                  <i class="pi pi-pencil"></i> Editar evento
+                </a>
               </div>
             }
           </div>
@@ -100,16 +103,17 @@ function fmtTime(d: string | Date): string {
       </div>
 
       <!-- ===== TABS ===== -->
-      <div class="detail-tabs">
+      @if (portalHtml()) {
+      <div class="detail-tabs" [style]="{ '--pos': activeTab() === 'portal' ? '100%' : '0%' }">
+        <span class="detail-tabs__indicator"></span>
         <button class="detail-tabs__tab" [class.detail-tabs__tab--active]="activeTab() === 'info'" (click)="activeTab.set('info')">
           <i class="pi pi-info-circle"></i> Información
         </button>
-        @if (portalHtml()) {
-          <button class="detail-tabs__tab" [class.detail-tabs__tab--active]="activeTab() === 'portal'" (click)="activeTab.set('portal')">
-            <i class="pi pi-globe"></i> Portal
-          </button>
-        }
+        <button class="detail-tabs__tab" [class.detail-tabs__tab--active]="activeTab() === 'portal'" (click)="activeTab.set('portal')">
+          <i class="pi pi-globe"></i> Portal
+        </button>
       </div>
+      }
 
       @if (activeTab() === 'info') {
       <!-- ===== CONTENT ===== -->
@@ -553,42 +557,53 @@ function fmtTime(d: string | Date): string {
 
     /* ===== DETAIL TABS ===== */
     .detail-tabs {
-      display: flex;
-      gap: var(--spacing-xs);
-      max-width: 1200px;
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+      width: fit-content;
       margin: var(--spacing-lg) auto 0;
-      padding: 0 var(--spacing-lg);
-      flex-wrap: wrap;
+      padding: 4px;
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+    }
+    .detail-tabs__indicator {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 4px;
+      width: calc(50% - 4px);
+      border-radius: 999px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--color-text-primary) 30%, transparent);
+      transform: translateX(var(--pos, 0%));
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .detail-tabs__tab {
+      position: relative;
+      z-index: 1;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      padding: 10px 22px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
-      color: var(--color-text-secondary);
+      padding: 8px 18px;
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
       font-size: var(--font-size-sm);
       font-weight: 600;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: color var(--transition-fast);
       i { font-size: 13px; }
-      &:hover {
-        border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
-        color: var(--color-primary);
-      }
-      &--active {
-        background: var(--color-primary);
-        border-color: var(--color-primary);
-        color: #fff;
-        box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--color-primary) 45%, transparent);
-      }
+      &--active { color: var(--color-primary); }
     }
     .detail-tabs__panel {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-xl);
+      width: 100%;
+      padding: var(--spacing-xl) var(--spacing-lg);
     }
 
     /* ===== PAGE ===== */

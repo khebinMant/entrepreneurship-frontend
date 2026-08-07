@@ -186,6 +186,10 @@ export class EventService {
   getPortal(entityId: number): Observable<EntityPortal> {
     return this.api.get<EntityPortal>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_PORTALS}/by-entity/${entityId}`);
   }
+
+  getPortalBySubdomain(subdomain: string): Observable<EntityPortal> {
+    return this.api.get<EntityPortal>(this.baseUrl, `${API_ENDPOINTS.SHARED.ENTITY_PORTALS}/by-subdomain/${encodeURIComponent(subdomain)}`);
+  }
   createPortal(dto: CreateEntityPortalDto): Observable<EntityPortal> {
     return this.api.post<EntityPortal>(this.baseUrl, API_ENDPOINTS.SHARED.ENTITY_PORTALS, dto);
   }

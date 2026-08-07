@@ -487,7 +487,6 @@ export class LoginRedirectComponent {
 
     try {
       await this.directAuth.login(this.username, this.password);
-      this.toastService.success('Sesión iniciada correctamente.');
     } catch (err: any) {
       if (err.status === 400 || err.status === 401) {
         this.errorMessage.set('Usuario o contraseña incorrectos');

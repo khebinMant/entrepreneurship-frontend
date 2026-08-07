@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, OnInit, signal, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -17,12 +17,38 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             <span>{{ domain }}</span>
           </div>
         }
-        <span class="portal-view__live"><span class="portal-view__live-dot"></span> En vivo</span>
+        <div class="portal-view__bar-actions">
+          <span class="portal-view__live"><span class="portal-view__live-dot"></span> En vivo</span>
+          <button class="portal-view__expand" type="button" (click)="expanded.set(true)" title="Ver el portal a pantalla completa">
+            <i class="pi pi-window-maximize"></i>
+          </button>
+        </div>
       </header>
       <div class="portal-view__stage">
+        <div class="portal-view__browser-pill">
+          <i class="pi pi-globe"></i> Portal web de {{ title }} · emprendia.duckdns.org
+        </div>
         <iframe class="portal-view__frame" [srcdoc]="document" [title]="title" loading="lazy"></iframe>
       </div>
     </section>
+
+    @if (expanded()) {
+      <div class="portal-maximize">
+        <div class="portal-maximize__topbar">
+          <div class="portal-maximize__brand">
+            <span class="portal-maximize__logo">E</span>
+            <span class="portal-maximize__title-hint">Estás viendo <strong>{{ title }}</strong> a través de Emprendia</span>
+          </div>
+          <div class="portal-maximize__actions">
+            <span class="portal-maximize__live"><span class="portal-maximize__live-dot"></span> En vivo</span>
+            <button class="portal-maximize__close" type="button" (click)="expanded.set(false)" aria-label="Cerrar vista completa">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        </div>
+        <iframe class="portal-maximize__frame" [srcdoc]="document" [title]="title" loading="lazy"></iframe>
+      </div>
+    }
   `,
   styles: [`
     :host { display: block; width: 100%; }
@@ -64,7 +90,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      max-width: 46%;
+      max-width: 40%;
       padding: 4px 12px;
       border-radius: 999px;
       background: var(--color-surface-alt);
@@ -77,8 +103,14 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       > i { font-size: 11px; flex-shrink: 0; }
       span { overflow: hidden; text-overflow: ellipsis; }
     }
-    .portal-view__live {
+    .portal-view__bar-actions {
       margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    .portal-view__live,
+    .portal-maximize__live {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -89,9 +121,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       border-radius: 999px;
       background: color-mix(in srgb, var(--color-success) 12%, transparent);
       white-space: nowrap;
-      flex-shrink: 0;
     }
-    .portal-view__live-dot {
+    .portal-view__live-dot,
+    .portal-maximize__live-dot {
       width: 7px; height: 7px; border-radius: 50%;
       background: var(--color-success);
       animation: portal-pulse 1.6s ease-in-out infinite;
@@ -100,34 +132,133 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }
     }
+    .portal-view__expand {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all var(--transition-fast);
+      &:hover { color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border)); }
+    }
     .portal-view__stage {
       padding: var(--spacing-lg);
       background: var(--color-surface-alt);
     }
+    .portal-view__browser-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: var(--spacing-sm);
+      i { font-size: 12px; }
+    }
     .portal-view__frame {
       display: block;
       width: 100%;
-      min-height: 480px;
+      min-height: 460px;
       border: 1px solid var(--color-border);
       border-radius: 16px;
       background: #fff;
       box-shadow: 0 4px 20px -8px color-mix(in srgb, var(--color-text-primary) 25%, transparent);
     }
+
+    /* ===== Maximize overlay (estilo YouTube) ===== */
+    .portal-maximize {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+    }
+    .portal-maximize__topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-md);
+      padding: var(--spacing-sm) var(--spacing-lg);
+      flex-wrap: wrap;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .portal-maximize__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      min-width: 0;
+    }
+    .portal-maximize__logo {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .portal-maximize__title-hint {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      strong { color: var(--color-text-primary); }
+    }
+    .portal-maximize__actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    .portal-maximize__close {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      font-size: 15px;
+      transition: all var(--transition-fast);
+      &:hover { color: var(--color-error); border-color: color-mix(in srgb, var(--color-error) 45%, var(--color-border)); }
+    }
+    .portal-maximize__frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #fff;
+    }
+
     @media (max-width: 768px) {
       .portal-view { border-radius: 18px; }
       .portal-view__bar { padding: var(--spacing-md); }
       .portal-view__url { max-width: 100%; order: 3; }
       .portal-view__stage { padding: var(--spacing-md); }
       .portal-view__frame { min-height: 420px; }
+      .portal-maximize__topbar { padding: var(--spacing-sm) var(--spacing-md); }
     }
   `],
 })
-export class PortalViewComponent {
+export class PortalViewComponent implements OnInit {
   @Input() html = '';
   @Input() title = 'Portal';
   @Input() domain = '';
+  @Input() autoExpand = false;
 
+  readonly expanded = signal(false);
   private readonly sanitizer = inject(DomSanitizer);
+
+  ngOnInit(): void {
+    if (this.autoExpand) {
+      this.expanded.set(true);
+    }
+  }
 
   get document(): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(this.buildDocument());

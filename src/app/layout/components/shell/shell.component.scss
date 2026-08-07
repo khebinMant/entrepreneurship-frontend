@@ -9,6 +9,10 @@
     margin-left: var(--sidebar-width);
     transition: margin-left var(--transition-normal);
     min-width: 0;
+
+    &--folded {
+      margin-left: var(--sidebar-width-collapsed);
+    }
   }
 
   &__back-btn {

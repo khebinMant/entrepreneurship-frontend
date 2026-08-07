@@ -124,6 +124,13 @@ export class EntrepreneurshipService {
     );
   }
 
+  getPortalBySubdomain(subdomain: string): Observable<EntityPortal> {
+    return this.api.get<EntityPortal>(
+      this.baseUrl,
+      `${API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_PORTALS}/by-subdomain/${encodeURIComponent(subdomain)}`,
+    );
+  }
+
   createPortal(dto: CreateEntityPortalDto): Observable<EntityPortal> {
     return this.api.post<EntityPortal>(this.baseUrl, API_ENDPOINTS.ENTREPRENEURSHIPS.ENTITY_PORTALS, dto);
   }
