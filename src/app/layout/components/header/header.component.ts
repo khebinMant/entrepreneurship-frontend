@@ -7,6 +7,7 @@ import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ThemeToggleComponent } from '../../../core/theme/theme-toggle.component';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import { SidebarStateService } from '../../../core/theme/sidebar-state.service';
+import { SessionService } from '../../../core/session/session.service';
 import { STORAGE_KEYS } from '../../../core/constants/app.constants';
 
 @Component({
@@ -21,7 +22,26 @@ export class HeaderComponent {
   private readonly directAuth = inject(DirectAuthService);
   private readonly toastService = inject(ToastService);
   readonly sidebarState = inject(SidebarStateService);
+  private readonly sessionService = inject(SessionService);
   readonly menuOpen = signal(false);
+
+  readonly displayName = computed(() => {
+    const full = [this.sessionService.firstName(), this.sessionService.lastName()]
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .join(' ');
+    if (full) return full;
+    const raw = this.authService.authState().username;
+    if (!raw) return 'Usuario';
+    const base = raw.includes('@') ? raw.split('@')[0] : raw;
+    const parts = base.split(/[-_.]+/).filter(Boolean);
+    if (parts.join('') === base) return base.charAt(0).toUpperCase() + base.slice(1);
+    return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+  });
+
+  readonly displayEmail = computed(() => {
+    return this.authService.authState().email || this.authService.authState().username || '';
+  });
 
   readonly roleLabel = computed(() => {
     const roles = this.authService.authState().roles;

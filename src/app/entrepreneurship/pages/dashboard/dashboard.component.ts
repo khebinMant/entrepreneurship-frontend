@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
+import { SessionService } from '../../../core/session/session.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -135,8 +136,14 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
 })
 export class DashboardComponent {
   readonly authService = inject(AuthenticationService);
+  private readonly sessionService = inject(SessionService);
 
   readonly greetName = computed(() => {
+    const full = [this.sessionService.firstName(), this.sessionService.lastName()]
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .join(' ');
+    if (full) return full.split(' ')[0];
     const raw = this.authService.authState().username;
     if (!raw) return 'Emprendedor';
     const base = raw.includes('@') ? raw.split('@')[0] : raw;
