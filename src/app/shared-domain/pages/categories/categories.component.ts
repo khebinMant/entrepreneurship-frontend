@@ -6,6 +6,7 @@ import { ApiService } from '../../../core/http/services/api.service';
 import { AppConfigService } from '../../../core/config/services/app-config.service';
 import { API_ENDPOINTS } from '../../../core/constants/app.constants';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import type { Category } from '../../../entrepreneurship/models/category';
 
 @Component({
@@ -18,6 +19,7 @@ import type { Category } from '../../../entrepreneurship/models/category';
 export class CategoriesComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly config = inject(AppConfigService);
+  private readonly toastService = inject(ToastService);
   private readonly baseUrl = this.config.entrepreneurshipUrl;
 
   readonly categories = signal<Category[]>([]);
@@ -71,6 +73,7 @@ export class CategoriesComponent implements OnInit {
             cats.map((c) => (c.categoryId === category.categoryId ? updated : c)),
           );
           this.cancelEdit();
+          this.toastService.success('Categoría actualizada correctamente.');
         },
       });
   }
@@ -87,6 +90,7 @@ export class CategoriesComponent implements OnInit {
           this.categories.update((cats) => [...cats, cat]);
           this.newCategoryName.set('');
           this.newCategoryDescription.set('');
+          this.toastService.success('Categoría creada correctamente.');
         },
       });
   }
@@ -109,8 +113,9 @@ export class CategoriesComponent implements OnInit {
       await lastValueFrom(this.api.delete<void>(this.baseUrl, `${API_ENDPOINTS.ENTREPRENEURSHIPS.CATEGORIES}/${category.categoryId}`));
       this.categories.update((cats) => cats.filter((c) => c.categoryId !== category.categoryId));
       this.cancelDelete();
+      this.toastService.success('Categoría eliminada correctamente.');
     } catch {
-      // fallback
+      this.toastService.error('No se pudo eliminar la categoría.');
     } finally {
       this.deleting.set(false);
     }

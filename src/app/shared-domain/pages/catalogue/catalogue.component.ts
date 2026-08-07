@@ -7,6 +7,7 @@ import { ApiService } from '../../../core/http/services/api.service';
 import { AppConfigService } from '../../../core/config/services/app-config.service';
 import { API_ENDPOINTS } from '../../../core/constants/app.constants';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import type { CatalogueType, CreateCatalogueTypeDto, UpdateCatalogueTypeDto } from '../../models/catalogue-type';
 import type { CatalogueValue, CreateCatalogueValueDto, UpdateCatalogueValueDto } from '../../models/catalogue-value';
 
@@ -21,6 +22,7 @@ export class CatalogueComponent implements OnInit {
   private readonly catalogueService = inject(CatalogueService);
   private readonly api = inject(ApiService);
   private readonly config = inject(AppConfigService);
+  private readonly toastService = inject(ToastService);
   private readonly sharedUrl = this.config.sharedUrl;
 
   readonly types = signal<CatalogueType[]>([]);
@@ -82,6 +84,7 @@ export class CatalogueComponent implements OnInit {
       next: (type) => {
         this.types.update(t => [...t, type]);
         this.typeForm.set({ name: '', code: '', description: '' });
+        this.toastService.success('Tipo de catálogo creado correctamente.');
       },
     });
   }
@@ -103,6 +106,7 @@ export class CatalogueComponent implements OnInit {
       next: (updated) => {
         this.types.update(t => t.map(x => x.catalogueTypeId === type.catalogueTypeId ? updated : x));
         this.cancelEditType();
+        this.toastService.success('Tipo de catálogo actualizado correctamente.');
       },
     });
   }
@@ -127,8 +131,9 @@ export class CatalogueComponent implements OnInit {
       this.valuesByType.update(v => { const copy = { ...v }; delete copy[type.catalogueTypeId]; return copy; });
       if (this.expandedTypeId() === type.catalogueTypeId) this.expandedTypeId.set(null);
       this.cancelDeleteType();
+      this.toastService.success('Tipo de catálogo eliminado correctamente.');
     } catch {
-      // fallback
+      this.toastService.error('No se pudo eliminar el tipo de catálogo.');
     } finally {
       this.deleting.set(false);
     }
@@ -155,8 +160,9 @@ export class CatalogueComponent implements OnInit {
         [value.catalogueTypeId]: (v[value.catalogueTypeId] || []).filter(x => x.catalogueValueId !== value.catalogueValueId),
       }));
       this.cancelDeleteValue();
+      this.toastService.success('Valor de catálogo eliminado correctamente.');
     } catch {
-      // fallback
+      this.toastService.error('No se pudo eliminar el valor de catálogo.');
     } finally {
       this.deleting.set(false);
     }
@@ -173,6 +179,7 @@ export class CatalogueComponent implements OnInit {
           [type.catalogueTypeId]: [...(v[type.catalogueTypeId] || []), value],
         }));
         this.newValueForm.set({ name: '', code: '', description: '' });
+        this.toastService.success('Valor de catálogo creado correctamente.');
       },
     });
   }
@@ -198,6 +205,7 @@ export class CatalogueComponent implements OnInit {
           return { ...v, [typeId]: arr.map(x => x.catalogueValueId === value.catalogueValueId ? updated : x) };
         });
         this.cancelEditValue();
+        this.toastService.success('Valor de catálogo actualizado correctamente.');
       },
     });
   }

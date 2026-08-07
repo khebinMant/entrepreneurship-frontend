@@ -14,6 +14,7 @@ import { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
 import { CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
 import { CreateComponent } from '../create/create.component';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import { EntrepreneurshipService } from '../../../entrepreneurship/services/entrepreneurship.service';
 import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepreneurship';
@@ -34,6 +35,7 @@ export class ListComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
   readonly imageService = inject(ImageService);
+  private readonly toastService = inject(ToastService);
 
   readonly events = signal<Event[]>([]);
   readonly eventTypes = signal<CatalogueValue[]>([]);
@@ -271,8 +273,10 @@ export class ListComponent implements OnInit {
       this.showDeleteConfirm.set(false);
       this.deletingEvent.set(null);
       this.loadEvents();
+      this.toastService.success(`Evento "${event.name}" eliminado correctamente.`);
     } catch (err) {
       console.error('Error deleting event:', err);
+      this.toastService.error('No se pudo eliminar el evento.');
     } finally {
       this.deleting.set(false);
     }
@@ -366,10 +370,12 @@ export class ListComponent implements OnInit {
       next: () => {
         this.modalInvitations.update((list) => list.filter((i) => i.invitationId !== invitationId));
         this.modalInvitationSuccess.set('Invitación eliminada correctamente');
+        this.toastService.success('Invitación eliminada correctamente.');
         this.deletingInvitationId.set(null);
       },
       error: () => {
         this.modalInvitationError.set('Error al eliminar la invitación');
+        this.toastService.error('No se pudo eliminar la invitación.');
         this.deletingInvitationId.set(null);
       },
     });
@@ -397,10 +403,12 @@ export class ListComponent implements OnInit {
       next: () => {
         this.loadModalInvitations();
         this.modalInvitationSuccess.set('Invitación reenviada correctamente');
+        this.toastService.success('Invitación reenviada correctamente.');
         this.closeResendInvModal();
       },
       error: () => {
         this.modalInvitationError.set('Error al reenviar la invitación');
+        this.toastService.error('No se pudo reenviar la invitación.');
         this.resendingInv.set(false);
       },
     });
@@ -437,10 +445,12 @@ export class ListComponent implements OnInit {
       next: () => {
         this.loadModalInvitations();
         this.modalInvitationSuccess.set('Invitación rechazada correctamente');
+        this.toastService.success('Invitación rechazada correctamente.');
         this.closeRejectInvModal();
       },
       error: () => {
         this.modalInvitationError.set('Error al rechazar la invitación');
+        this.toastService.error('No se pudo rechazar la invitación.');
         this.rejectingInv.set(false);
       },
     });
@@ -495,14 +505,19 @@ export class ListComponent implements OnInit {
       this.inviteSuccess.set(
         `Invitación${ids.length > 1 ? 'es' : ''} enviada${ids.length > 1 ? 's' : ''} correctamente a ${ids.length} emprendimiento${ids.length > 1 ? 's' : ''}.`,
       );
+      this.toastService.success(
+        `Invitación${ids.length > 1 ? 'es' : ''} enviada${ids.length > 1 ? 's' : ''} correctamente.`,
+      );
     } catch (err) {
       if (err instanceof HttpErrorResponse && err.status === 409) {
         const alreadyIn = ids.map((id) => nameMap.get(id) || `ID ${id}`);
         this.inviteError.set(
           `${alreadyIn.join(', ')} ya ${alreadyIn.length > 1 ? 'estaban' : 'estaba'} invitado${alreadyIn.length > 1 ? 's' : ''} a este evento.`,
         );
+        this.toastService.warning('Algunos emprendimientos ya estaban invitados a este evento.');
       } else {
         this.inviteError.set('Error al enviar las invitaciones');
+        this.toastService.error('No se pudieron enviar las invitaciones.');
       }
     } finally {
       this.inviting.set(false);

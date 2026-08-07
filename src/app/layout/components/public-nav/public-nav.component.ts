@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
 import { DirectAuthService } from '../../../authentication/services/direct-auth.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ThemeToggleComponent } from '../../../core/theme/theme-toggle.component';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import { STORAGE_KEYS } from '../../../core/constants/app.constants';
@@ -22,7 +23,6 @@ import { STORAGE_KEYS } from '../../../core/constants/app.constants';
         </div>
 
         <div class="public-nav__center" [class.open]="mobileOpen">
-          <a class="public-nav__link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="mobileOpen = false">Home</a>
           <a class="public-nav__link" routerLink="/entrepreneurships" routerLinkActive="active" (click)="mobileOpen = false">Emprendimientos</a>
           <a class="public-nav__link" routerLink="/events" routerLinkActive="active" (click)="mobileOpen = false">Eventos</a>
           <div class="public-nav__mobile-theme">
@@ -326,6 +326,7 @@ import { STORAGE_KEYS } from '../../../core/constants/app.constants';
 export class PublicNavComponent {
   readonly authService = inject(AuthenticationService);
   private readonly directAuth = inject(DirectAuthService);
+  private readonly toastService = inject(ToastService);
   mobileOpen = false;
   readonly dropdownOpen = signal(false);
 
@@ -341,6 +342,7 @@ export class PublicNavComponent {
   }
 
   logout(): void {
+    this.toastService.success('Sesión cerrada correctamente.');
     this.directAuth.logout();
   }
 }

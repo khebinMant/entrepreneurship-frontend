@@ -8,6 +8,7 @@ import { ImageService } from '../../../shared-domain/services/image.service';
 import { CatalogueService } from '../../../shared-domain/services/catalogue.service';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
 import { UserService } from '../../../user/services/user.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ENTITY_TYPE, CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import { Category } from '../../models/category';
 import { Entrepreneurship } from '../../models/entrepreneurship';
@@ -46,6 +47,7 @@ export class CreateComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
 
   readonly created = output<void>();
   readonly cancelled = output<void>();
@@ -499,6 +501,7 @@ export class CreateComponent implements OnInit {
 
         this.created.emit();
         this.router.navigate(['/app/entrepreneurships', entrepreneurship.entrepreneurshipId]);
+        this.toastService.success(`Emprendimiento "${f.name}" actualizado correctamente.`);
       } else {
         const payload: any = {
           userId: currentUser?.userId ?? 0,
@@ -553,9 +556,11 @@ export class CreateComponent implements OnInit {
 
         this.created.emit();
         this.router.navigate(['/app/entrepreneurships', entrepreneurship.entrepreneurshipId]);
+        this.toastService.success(`Emprendimiento "${f.name}" creado correctamente.`);
       }
     } catch (err: any) {
       console.error('Error saving entrepreneurship:', err);
+      this.toastService.error('No se pudo guardar el emprendimiento. Intenta de nuevo.');
     } finally {
       this.loading.set(false);
     }

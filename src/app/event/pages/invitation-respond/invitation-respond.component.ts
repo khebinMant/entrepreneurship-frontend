@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { CatalogueService } from '../../../shared-domain/services/catalogue.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import type { EventInvitation } from '../../models/event-invitation';
 import type { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
@@ -20,6 +21,7 @@ export class InvitationRespondComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly eventService = inject(EventService);
   private readonly catalogueService = inject(CatalogueService);
+  private readonly toastService = inject(ToastService);
 
   readonly invitation = signal<EventInvitation | null>(null);
   readonly loading = signal(true);
@@ -82,8 +84,10 @@ export class InvitationRespondComponent implements OnInit {
       );
       this.actionResult.set('accepted');
       this.actionDone.set(true);
+      this.toastService.success('Invitación aceptada correctamente.');
     } catch {
       this.error.set('Error al aceptar la invitación');
+      this.toastService.error('No se pudo aceptar la invitación.');
     } finally {
       this.actionLoading.set(false);
     }
@@ -122,8 +126,10 @@ export class InvitationRespondComponent implements OnInit {
       this.actionResult.set('rejected');
       this.actionDone.set(true);
       this.showRejectModal.set(false);
+      this.toastService.success('Invitación rechazada correctamente.');
     } catch {
       this.error.set('Error al rechazar la invitación');
+      this.toastService.error('No se pudo rechazar la invitación.');
     } finally {
       this.actionLoading.set(false);
     }

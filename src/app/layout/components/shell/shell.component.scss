@@ -21,7 +21,7 @@
     background: var(--color-surface);
     color: var(--color-text-secondary);
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     margin-bottom: var(--spacing-md);
     transition: all 0.2s;
@@ -33,7 +33,7 @@
     }
 
     i {
-      font-size: 0.9rem;
+      font-size: var(--font-size-sm);
     }
   }
 

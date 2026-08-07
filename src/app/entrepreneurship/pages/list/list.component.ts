@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { EntrepreneurshipService } from '../../services/entrepreneurship.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
 import { Category } from '../../models/category';
 import { Entrepreneurship, EntrepreneurshipSearchFilters } from '../../models/entrepreneurship';
@@ -26,6 +27,7 @@ export class ListComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
   readonly imageService = inject(ImageService);
+  private readonly toastService = inject(ToastService);
 
   readonly entrepreneurships = signal<Entrepreneurship[]>([]);
   readonly categories = signal<Category[]>([]);
@@ -182,8 +184,10 @@ export class ListComponent implements OnInit {
       this.showDeleteConfirm.set(false);
       this.deletingEntrepreneurship.set(null);
       this.loadEntrepreneurships();
+      this.toastService.success(`Emprendimiento "${entrepreneurship.name}" eliminado correctamente.`);
     } catch (err) {
       console.error('Error deleting entrepreneurship:', err);
+      this.toastService.error('No se pudo eliminar el emprendimiento.');
     } finally {
       this.deleting.set(false);
     }

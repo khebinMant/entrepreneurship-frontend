@@ -6,6 +6,7 @@ import { lastValueFrom } from 'rxjs';
 import { EntrepreneurshipService } from '../../services/entrepreneurship.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
 import { CatalogueService } from '../../../shared-domain/services/catalogue.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import type { Category } from '../../models/category';
 import type { Entrepreneurship } from '../../models/entrepreneurship';
@@ -49,6 +50,7 @@ export class EditComponent implements OnInit {
   private readonly entrepreneurshipService = inject(EntrepreneurshipService);
   private readonly imageService = inject(ImageService);
   private readonly catalogueService = inject(CatalogueService);
+  private readonly toastService = inject(ToastService);
 
   readonly editingEntrepreneurship = input<Entrepreneurship | null>(null);
   readonly saved = output<void>();
@@ -386,8 +388,10 @@ export class EditComponent implements OnInit {
 
       this.saved.emit();
       this.goBack();
+      this.toastService.success('Emprendimiento actualizado correctamente.');
     } catch (err: any) {
       console.error('Error saving entrepreneurship:', err);
+      this.toastService.error('No se pudo guardar el emprendimiento.');
     } finally {
       this.saving.set(false);
     }
@@ -512,8 +516,10 @@ export class EditComponent implements OnInit {
       await lastValueFrom(obs$);
       this.loadLocations();
       this.cancelLocationForm();
+      this.toastService.success(editing ? 'Dirección actualizada correctamente.' : 'Dirección añadida correctamente.');
     } catch (err) {
       console.error('Error saving location:', err);
+      this.toastService.error('No se pudo guardar la dirección.');
     } finally {
       this.savingLocation.set(false);
     }
@@ -523,8 +529,10 @@ export class EditComponent implements OnInit {
     try {
       await lastValueFrom(this.entrepreneurshipService.deleteLocation(loc.entrepreneurshipLocationId));
       this.loadLocations();
+      this.toastService.success('Dirección eliminada correctamente.');
     } catch (err) {
       console.error('Error deleting location:', err);
+      this.toastService.error('No se pudo eliminar la dirección.');
     }
   }
 
@@ -576,9 +584,11 @@ export class EditComponent implements OnInit {
       this.clearSocialFeedback();
       this.loadSocialLinks();
       this.cancelSocialForm();
+      this.toastService.success(editing ? 'Red social actualizada correctamente.' : 'Red social añadida correctamente.');
     } catch {
       this.socialLinkFeedback.set({ type: 'error', message: 'Error al guardar la red social. Intenta de nuevo.' });
       this.clearSocialFeedback();
+      this.toastService.error('No se pudo guardar la red social.');
     } finally {
       this.savingSocialLink.set(false);
     }
@@ -588,8 +598,10 @@ export class EditComponent implements OnInit {
     try {
       await lastValueFrom(this.entrepreneurshipService.deleteSocialLink(link.entitySocialLinkId));
       this.loadSocialLinks();
+      this.toastService.success('Red social eliminada correctamente.');
     } catch (err) {
       console.error('Error deleting social link:', err);
+      this.toastService.error('No se pudo eliminar la red social.');
     }
   }
 
@@ -625,8 +637,10 @@ export class EditComponent implements OnInit {
         }));
       }
       this.loadPortal();
+      this.toastService.success('Portal guardado correctamente.');
     } catch (err) {
       console.error('Error saving portal:', err);
+      this.toastService.error('No se pudo guardar el portal.');
     } finally {
       this.savingPortal.set(false);
     }
@@ -643,8 +657,10 @@ export class EditComponent implements OnInit {
       await lastValueFrom(this.entrepreneurshipService.deletePortal(portalId));
       this.portal.set(null);
       this.portalForm.set({ subdomain: '', themeId: null, isActive: true, htmlContent: '' });
+      this.toastService.success('Portal eliminado correctamente.');
     } catch (err) {
       console.error('Error deleting portal:', err);
+      this.toastService.error('No se pudo eliminar el portal.');
     }
   }
 

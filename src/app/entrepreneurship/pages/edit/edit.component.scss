@@ -102,7 +102,7 @@
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--color-text-secondary);
     transition: color 0.2s, border-color 0.2s;
@@ -168,7 +168,7 @@
   }
 
   &__label {
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--color-text-secondary);
   }
@@ -215,7 +215,7 @@
     border: 1px solid var(--color-border);
     border-radius: 20px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
     color: var(--color-text-primary);
     transition: all 0.2s;
 
@@ -339,7 +339,7 @@
     flex: 1;
 
     strong {
-      font-size: 0.9rem;
+      font-size: var(--font-size-sm);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -348,7 +348,7 @@
   }
 
   &__list-meta {
-    font-size: 0.8rem;
+    font-size: var(--font-size-xs);
     color: var(--color-text-secondary);
   }
 
@@ -373,15 +373,15 @@
     i { font-size: 16px; }
 
     &--success {
-      background: #f0fdf4;
-      border: 1px solid #86efac;
-      color: #166534;
+      background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+      border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+      color: var(--color-success);
     }
 
     &--error {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
+      background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
+      border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+      color: var(--color-error);
     }
   }
 
@@ -401,7 +401,7 @@
     }
 
     label {
-      font-size: 0.9rem;
+      font-size: var(--font-size-sm);
       cursor: pointer;
       color: var(--color-text-primary);
     }
@@ -410,7 +410,7 @@
   // ===================== Field hint =====================
 
   &__field-hint {
-    font-size: 0.78rem;
+    font-size: var(--font-size-xs);
     color: var(--color-text-muted);
     margin-top: 2px;
   }
@@ -419,7 +419,7 @@
 
   &__textarea--code {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
     line-height: 1.5;
     min-height: 140px;
   }

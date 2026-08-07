@@ -14,7 +14,7 @@ import { PublicNavComponent } from '../public-nav/public-nav.component';
   `,
   styles: [`
     .public-content {
-      padding-top: 64px;
+      padding-top: var(--header-height);
       min-height: 100vh;
     }
   `],

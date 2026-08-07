@@ -6,6 +6,7 @@ import { lastValueFrom } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
 import { CatalogueService } from '../../../shared-domain/services/catalogue.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { CATALOGUE_CODES, ENTITY_TYPE } from '../../../core/constants/app.constants';
 import type { Event as EventModel } from '../../models/event';
 import type { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
@@ -34,6 +35,7 @@ export class EditComponent implements OnInit {
   private readonly eventService = inject(EventService);
   private readonly imageService = inject(ImageService);
   private readonly catalogueService = inject(CatalogueService);
+  private readonly toastService = inject(ToastService);
 
   readonly activeTab = signal<TabId>('info');
 
@@ -265,6 +267,7 @@ export class EditComponent implements OnInit {
       await lastValueFrom(this.imageService.upload(file, ENTITY_TYPE.EVENT, this.eventId, undefined, undefined, undefined));
       this.imageService.invalidateCache(ENTITY_TYPE.EVENT, this.eventId);
       await this.loadExistingImages();
+      this.toastService.success('Imagen de la galería subida correctamente.');
     } catch { /* fallback */ }
     finally { this.uploadingImage.set(false); (evt.target as HTMLInputElement).value = ''; }
   }
@@ -312,7 +315,10 @@ export class EditComponent implements OnInit {
 
       await lastValueFrom(this.eventService.update(this.eventId!, payload));
       await this.loadEvent();
-    } catch { /* fallback */ }
+      this.toastService.success('Evento actualizado correctamente.');
+    } catch {
+      this.toastService.error('No se pudo guardar el evento. Intenta de nuevo.');
+    }
     finally { this.saving.set(false); }
   }
 
@@ -434,30 +440,39 @@ export class EditComponent implements OnInit {
 
   async savePortal(): Promise<void> {
     const pf = this.portalForm();
+    const subdomain = pf.subdomain.trim();
+    if (!subdomain) {
+      this.toastService.error('Escribe un subdominio para el portal (ej. mi-evento).');
+      return;
+    }
     this.savingPortal.set(true);
     try {
       const existing = this.portal();
       const dto: CreateEntityPortalDto = {
         entityId: this.eventId!,
-        subdomain: pf.subdomain || undefined,
+        subdomain,
         themeId: pf.themeId ?? undefined,
         isActive: pf.isActive,
         htmlContent: pf.htmlContent || undefined,
       };
       if (existing) {
         const updateDto: UpdateEntityPortalDto = {
-          subdomain: pf.subdomain || undefined,
+          subdomain,
           themeId: pf.themeId ?? undefined,
           isActive: pf.isActive,
           htmlContent: pf.htmlContent || undefined,
         };
         const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
         await lastValueFrom(this.eventService.updatePortal(id, updateDto));
+        this.toastService.success('Portal guardado correctamente.');
       } else {
         await lastValueFrom(this.eventService.createPortal(dto));
+        this.toastService.success('Portal creado correctamente.');
       }
       await this.loadPortal();
-    } catch { /* fallback */ }
+    } catch {
+      this.toastService.error('No se pudo guardar el portal. Revisa los datos e intenta de nuevo.');
+    }
     finally { this.savingPortal.set(false); }
   }
 
@@ -470,7 +485,10 @@ export class EditComponent implements OnInit {
       await lastValueFrom(this.eventService.deletePortal(id));
       this.portal.set(null);
       this.portalForm.set({ subdomain: '', themeId: null, isActive: true, htmlContent: '' });
-    } catch { /* fallback */ }
+      this.toastService.success('Portal eliminado correctamente.');
+    } catch {
+      this.toastService.error('No se pudo eliminar el portal.');
+    }
     finally { this.savingPortal.set(false); }
   }
 }

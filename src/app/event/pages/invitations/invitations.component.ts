@@ -12,6 +12,7 @@ import { ImageService } from '../../../shared-domain/services/image.service';
 import { EntrepreneurshipService } from '../../../entrepreneurship/services/entrepreneurship.service';
 import { CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import type { EventInvitation, CreateEventInvitationDto, BulkCreateInvitationDto } from '../../models/event-invitation';
 import type { Event } from '../../models/event';
 import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepreneurship';
@@ -42,6 +43,7 @@ export class InvitationsComponent implements OnInit {
   private readonly catalogueService = inject(CatalogueService);
   private readonly entrepreneurshipService = inject(EntrepreneurshipService);
   readonly imageService = inject(ImageService);
+  private readonly toastService = inject(ToastService);
 
   readonly events = signal<Event[]>([]);
   readonly invitationsMap = signal<Map<number, EventInvitation[]>>(new Map());
@@ -290,6 +292,9 @@ export class InvitationsComponent implements OnInit {
       this.inviteSuccess.set(
         `Invitación${ids.length > 1 ? 'es' : ''} enviada${ids.length > 1 ? 's' : ''} correctamente a ${ids.length} emprendimiento${ids.length > 1 ? 's' : ''}.`,
       );
+      this.toastService.success(
+        `Invitación${ids.length > 1 ? 'es' : ''} enviada${ids.length > 1 ? 's' : ''} correctamente.`,
+      );
       await this.loadInvitations(event.eventId);
     } catch (err) {
       if (err instanceof HttpErrorResponse && err.status === 409) {
@@ -297,8 +302,10 @@ export class InvitationsComponent implements OnInit {
         this.inviteError.set(
           `${alreadyIn.join(', ')} ya ${alreadyIn.length > 1 ? 'estaban' : 'estaba'} invitado${alreadyIn.length > 1 ? 's' : ''} a este evento.`,
         );
+        this.toastService.warning('Algunos emprendimientos ya estaban invitados a este evento.');
       } else {
         this.inviteError.set('Error al enviar las invitaciones');
+        this.toastService.error('No se pudieron enviar las invitaciones.');
       }
     } finally {
       this.invitingBulk.set(false);
@@ -325,6 +332,7 @@ export class InvitationsComponent implements OnInit {
       });
     } catch {
       this.error.set('Error al eliminar la invitación');
+      this.toastService.error('No se pudo eliminar la invitación.');
     } finally {
       this.deletingId.set(null);
     }
@@ -367,8 +375,10 @@ export class InvitationsComponent implements OnInit {
         return next;
       });
       this.closeResendModal();
+      this.toastService.success('Invitación reenviada correctamente.');
     } catch {
       this.error.set('Error al reenviar la invitación');
+      this.toastService.error('No se pudo reenviar la invitación.');
     } finally {
       this.resending.set(false);
     }
@@ -420,8 +430,10 @@ export class InvitationsComponent implements OnInit {
         return next;
       });
       this.closeRejectModal();
+      this.toastService.success('Invitación rechazada correctamente.');
     } catch {
       this.error.set('Error al rechazar la invitación');
+      this.toastService.error('No se pudo rechazar la invitación.');
     } finally {
       this.rejecting.set(false);
     }

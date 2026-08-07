@@ -5,6 +5,7 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -218,6 +219,7 @@ export class ResetPasswordComponent {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
 
   newPassword = '';
   confirmPassword = '';
@@ -257,11 +259,14 @@ export class ResetPasswordComponent {
         ),
       );
       this.success.set(true);
+      this.toastService.success('Contraseña restablecida correctamente.');
     } catch (err: any) {
       if (err.status === 400) {
         this.errorMessage.set('El token es inválido o ha expirado.');
+        this.toastService.error('El token es inválido o ha expirado.');
       } else {
         this.errorMessage.set('Ocurrió un error. Intenta de nuevo.');
+        this.toastService.error('Ocurrió un error al restablecer la contraseña.');
       }
     } finally {
       this.loading.set(false);

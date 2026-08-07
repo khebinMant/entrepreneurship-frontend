@@ -6,6 +6,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
 import { EntrepreneurshipService } from '../../services/entrepreneurship.service';
 import { EventService } from '../../../event/services/event.service';
 import { UserService } from '../../../user/services/user.service';
+import { ThemeService } from '../../../core/theme/theme.service';
 import { APP_ROLE } from '../../../core/constants/app.constants';
 import { lastValueFrom } from 'rxjs';
 import type { MonthlyActivity, ByType, EventTypeCount, EventVisibilityCount, CategoryCount } from '../../../shared/models/analytics';
@@ -32,6 +33,7 @@ export class DashboardMetricsComponent implements OnInit {
   private readonly entrepreneurshipService = inject(EntrepreneurshipService);
   private readonly eventService = inject(EventService);
   private readonly userService = inject(UserService);
+  private readonly themeService = inject(ThemeService);
 
   readonly loading = signal(false);
   readonly isAdmin = computed(() => this.authService.hasRole(APP_ROLE.ADMIN) || this.authService.hasRole(APP_ROLE.ADMIN_KEYCLOAK));
@@ -68,8 +70,29 @@ export class DashboardMetricsComponent implements OnInit {
   private eventTypeChart: Chart | null = null;
   private eventVisChart: Chart | null = null;
 
+  private cssVar(name: string, fallback: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  }
+
+  private palette(): { primary: string; secondary: string; success: string; warning: string; error: string; text: string; grid: string } {
+    return {
+      primary: this.cssVar('--color-primary', '#2563eb'),
+      secondary: this.cssVar('--color-secondary', '#0891b2'),
+      success: this.cssVar('--color-success', '#059669'),
+      warning: this.cssVar('--color-warning', '#d97706'),
+      error: this.cssVar('--color-error', '#dc2626'),
+      text: this.cssVar('--color-text-secondary', '#475569'),
+      grid: this.cssVar('--color-border', '#e2e8f0'),
+    };
+  }
+
+  private legendLabels(palette: { primary: string; secondary: string; success: string; warning: string; error: string; text: string; grid: string }): { position: 'top' | 'right'; labels: { boxWidth: number; padding: number; color: string; font: { size: number } } } {
+    return { position: 'right', labels: { boxWidth: 12, padding: 8, color: palette.text, font: { size: 11 } } };
+  }
+
   constructor() {
     effect(() => {
+      this.themeService.isDark();
       if (!this.loading()) {
         setTimeout(() => {
           this.renderMonthlyChart();
@@ -102,7 +125,7 @@ export class DashboardMetricsComponent implements OnInit {
     ]);
 
     this.metrics.set([
-      { label: 'Emprendimientos', value: entrepAnalytics?.totalEntrepreneurships ?? 0, icon: 'pi pi-briefcase', route: '/app/entrepreneurships', color: '#4f46e5' },
+      { label: 'Emprendimientos', value: entrepAnalytics?.totalEntrepreneurships ?? 0, icon: 'pi pi-briefcase', route: '/app/entrepreneurships', color: '#2563eb' },
       { label: 'Eventos', value: eventAnalytics?.totalEvents ?? 0, icon: 'pi pi-calendar', route: '/app/events', color: '#0891b2' },
       { label: 'Usuarios', value: Array.isArray(users) ? users.length : 0, icon: 'pi pi-users', route: '/app/users', color: '#059669' },
       { label: 'Invitaciones', value: eventAnalytics?.totalInvitationsSent ?? 0, icon: 'pi pi-send', route: '/app/events', color: '#d97706' },
@@ -133,7 +156,7 @@ export class DashboardMetricsComponent implements OnInit {
     ]);
 
     this.metrics.set([
-      { label: 'Mis Emprendimientos', value: entrepStats?.totalEntrepreneurships ?? 0, icon: 'pi pi-briefcase', route: '/app/entrepreneurships', color: '#4f46e5' },
+      { label: 'Mis Emprendimientos', value: entrepStats?.totalEntrepreneurships ?? 0, icon: 'pi pi-briefcase', route: '/app/entrepreneurships', color: '#2563eb' },
       { label: 'Mis Eventos', value: eventStats?.totalEvents ?? 0, icon: 'pi pi-calendar', route: '/app/events', color: '#0891b2' },
       { label: 'Invitaciones', value: eventStats?.totalInvitationsSent ?? 0, icon: 'pi pi-send', route: '/app/events', color: '#059669' },
       { label: 'Participantes', value: eventStats?.totalParticipants ?? 0, icon: 'pi pi-users', route: '/app/events', color: '#d97706' },
@@ -204,6 +227,7 @@ export class DashboardMetricsComponent implements OnInit {
     const canvasEl = this.monthlyChartCanvas();
     if (!canvasEl?.nativeElement) return;
     this.monthlyChart?.destroy();
+    const palette = this.palette();
     this.monthlyChart = new Chart(canvasEl.nativeElement, {
       type: 'bar',
       data: {
@@ -212,13 +236,13 @@ export class DashboardMetricsComponent implements OnInit {
           {
             label: 'Emprendimientos',
             data: this.entrepMonthlyData(),
-            backgroundColor: '#4f46e5',
+            backgroundColor: palette.primary,
             borderRadius: 4,
           },
           {
             label: 'Eventos',
             data: this.eventMonthlyData(),
-            backgroundColor: '#0891b2',
+            backgroundColor: palette.secondary,
             borderRadius: 4,
           },
         ],
@@ -227,11 +251,11 @@ export class DashboardMetricsComponent implements OnInit {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'top', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } },
+          legend: { position: 'top', labels: { boxWidth: 12, padding: 12, color: palette.text, font: { size: 11 } } },
         },
         scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
-          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, color: palette.text }, grid: { color: palette.grid } },
+          x: { ticks: { color: palette.text }, grid: { display: false } },
         },
       },
     });
@@ -243,19 +267,20 @@ export class DashboardMetricsComponent implements OnInit {
     this.typeChart?.destroy();
     const bt = this.byTypeData();
     if (!bt) return;
+    const palette = this.palette();
     const labels: string[] = [];
     const data: number[] = [];
     const colors: string[] = [];
-    if (bt.physical) { labels.push('Físico'); data.push(bt.physical); colors.push('#4f46e5'); }
-    if (bt.digital) { labels.push('Digital'); data.push(bt.digital); colors.push('#0891b2'); }
-    if (bt.both) { labels.push('Ambos'); data.push(bt.both); colors.push('#059669'); }
+    if (bt.physical) { labels.push('Físico'); data.push(bt.physical); colors.push(palette.primary); }
+    if (bt.digital) { labels.push('Digital'); data.push(bt.digital); colors.push(palette.secondary); }
+    if (bt.both) { labels.push('Ambos'); data.push(bt.both); colors.push(palette.success); }
     if (!data.length) return;
     this.typeChart = new Chart(canvasEl.nativeElement, {
       type: 'doughnut',
       data: { labels, datasets: [{ data, backgroundColor: colors }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } } },
+        plugins: { legend: this.legendLabels(palette) },
       },
     });
   }
@@ -266,7 +291,8 @@ export class DashboardMetricsComponent implements OnInit {
     this.categoryChart?.destroy();
     const items = this.byCategory();
     if (!items.length) return;
-    const colors = ['#4f46e5','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777','#ea580c','#14b8a6','#f97316'];
+    const palette = this.palette();
+    const colors = [palette.primary, palette.secondary, palette.success, palette.warning, palette.error, '#7c3aed', '#db2777', '#ea580c', '#14b8a6', '#f97316'];
     this.categoryChart = new Chart(canvasEl.nativeElement, {
       type: 'pie',
       data: {
@@ -276,7 +302,7 @@ export class DashboardMetricsComponent implements OnInit {
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'right', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+          legend: this.legendLabels(palette),
         },
       },
     });
@@ -288,19 +314,20 @@ export class DashboardMetricsComponent implements OnInit {
     this.eventTypeChart?.destroy();
     const items = this.eventByType();
     if (!items.length) return;
+    const palette = this.palette();
     const labels = items.map(i => {
       if (i.name === 'Physical Event') return 'Presencial';
       if (i.name === 'Virtual Event') return 'Virtual';
       return i.name;
     });
     const data = items.map(i => i.count);
-    const colors = ['#4f46e5', '#0891b2', '#d97706'];
+    const colors = [palette.primary, palette.secondary, palette.warning];
     this.eventTypeChart = new Chart(canvasEl.nativeElement, {
       type: 'pie',
       data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length) }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } } },
+        plugins: { legend: this.legendLabels(palette) },
       },
     });
   }
@@ -311,20 +338,92 @@ export class DashboardMetricsComponent implements OnInit {
     this.eventVisChart?.destroy();
     const items = this.eventByVisibility();
     if (!items.length) return;
+    const palette = this.palette();
     const labels = items.map(i => {
       if (i.name === 'Public') return 'Público';
       if (i.name === 'Private') return 'Privado';
       return i.name;
     });
     const data = items.map(i => i.count);
-    const colors = ['#059669', '#dc2626', '#d97706'];
+    const colors = [palette.success, palette.error, palette.warning];
     this.eventVisChart = new Chart(canvasEl.nativeElement, {
       type: 'pie',
       data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length) }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } } },
+        plugins: { legend: this.legendLabels(palette) },
       },
     });
+  }
+
+  exportMetrics(): void {
+    const rows: (string | number)[][] = [];
+
+    rows.push(['Emprendia — Métricas del panel']);
+    rows.push(['Generado', new Date().toLocaleString('es-EC')]);
+    rows.push([]);
+
+    rows.push(['Resumen']);
+    rows.push(['Métrica', 'Valor']);
+    for (const m of this.metrics()) rows.push([m.label, m.value]);
+    rows.push([]);
+
+    rows.push(['Actividad mensual']);
+    rows.push(['Mes', 'Emprendimientos', 'Eventos']);
+    this.monthLabels().forEach((label, i) => {
+      rows.push([label, this.entrepMonthlyData()[i] ?? 0, this.eventMonthlyData()[i] ?? 0]);
+    });
+    rows.push([]);
+
+    const bt = this.byTypeData();
+    if (bt) {
+      rows.push(['Tipo de emprendimiento', 'Cantidad']);
+      rows.push(['Físico', bt.physical]);
+      rows.push(['Digital', bt.digital]);
+      rows.push(['Ambos', bt.both]);
+      rows.push([]);
+    }
+
+    if (this.byCategory().length) {
+      rows.push(['Emprendimientos por categoría']);
+      rows.push(['Categoría', 'Cantidad']);
+      for (const c of this.byCategory()) rows.push([c.categoryName, c.count]);
+      rows.push([]);
+    }
+
+    if (this.eventByType().length) {
+      rows.push(['Eventos por tipo']);
+      rows.push(['Tipo', 'Cantidad']);
+      for (const t of this.eventByType()) {
+        rows.push([t.name === 'Physical Event' ? 'Presencial' : t.name === 'Virtual Event' ? 'Virtual' : t.name, t.count]);
+      }
+      rows.push([]);
+    }
+
+    if (this.eventByVisibility().length) {
+      rows.push(['Eventos por visibilidad']);
+      rows.push(['Visibilidad', 'Cantidad']);
+      for (const v of this.eventByVisibility()) {
+        rows.push([v.name === 'Public' ? 'Público' : v.name === 'Private' ? 'Privado' : v.name, v.count]);
+      }
+      rows.push([]);
+    }
+
+    rows.push(['Eventos próximos', this.upcomingEvents()]);
+    rows.push(['Eventos pasados', this.pastEvents()]);
+    rows.push(['Invitaciones enviadas', this.totalInvitationsSent()]);
+    rows.push(['Participantes', this.totalParticipants()]);
+    rows.push(['Tasa de participación', this.participationRate() + '%']);
+
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `emprendia-metricas-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 }

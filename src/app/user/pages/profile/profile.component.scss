@@ -123,15 +123,15 @@
   }
 
   &__success {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #166534;
+    background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+    color: var(--color-success);
   }
 
   &__error {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #b91c1c;
+    background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
+    border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+    color: var(--color-error);
   }
 
   &__grid {
@@ -406,7 +406,7 @@
     &.active {
       background: var(--color-primary);
       border-color: var(--color-primary);
-      color: #fff;
+      color: var(--color-white);
     }
   }
 }

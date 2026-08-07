@@ -70,7 +70,7 @@ import { NgTemplateOutlet } from '@angular/common';
     .hero-carousel {
       position: relative;
       width: 100%;
-      min-height: 520px;
+      min-height: 400px;
       user-select: none;
       isolation: isolate;
     }
@@ -88,7 +88,7 @@ import { NgTemplateOutlet } from '@angular/common';
       position: absolute;
       top: 0;
       left: 50%;
-      width: calc(100% - 200px);
+      width: calc(100% - 140px);
       height: 100%;
       min-height: inherit;
       border-radius: var(--radius-xl);
@@ -207,10 +207,10 @@ import { NgTemplateOutlet } from '@angular/common';
     /* ===== RESPONSIVE ===== */
     @media (max-width: 1024px) {
       .hero-carousel {
-        min-height: 460px;
+        min-height: 360px;
       }
       .hero-carousel__slide {
-        width: calc(100% - 140px);
+        width: calc(100% - 120px);
       }
     }
 

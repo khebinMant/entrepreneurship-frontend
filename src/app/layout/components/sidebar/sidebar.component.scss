@@ -15,7 +15,7 @@
   flex-direction: column;
 
   &--collapsed {
-    width: 64px;
+    width: var(--sidebar-width-collapsed);
   }
 
   &__nav {
@@ -26,48 +26,86 @@
     flex: 1;
   }
 
+  &__section-label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--color-text-tertiary);
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-xs);
+    transition: opacity var(--transition-fast);
+    white-space: nowrap;
+  }
+
+  &--collapsed &__section-label {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
   &__link {
+    position: relative;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    padding: 10px var(--spacing-md);
-    margin: 0 var(--spacing-xs);
+    padding: 8px var(--spacing-md);
+    margin: 2px var(--spacing-xs);
     color: var(--color-text-secondary);
     text-decoration: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     transition: all var(--transition-fast);
-    position: relative;
     white-space: nowrap;
 
     &:hover {
-      background: var(--color-primary-light);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-primary);
     }
 
     &--active {
-      background: var(--color-primary-light);
+      background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-primary) 14%, transparent) 0%,
+        color-mix(in srgb, var(--color-primary) 5%, transparent) 100%
+      );
       color: var(--color-primary);
       font-weight: 600;
 
       &::before {
         content: '';
         position: absolute;
-        left: 0;
+        left: -2px;
         top: 50%;
         transform: translateY(-50%);
-        width: 3px;
-        height: 20px;
+        width: 4px;
+        height: 22px;
         background: var(--color-primary);
-        border-radius: 0 2px 2px 0;
+        border-radius: 0 4px 4px 0;
       }
     }
   }
 
   &__icon {
-    font-size: 18px;
-    width: 24px;
-    text-align: center;
+    font-size: 17px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    transition: all var(--transition-fast);
+  }
+
+  &__link:hover &__icon,
+  &__group-btn:hover &__icon {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+
+  &__link--active &__icon {
+    background: var(--color-primary);
+    color: var(--color-white);
   }
 
   &__label {
@@ -106,9 +144,9 @@
     font-size: 14px;
 
     &:hover {
-      background: var(--color-primary-light);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-primary);
-      border-color: var(--color-primary);
+      border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
     }
   }
 
@@ -138,12 +176,12 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    padding: 10px var(--spacing-md);
-    margin: 0 var(--spacing-xs);
+    padding: 8px var(--spacing-md);
+    margin: 2px var(--spacing-xs);
     color: var(--color-text-secondary);
     background: none;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
@@ -153,7 +191,7 @@
     font-family: inherit;
 
     &:hover {
-      background: var(--color-primary-light);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-primary);
     }
   }
@@ -161,21 +199,25 @@
   &__chevron {
     margin-left: auto;
     font-size: 12px;
+    color: var(--color-text-muted);
     transition: transform var(--transition-fast);
   }
 
   &__subnav {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 1px;
-    padding-left: var(--spacing-md);
+    margin-left: calc(var(--spacing-md) + 14px);
+    padding-left: var(--spacing-sm);
+    border-left: 1px solid var(--color-border);
   }
 
   &__sublink {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    padding: 8px var(--spacing-md);
+    padding: 7px var(--spacing-md);
     margin: 0 var(--spacing-xs);
     color: var(--color-text-secondary);
     text-decoration: none;
@@ -185,7 +227,7 @@
     font-size: var(--font-size-sm);
 
     &:hover {
-      background: var(--color-primary-light);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-primary);
     }
 
@@ -193,6 +235,13 @@
       background: var(--color-primary-light);
       color: var(--color-primary);
       font-weight: 600;
+    }
+
+    & &__icon {
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+      background: none;
     }
   }
 

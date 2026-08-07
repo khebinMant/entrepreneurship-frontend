@@ -127,7 +127,7 @@
           <div class="event-card__image">
             <img [src]="getImageUrl(item)" [alt]="item.name" loading="lazy" />
             <span class="event-card__badge" *ngIf="item.isPaid">
-              <i class="pi pi-dollar"></i> Pago
+              <i class="pi pi-dollar"></i> {{ item.price ? ('$' + item.price) : 'Pago' }}
             </span>
           </div>
           <div class="event-card__body">

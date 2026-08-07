@@ -9,7 +9,9 @@ import { EventService } from '../../services/event.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
 import { CatalogueService } from '../../../shared-domain/services/catalogue.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
+import { PortalViewComponent } from '../../../shared/ui/portal-view/portal-view.component';
 import { CATALOGUE_CODES, PARTICIPATION_STATUS } from '../../../core/constants/app.constants';
 import type { Event } from '../../models/event';
 import type { EventParticipant } from '../../models/event-invitation';
@@ -30,7 +32,7 @@ function fmtTime(d: string | Date): string {
 @Component({
   selector: 'app-event-public-detail',
   standalone: true,
-  imports: [RouterLink, NgClass, ClickOutsideDirective],
+  imports: [RouterLink, NgClass, ClickOutsideDirective, PortalViewComponent],
   template: `
     @if (loading()) {
       <div class="hero-skeleton">
@@ -64,6 +66,10 @@ function fmtTime(d: string | Date): string {
           </div>
         }
         <input #coverInput type="file" accept="image/*" (change)="onCoverSelected($event)" style="display:none" />
+        <a class="hero__back" [routerLink]="(isAppContext ? '/app' : '') + '/events'" aria-label="Volver a eventos">
+          <i class="pi pi-arrow-left"></i>
+          <span>Volver</span>
+        </a>
         <div class="hero-overlay">
           <div class="hero-content">
             <span class="hero-chip animate__animated animate__fadeInDown" [ngClass]="typeCssClass()">{{ eventTypeName() }}</span>
@@ -93,6 +99,19 @@ function fmtTime(d: string | Date): string {
         </div>
       </div>
 
+      <!-- ===== TABS ===== -->
+      <div class="detail-tabs">
+        <button class="detail-tabs__tab" [class.detail-tabs__tab--active]="activeTab() === 'info'" (click)="activeTab.set('info')">
+          <i class="pi pi-info-circle"></i> Información
+        </button>
+        @if (portalHtml()) {
+          <button class="detail-tabs__tab" [class.detail-tabs__tab--active]="activeTab() === 'portal'" (click)="activeTab.set('portal')">
+            <i class="pi pi-globe"></i> Portal
+          </button>
+        }
+      </div>
+
+      @if (activeTab() === 'info') {
       <!-- ===== CONTENT ===== -->
       <div class="page">
 
@@ -390,6 +409,11 @@ function fmtTime(d: string | Date): string {
           </section>
         }
       </div>
+      } @else {
+        <div class="detail-tabs__panel">
+          <app-portal-view [html]="portalHtml()" [title]="portalTitle()" [domain]="portalDomain()" />
+        </div>
+      }
 
       <!-- ===== LIGHTBOX ===== -->
       @if (selectedImage(); as img) {
@@ -419,34 +443,77 @@ function fmtTime(d: string | Date): string {
 
     /* ===== HERO ===== */
     .hero {
-      position: relative; width: 100%; height: 520px; overflow: hidden;
+      position: relative;
+      width: 100%;
+      height: 520px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(120% 60% at 50% 0%, rgba(255, 255, 255, 0.16) 0%, transparent 55%);
+      mix-blend-mode: overlay;
     }
     .hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .hero-overlay {
       position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.25) 50%, transparent 100%);
+      background:
+        linear-gradient(to top, rgba(2, 6, 23, 0.92) 0%, rgba(2, 6, 23, 0.42) 45%, transparent 80%),
+        linear-gradient(to bottom, rgba(2, 6, 23, 0.3) 0%, transparent 32%);
       display: flex; align-items: flex-end; padding: var(--spacing-xxl) var(--spacing-xxl);
     }
     .hero-content { max-width: 1200px; width: 100%; margin: 0 auto; }
+    .hero__back {
+      position: absolute; top: var(--spacing-md); left: var(--spacing-md); z-index: 10;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 999px;
+      color: #fff; font-size: var(--font-size-sm); font-weight: 600;
+      text-decoration: none;
+      background: rgba(2, 6, 23, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: background var(--transition-fast), transform var(--transition-fast);
+      i { font-size: 13px; }
+      &:hover { background: rgba(2, 6, 23, 0.55); transform: translateX(-2px); }
+    }
     .hero-chip {
-      display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+      display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px;
       color: #fff; border-radius: 999px; font-size: var(--font-size-xs);
-      font-weight: 600; margin-bottom: var(--spacing-md); letter-spacing: 0.3px;
-      &.chip--blue { background: #3b82f6; }
-      &.chip--purple { background: #8b5cf6; }
-      &.chip--amber { background: #d97706; }
-      &:not(.chip--blue):not(.chip--purple):not(.chip--amber) { background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); }
+      font-weight: 700; margin-bottom: var(--spacing-md); letter-spacing: 0.3px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 4px 16px rgba(2, 6, 23, 0.25);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      &.chip--blue { background: rgba(59, 130, 246, 0.88); }
+      &.chip--purple { background: rgba(139, 92, 246, 0.88); }
+      &.chip--amber { background: rgba(217, 119, 6, 0.88); }
+      &:not(.chip--blue):not(.chip--purple):not(.chip--amber) { background: rgba(255, 255, 255, 0.16); }
     }
     .hero-title {
-      font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; color: #fff;
-      margin: 0 0 var(--spacing-md); line-height: 1.1; letter-spacing: -0.02em;
+      font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; color: #fff;
+      margin: 0 0 var(--spacing-md); line-height: 1.08; letter-spacing: -0.03em;
+      text-shadow: 0 2px 24px rgba(2, 6, 23, 0.35);
     }
     .hero-stats {
-      display: flex; flex-wrap: wrap; gap: var(--spacing-lg); margin-bottom: var(--spacing-lg);
-      color: rgba(255,255,255,0.85); font-size: var(--font-size-sm);
-      i { margin-right: 6px; font-size: 13px; }
+      display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg);
+      & > span {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 16px; border-radius: 999px;
+        color: #fff; font-size: var(--font-size-sm); font-weight: 500;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        i { font-size: 13px; }
+      }
     }
-    .price-icon--free, .price-icon--paid { color: #22c55e; }
+    .price-icon--free { color: #4ade80; }
+    .price-icon--paid { color: #22c55e; }
     .hero__organizer {
       display: flex; align-items: center; gap: 10px;
       color: rgba(255,255,255,0.75); font-size: var(--font-size-sm);
@@ -484,6 +551,46 @@ function fmtTime(d: string | Date): string {
       &:hover { background: var(--color-surface-alt); }
     }
 
+    /* ===== DETAIL TABS ===== */
+    .detail-tabs {
+      display: flex;
+      gap: var(--spacing-xs);
+      max-width: 1200px;
+      margin: var(--spacing-lg) auto 0;
+      padding: 0 var(--spacing-lg);
+      flex-wrap: wrap;
+    }
+    .detail-tabs__tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      i { font-size: 13px; }
+      &:hover {
+        border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+        color: var(--color-primary);
+      }
+      &--active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+        box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--color-primary) 45%, transparent);
+      }
+    }
+    .detail-tabs__panel {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-xl);
+    }
+
     /* ===== PAGE ===== */
     .page {
       max-width: 1200px;
@@ -500,8 +607,12 @@ function fmtTime(d: string | Date): string {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-xl);
       padding: var(--spacing-xl);
-      transition: box-shadow var(--transition-fast);
-      &:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+      transition: box-shadow var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast);
+      &:hover {
+        box-shadow: 0 16px 44px -14px color-mix(in srgb, var(--color-primary) 38%, transparent);
+        border-color: color-mix(in srgb, var(--color-primary) 32%, var(--color-border));
+        transform: translateY(-2px);
+      }
     }
     .card--about {
       padding-left: calc(var(--spacing-xl) + 56px);
@@ -511,13 +622,19 @@ function fmtTime(d: string | Date): string {
     .card--about .card__accent {
       position: absolute; top: 0; left: 0;
       width: 4px; height: 100%;
-      background: var(--color-primary);
+      background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
       border-radius: 0 4px 4px 0;
     }
     .card__header {
       display: flex; align-items: center; gap: var(--spacing-sm);
       margin-bottom: var(--spacing-md);
-      i { font-size: 20px; color: var(--color-primary); }
+      i {
+        font-size: 17px; color: var(--color-primary);
+        width: 38px; height: 38px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--color-primary-light);
+        border-radius: var(--radius-md);
+      }
     }
     .card__title {
       font-size: var(--font-size-lg); font-weight: 700;
@@ -541,7 +658,19 @@ function fmtTime(d: string | Date): string {
     }
 
     /* -- Collapsible -- */
-    .card--collapsible { padding: 0; }
+    .card--collapsible {
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      &::after {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+      }
+      &.card--open::after { opacity: 1; }
+    }
     .card__trigger {
       display: flex; align-items: center; gap: var(--spacing-sm);
       width: 100%; padding: var(--spacing-md) var(--spacing-lg);
@@ -549,7 +678,14 @@ function fmtTime(d: string | Date): string {
       color: var(--color-text-primary); font-size: var(--font-size-sm); font-weight: 600;
       text-align: left; transition: background var(--transition-fast);
       &:hover { background: var(--color-surface-alt); }
-      i:first-child { font-size: 16px; color: var(--color-primary); }
+      i:first-child {
+        font-size: 15px; color: var(--color-primary);
+        width: 34px; height: 34px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--color-primary-light);
+        border-radius: var(--radius-md);
+      }
+      .card--open & i:first-child { background: var(--color-primary); color: var(--color-white); }
     }
     .card__trigger-title { flex: 1; }
     .card__chevron {
@@ -618,7 +754,8 @@ function fmtTime(d: string | Date): string {
       padding: var(--spacing-sm) 0; gap: var(--spacing-lg);
     }
     .info-row__label {
-      font-size: var(--font-size-xs); color: var(--color-text-muted); font-weight: 500; flex-shrink: 0;
+      font-size: var(--font-size-xs); color: var(--color-text-muted);
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; flex-shrink: 0;
     }
     .info-row__value {
       font-size: var(--font-size-sm); color: var(--color-text-primary);
@@ -661,7 +798,8 @@ function fmtTime(d: string | Date): string {
 
     /* ===== HERO SKELETON ===== */
     .hero-skeleton {
-      width: 100%; height: 520px;
+      width: 100%;
+      height: 520px;
       background: var(--color-surface-alt);
       display: flex; align-items: flex-end;
       padding: var(--spacing-xxl);
@@ -680,15 +818,17 @@ function fmtTime(d: string | Date): string {
     /* ===== GALLERY SECTION (full-width) ===== */
     .gallery-section {
       width: 100%;
-      background: var(--color-surface-alt);
-      padding: var(--spacing-xl) 0;
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface-alt) 65%, var(--color-surface));
+      border: 1px solid var(--color-border);
+      border-radius: 28px;
+      padding: var(--spacing-xl) var(--spacing-lg);
+      margin: var(--spacing-sm) 0;
     }
     .gallery-section__inner {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0 var(--spacing-lg);
+      width: 100%;
+      padding: 0;
       position: relative;
     }
     .gallery-section__header {
@@ -835,14 +975,17 @@ function fmtTime(d: string | Date): string {
       &:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
     }
     .org-section__avatar {
-      width: 80px; height: 80px; border-radius: 50%; overflow: hidden;
-      flex-shrink: 0; border: 3px solid var(--color-primary); box-shadow: 0 0 0 4px var(--color-surface);
-      img { width: 100%; height: 100%; object-fit: cover; }
+      width: 88px; height: 88px; border-radius: 50%;
+      flex-shrink: 0; padding: 3px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      box-shadow: 0 10px 26px -8px color-mix(in srgb, var(--color-primary) 50%, transparent);
+      img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
     }
     .org-section__initials {
       width: 100%; height: 100%; display: flex; align-items: center;
-      justify-content: center; background: var(--color-primary);
-      color: #fff; font-size: 30px; font-weight: 700;
+      justify-content: center; background: var(--color-surface);
+      border-radius: 50%; color: var(--color-primary);
+      font-size: 30px; font-weight: 800;
     }
     .org-section__info {
       flex: 1; min-width: 0;
@@ -877,15 +1020,27 @@ function fmtTime(d: string | Date): string {
     }
     @media (max-width: 768px) {
       .hero { height: 340px; }
+      .hero-skeleton { height: 340px; }
+      .hero__back { padding: 7px 12px; font-size: var(--font-size-xs); }
       .hero-overlay { padding: var(--spacing-lg); }
-      .hero-stats { flex-direction: column; gap: var(--spacing-xs); }
+      .hero-stats { flex-direction: column; align-items: flex-start; gap: var(--spacing-xs); }
       .page { padding: var(--spacing-lg); gap: var(--spacing-lg); }
       .card--about { padding-left: var(--spacing-xl); }
       .card--about .card__accent { display: none; }
       .info-row { flex-direction: column; align-items: flex-start; gap: 2px; }
       .info-row__value { text-align: left; max-width: 100%; }
       .gallery-section__slide { flex: 0 0 260px; }
-      .gallery-section { padding: var(--spacing-lg) 0; }
+      .gallery-section { padding: var(--spacing-lg); border-radius: 20px; }
+      .org-section { padding: 0 var(--spacing-md); }
+      .org-section__card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-lg);
+      }
+      .org-section__info { align-items: center; }
+      .org-section__contacts { justify-content: center; }
       .lightbox__nav { width: 40px; height: 40px; font-size: 18px; }
       .lightbox__nav--prev { left: 10px; } .lightbox__nav--next { right: 10px; }
       .lightbox__img { max-width: 95vw; }
@@ -898,6 +1053,7 @@ export class PublicDetailComponent implements OnInit {
   private readonly eventService = inject(EventService);
   private readonly authService = inject(AuthenticationService);
   private readonly catalogueService = inject(CatalogueService);
+  private readonly toastService = inject(ToastService);
   private readonly sanitizer = inject(DomSanitizer);
   readonly imageService = inject(ImageService);
 
@@ -919,6 +1075,14 @@ export class PublicDetailComponent implements OnInit {
 
   readonly portal = signal<Event['portal']>(null);
   readonly expandedSections = signal<Set<string>>(new Set(['fecha', 'org', 'tipo', 'sociales', 'portalSection']));
+
+  readonly activeTab = signal<'info' | 'portal'>('info');
+  readonly portalHtml = computed(() => this.portal()?.htmlContent?.trim() || '');
+  readonly portalTitle = computed(() => this.event()?.name || 'Portal');
+  readonly portalDomain = computed(() => {
+    const s = this.portal()?.subdomain;
+    return s ? `${s}.emprendia.com` : '';
+  });
 
   readonly mapsEmbedUrl = computed(() => {
     const url = this.event()?.mapsUrl;
@@ -1190,7 +1354,11 @@ export class PublicDetailComponent implements OnInit {
       this.imageService.invalidateCache('EVENT', ev.eventId);
       await this.loadEvent(ev.eventId);
       await this.loadGallery(ev.eventId);
-    } catch (err) { console.error('Error updating cover:', err); }
+      this.toastService.success('Portada del evento actualizada.');
+    } catch (err) {
+      console.error('Error updating cover:', err);
+      this.toastService.error('No se pudo actualizar la portada del evento.');
+    }
     finally { this.uploadingCover.set(false); }
   }
 }

@@ -6,7 +6,7 @@ import { lastValueFrom } from 'rxjs';
 import { DirectAuthService } from '../../../authentication/services/direct-auth.service';
 import { AuthService } from '../../../authentication/services/auth.service';
 import { UserService } from '../../../user/services/user.service';
-import { environment } from '../../../../environments/environment';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 
 @Component({
   selector: 'app-login-redirect',
@@ -18,6 +18,9 @@ import { environment } from '../../../../environments/environment';
         <div class="auth-form-side">
           <div class="auth-form-inner">
             <div class="auth-form-header">
+              <div class="auth-logo">
+                <i class="pi pi-briefcase"></i>
+              </div>
               <h1 class="auth-form-title">{{ title }}</h1>
               <p class="auth-form-subtitle">{{ subtitle }}</p>
             </div>
@@ -74,19 +77,6 @@ import { environment } from '../../../../environments/environment';
                   {{ loading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
                 </button>
               </form>
-
-              <div class="auth-divider">
-                <span>O continúa con</span>
-              </div>
-
-              <div class="auth-social">
-                <button class="auth-btn auth-btn--outline" (click)="loginGoogle()">
-                  <i class="pi pi-google"></i> Google
-                </button>
-                <button class="auth-btn auth-btn--outline" (click)="loginFacebook()">
-                  <i class="pi pi-facebook"></i> Facebook
-                </button>
-              </div>
 
               <p class="auth-footer">
                 ¿No tienes cuenta?
@@ -180,19 +170,6 @@ import { environment } from '../../../../environments/environment';
                 </button>
               </form>
 
-              <div class="auth-divider">
-                <span>O regístrate con</span>
-              </div>
-
-              <div class="auth-social">
-                <button class="auth-btn auth-btn--outline" (click)="loginGoogle()">
-                  <i class="pi pi-google"></i> Google
-                </button>
-                <button class="auth-btn auth-btn--outline" (click)="loginFacebook()">
-                  <i class="pi pi-facebook"></i> Facebook
-                </button>
-              </div>
-
               <p class="auth-footer">
                 ¿Ya tienes cuenta?
                 <a routerLink="/login" class="auth-link">Iniciar sesión</a>
@@ -201,10 +178,24 @@ import { environment } from '../../../../environments/environment';
           </div>
         </div>
 
-        <div class="auth-image-side">
-          <img src="https://thumbs.dreamstime.com/b/la-gente-estudia-alfabetizaci%C3%B3n-financiera-y-contabilidad-para-crear-conciencia-sobre-el-esp%C3%ADritu-empresarial-aumentar-del-293918030.jpg" alt="Emprendimiento" />
-          <div class="auth-image-overlay">
-            <h2>Emprendia</h2>
+        <div class="auth-visual-side">
+          <div class="auth-visual-grid"></div>
+          <div class="auth-visual-glow"></div>
+          <div class="auth-visual-art" aria-hidden="true">
+            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="62" r="20" stroke="rgba(255,255,255,0.9)" stroke-width="2.5" />
+              <circle cx="44" cy="144" r="15" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" />
+              <circle cx="156" cy="144" r="15" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" />
+              <path d="M100 82 C 90 106 62 122 52 136" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" />
+              <path d="M100 82 C 110 106 138 122 148 136" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" />
+              <path d="M100 82 C 100 112 100 126 100 146" stroke="rgba(255,255,255,0.45)" stroke-width="2.5" stroke-dasharray="5 6" />
+              <circle cx="100" cy="62" r="5" fill="rgba(255,255,255,0.95)" />
+              <circle cx="44" cy="144" r="3.5" fill="rgba(255,255,255,0.7)" />
+              <circle cx="156" cy="144" r="3.5" fill="rgba(255,255,255,0.7)" />
+            </svg>
+          </div>
+          <div class="auth-visual-caption">
+            <span class="auth-visual-brand">Emprendia</span>
             <p>Conecta, crece y haz realidad tu emprendimiento</p>
           </div>
         </div>
@@ -222,11 +213,12 @@ import { environment } from '../../../../environments/environment';
     .auth-container {
       display: flex;
       width: 100%;
-      max-width: 900px;
+      max-width: 920px;
       min-height: 500px;
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-xl);
       overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      border: 1px solid var(--color-border);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.08);
     }
     .auth-form-side {
       flex: 1;
@@ -243,6 +235,19 @@ import { environment } from '../../../../environments/environment';
     .auth-form-header {
       text-align: center;
       margin-bottom: var(--spacing-xl);
+    }
+    .auth-logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto var(--spacing-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-primary-light);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      color: var(--color-primary);
+      i { font-size: 24px; }
     }
     .auth-form-title {
       font-size: var(--font-size-xxl);
@@ -360,34 +365,6 @@ import { environment } from '../../../../environments/environment';
     .auth-btn--primary:hover:not(:disabled) {
       background: var(--color-primary-dark);
     }
-    .auth-btn--outline {
-      background: transparent;
-      border: 1px solid var(--color-border);
-      color: var(--color-text-primary);
-      flex: 1;
-    }
-    .auth-btn--outline:hover {
-      background: var(--color-surface-alt);
-    }
-    .auth-divider {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-md);
-      color: var(--color-text-muted);
-      font-size: var(--font-size-sm);
-      margin: var(--spacing-lg) 0;
-    }
-    .auth-divider::before,
-    .auth-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--color-border);
-    }
-    .auth-social {
-      display: flex;
-      gap: var(--spacing-sm);
-    }
     .auth-footer {
       text-align: center;
       font-size: var(--font-size-sm);
@@ -402,50 +379,73 @@ import { environment } from '../../../../environments/environment';
       text-decoration: underline;
     }
 
-    .auth-image-side {
+    .auth-visual-side {
       flex: 0 0 380px;
       position: relative;
       overflow: hidden;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      background: linear-gradient(150deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
     }
-    .auth-image-side::before {
-      content: '';
+    .auth-visual-grid {
       position: absolute;
       inset: 0;
       z-index: 1;
-      background: linear-gradient(135deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 100%);
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, transparent 78%);
+      -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, transparent 78%);
     }
-    .auth-image-side img {
+    .auth-visual-glow {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      width: 240px;
+      height: 240px;
+      top: -60px;
+      right: -60px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      filter: blur(60px);
+      z-index: 1;
     }
-    .auth-image-overlay {
+    .auth-visual-art {
+      position: relative;
+      z-index: 2;
+      width: 150px;
+      height: 150px;
+      margin-bottom: var(--spacing-xl);
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .auth-visual-caption {
       position: relative;
       z-index: 2;
       text-align: center;
-      padding: var(--spacing-xl);
       color: #fff;
+      padding: 0 var(--spacing-xl);
     }
-    .auth-image-overlay h2 {
+    .auth-visual-brand {
+      display: block;
       font-size: var(--font-size-xxl);
-      font-weight: 700;
-      margin: 0 0 var(--spacing-sm);
+      font-weight: 800;
+      letter-spacing: 0.5px;
       color: #fff;
+      margin-bottom: var(--spacing-xs);
     }
-    .auth-image-overlay p {
-      font-size: var(--font-size-md);
-      opacity: 0.95;
+    .auth-visual-caption p {
       margin: 0;
-      color: #fff;
+      font-size: var(--font-size-sm);
+      line-height: 1.6;
+      color: rgba(255,255,255,0.85);
     }
 
     @media (max-width: 768px) {
-      .auth-image-side {
+      .auth-visual-side {
         display: none;
       }
       .auth-form-side {
@@ -459,6 +459,7 @@ export class LoginRedirectComponent {
   private readonly directAuth = inject(DirectAuthService);
   private readonly authService = inject(AuthService);
   private readonly userService = inject(UserService);
+  private readonly toastService = inject(ToastService);
 
   readonly isRegister = computed(() => this.router.url.includes('/register'));
 
@@ -486,13 +487,17 @@ export class LoginRedirectComponent {
 
     try {
       await this.directAuth.login(this.username, this.password);
+      this.toastService.success('Sesión iniciada correctamente.');
     } catch (err: any) {
       if (err.status === 400 || err.status === 401) {
         this.errorMessage.set('Usuario o contraseña incorrectos');
+        this.toastService.error('Usuario o contraseña incorrectos.');
       } else if (err.error?.error_description) {
         this.errorMessage.set(err.error.error_description);
+        this.toastService.error(err.error.error_description);
       } else {
         this.errorMessage.set('Error al iniciar sesión. Intenta nuevamente.');
+        this.toastService.error('Error al iniciar sesión. Intenta nuevamente.');
       }
     } finally {
       this.loading.set(false);
@@ -516,24 +521,20 @@ export class LoginRedirectComponent {
         profilePictureUrl: null,
       }));
       this.router.navigate(['/login']);
+      this.toastService.success('Cuenta creada correctamente. Inicia sesión.');
     } catch (err: any) {
       if (err.status === 409) {
         this.errorMessage.set('El usuario o correo ya está registrado');
+        this.toastService.error('El usuario o correo ya está registrado.');
       } else if (err.error?.message) {
         this.errorMessage.set(err.error.message);
+        this.toastService.error(err.error.message);
       } else {
         this.errorMessage.set('Error al crear la cuenta. Intenta nuevamente.');
+        this.toastService.error('Error al crear la cuenta. Intenta nuevamente.');
       }
     } finally {
       this.loading.set(false);
     }
-  }
-
-  loginGoogle(): void {
-    window.location.href = `${environment.keycloak.url}/realms/${environment.keycloak.realm}/protocol/openid-connect/auth?client_id=${environment.keycloak.clientId}&redirect_uri=${window.location.origin}/&response_type=code&scope=openid&kc_idp_hint=google`;
-  }
-
-  loginFacebook(): void {
-    window.location.href = `${environment.keycloak.url}/realms/${environment.keycloak.realm}/protocol/openid-connect/auth?client_id=${environment.keycloak.clientId}&redirect_uri=${window.location.origin}/&response_type=code&scope=openid&kc_idp_hint=facebook`;
   }
 }

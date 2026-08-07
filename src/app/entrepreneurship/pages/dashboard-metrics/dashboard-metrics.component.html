@@ -6,8 +6,13 @@
         Bienvenido de nuevo, {{ username() }}. Aquí tienes un resumen completo de tu plataforma.
       </p>
     </div>
-    <div class="dashboard-metrics__hero-icon">
-      <i class="pi pi-chart-bar"></i>
+    <div class="dashboard-metrics__hero-actions">
+      <button class="dashboard-metrics__export-btn" (click)="exportMetrics()">
+        <i class="pi pi-download"></i> Exportar métricas
+      </button>
+      <div class="dashboard-metrics__hero-icon">
+        <i class="pi pi-chart-bar"></i>
+      </div>
     </div>
   </div>
 

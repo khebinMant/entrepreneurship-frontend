@@ -8,6 +8,7 @@ import { CatalogueService } from '../../../shared-domain/services/catalogue.serv
 import { ImageService } from '../../../shared-domain/services/image.service';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
 import { UserService } from '../../../user/services/user.service';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { CATALOGUE_CODES, ENTITY_TYPE } from '../../../core/constants/app.constants';
 import { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
 import { Event as EventModel } from '../../models/event';
@@ -35,6 +36,7 @@ export class CreateComponent implements OnInit {
   private readonly authService = inject(AuthenticationService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
 
   readonly created = output<void>();
   readonly cancelled = output<void>();
@@ -460,32 +462,40 @@ export class CreateComponent implements OnInit {
 
   async savePortal(): Promise<void> {
     const pf = this.portalForm();
-    if (!pf.subdomain.trim()) return;
+    const subdomain = pf.subdomain.trim();
+    if (!subdomain) {
+      this.toastService.error('Escribe un subdominio para el portal (ej. mi-evento).');
+      return;
+    }
     this.savingPortal.set(true);
     try {
       const existing = this.portal();
       const eventId = this.editingEvent()?.eventId;
       if (eventId && existing) {
         const dto: UpdateEntityPortalDto = {
-          subdomain: pf.subdomain.trim(),
+          subdomain,
           themeId: pf.themeId ?? undefined,
           isActive: pf.isActive,
           htmlContent: pf.htmlContent || undefined,
         };
         const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
         await lastValueFrom(this.eventService.updatePortal(id, dto));
+        this.toastService.success('Portal guardado correctamente.');
       } else if (eventId) {
         const dto: CreateEntityPortalDto = {
           entityId: eventId,
-          subdomain: pf.subdomain.trim(),
+          subdomain,
           themeId: pf.themeId ?? undefined,
           isActive: pf.isActive,
           htmlContent: pf.htmlContent || undefined,
         };
         await lastValueFrom(this.eventService.createPortal(dto));
+        this.toastService.success('Portal creado correctamente.');
       }
       this.showPortalForm.set(false);
-    } catch { /* fallback */ }
+    } catch {
+      this.toastService.error('No se pudo guardar el portal. Revisa los datos e intenta de nuevo.');
+    }
     finally { this.savingPortal.set(false); }
   }
 
@@ -499,7 +509,10 @@ export class CreateComponent implements OnInit {
       this.portal.set(null);
       this.portalForm.set({ subdomain: '', themeId: null, isActive: true, htmlContent: '' });
       this.showPortalForm.set(false);
-    } catch { /* fallback */ }
+      this.toastService.success('Portal eliminado correctamente.');
+    } catch {
+      this.toastService.error('No se pudo eliminar el portal.');
+    }
     finally { this.savingPortal.set(false); }
   }
 
@@ -573,6 +586,7 @@ export class CreateComponent implements OnInit {
 
         this.created.emit();
         this.router.navigate(['/app/events', event.eventId]);
+        this.toastService.success(`Evento "${f.name}" actualizado correctamente.`);
       } else {
         const createPayload: any = {
           createdByUserId: currentUser?.userId ?? 0,
@@ -626,9 +640,11 @@ export class CreateComponent implements OnInit {
 
         this.created.emit();
         this.router.navigate(['/app/events', event.eventId]);
+        this.toastService.success(`Evento "${f.name}" creado correctamente.`);
       }
     } catch (err: any) {
       console.error('Error saving event:', err);
+      this.toastService.error('No se pudo guardar el evento. Intenta de nuevo.');
     } finally {
       this.loading.set(false);
     }

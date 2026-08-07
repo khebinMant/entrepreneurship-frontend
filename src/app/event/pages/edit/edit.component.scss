@@ -85,7 +85,7 @@
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--color-text-secondary);
     transition: color 0.2s, border-color 0.2s;
@@ -134,7 +134,7 @@
   }
 
   &__label {
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--color-text-secondary);
   }
@@ -250,10 +250,10 @@
     gap: 2px;
     min-width: 0;
     flex: 1;
-    strong { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-primary); }
+    strong { font-size: var(--font-size-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-primary); }
   }
 
-  &__list-meta { font-size: 0.8rem; color: var(--color-text-secondary); }
+  &__list-meta { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
   &__list-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
   &__checkbox {
@@ -262,14 +262,14 @@
     gap: var(--spacing-sm);
     padding-top: 4px;
     input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--color-primary); }
-    label { font-size: 0.9rem; cursor: pointer; color: var(--color-text-primary); }
+    label { font-size: var(--font-size-sm); cursor: pointer; color: var(--color-text-primary); }
   }
 
-  &__field-hint { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 2px; }
+  &__field-hint { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 2px; }
 
   &__textarea--code {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
     line-height: 1.5;
     min-height: 140px;
   }

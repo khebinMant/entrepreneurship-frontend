@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { CatalogueService } from '../../../shared-domain/services/catalogue.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { KeycloakService } from '../../../authentication/services/keycloak.service';
 import { ENTITY_TYPE, CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import type { User } from '../../models/user';
@@ -28,6 +29,7 @@ export class ProfileComponent implements OnInit {
   private readonly catalogueService = inject(CatalogueService);
   private readonly keycloakService = inject(KeycloakService);
   readonly imageService = inject(ImageService);
+  private readonly toastService = inject(ToastService);
 
   readonly activeTab = signal<'info' | 'password' | 'addresses' | 'contacts' | 'identifications'>('info');
 
@@ -199,8 +201,10 @@ export class ProfileComponent implements OnInit {
       const updated = await lastValueFrom(this.userService.update(u.userId, { firstName, lastName }));
       this.user.update((prev) => prev ? { ...prev, ...updated } : updated);
       this.success.set('Perfil actualizado correctamente');
+      this.toastService.success('Perfil actualizado correctamente.');
     } catch {
       this.error.set('Error al actualizar el perfil');
+      this.toastService.error('No se pudo actualizar el perfil.');
     } finally {
       this.saving.set(false);
     }
@@ -229,9 +233,11 @@ export class ProfileComponent implements OnInit {
       await lastValueFrom(this.userService.updateEmail(u.userId, email));
       this.showEmailConfirmModal.set(false);
       this.success.set('Correo electrónico cambiado con éxito. Serás redirigido para iniciar sesión nuevamente.');
+      this.toastService.success('Correo electrónico actualizado. Serás redirigido para iniciar sesión.');
       setTimeout(() => this.keycloakService.logout(), 3000);
     } catch {
       this.error.set('Error al cambiar el correo electrónico');
+      this.toastService.error('No se pudo cambiar el correo electrónico.');
       this.showEmailConfirmModal.set(false);
       this.pendingEmail.set('');
     } finally {
@@ -254,8 +260,10 @@ export class ProfileComponent implements OnInit {
       this.authService.setUserImage(result.imageUrl);
       this.user.update((prev) => prev ? { ...prev, imageUrl: result.imageUrl, imageId: result.imageId } : prev);
       await this.loadImages(u.userId);
+      this.toastService.success('Foto de perfil actualizada.');
     } catch {
       this.error.set('Error al subir la foto');
+      this.toastService.error('No se pudo subir la foto de perfil.');
     } finally {
       this.uploading.set(false);
       input.value = '';
@@ -284,8 +292,10 @@ export class ProfileComponent implements OnInit {
         this.authService.setUserImage(null);
         this.user.update((prev) => prev ? { ...prev, imageUrl: undefined, imageId: undefined } : prev);
       }
+      this.toastService.success('Imagen eliminada correctamente.');
     } catch {
       this.error.set('Error al eliminar la imagen');
+      this.toastService.error('No se pudo eliminar la imagen.');
     }
   }
 
@@ -302,8 +312,10 @@ export class ProfileComponent implements OnInit {
         this.imageService.upload(file, ENTITY_TYPE.USER, u.userId, this.images().length + 1, '', u.userId),
       );
       await this.loadImages(u.userId);
+      this.toastService.success('Imagen de la galería subida correctamente.');
     } catch {
       this.error.set('Error al subir la imagen');
+      this.toastService.error('No se pudo subir la imagen.');
     } finally {
       this.uploading.set(false);
       input.value = '';
@@ -331,10 +343,12 @@ export class ProfileComponent implements OnInit {
     try {
       await lastValueFrom(this.userService.changePassword(u.userId, { newPassword: pw }));
       this.success.set('Contraseña actualizada correctamente');
+      this.toastService.success('Contraseña actualizada correctamente.');
       this.newPassword = '';
       this.repeatPassword = '';
     } catch {
       this.error.set('Error al cambiar la contraseña');
+      this.toastService.error('No se pudo cambiar la contraseña.');
     } finally {
       this.changingPassword.set(false);
     }
@@ -480,8 +494,10 @@ export class ProfileComponent implements OnInit {
       await this.loadAddresses(u.userId);
       this.closeAddressModal();
       this.success.set(editing ? 'Dirección actualizada' : 'Dirección creada');
+      this.toastService.success(editing ? 'Dirección actualizada correctamente.' : 'Dirección creada correctamente.');
     } catch {
       this.error.set('Error al guardar la dirección');
+      this.toastService.error('No se pudo guardar la dirección.');
     } finally {
       this.savingAddress.set(false);
     }
@@ -495,8 +511,10 @@ export class ProfileComponent implements OnInit {
       await lastValueFrom(this.userService.deleteAddress(id));
       this.addresses.update((list) => list.filter((a) => a.userAddressId !== id));
       this.success.set('Dirección eliminada');
+      this.toastService.success('Dirección eliminada correctamente.');
     } catch {
       this.error.set('Error al eliminar la dirección');
+      this.toastService.error('No se pudo eliminar la dirección.');
     }
   }
 
@@ -573,8 +591,10 @@ export class ProfileComponent implements OnInit {
       await this.loadContacts(u.userId);
       this.closeContactModal();
       this.success.set(editing ? 'Contacto actualizado' : 'Contacto creado');
+      this.toastService.success(editing ? 'Contacto actualizado correctamente.' : 'Contacto creado correctamente.');
     } catch {
       this.error.set('Error al guardar el contacto');
+      this.toastService.error('No se pudo guardar el contacto.');
     } finally {
       this.savingContact.set(false);
     }
@@ -588,8 +608,10 @@ export class ProfileComponent implements OnInit {
       await lastValueFrom(this.userService.deleteContact(id));
       this.contacts.update((list) => list.filter((c) => c.userContactId !== id));
       this.success.set('Contacto eliminado');
+      this.toastService.success('Contacto eliminado correctamente.');
     } catch {
       this.error.set('Error al eliminar el contacto');
+      this.toastService.error('No se pudo eliminar el contacto.');
     }
   }
 
@@ -666,8 +688,10 @@ export class ProfileComponent implements OnInit {
       await this.loadIdentifications(u.userId);
       this.closeIdentificationModal();
       this.success.set(editing ? 'Identificación actualizada' : 'Identificación creada');
+      this.toastService.success(editing ? 'Identificación actualizada correctamente.' : 'Identificación creada correctamente.');
     } catch {
       this.error.set('Error al guardar la identificación');
+      this.toastService.error('No se pudo guardar la identificación.');
     } finally {
       this.savingIdentification.set(false);
     }
@@ -681,8 +705,10 @@ export class ProfileComponent implements OnInit {
       await lastValueFrom(this.userService.deleteIdentification(id));
       this.identifications.update((list) => list.filter((i) => i.userIdentificationId !== id));
       this.success.set('Identificación eliminada');
+      this.toastService.success('Identificación eliminada correctamente.');
     } catch {
       this.error.set('Error al eliminar la identificación');
+      this.toastService.error('No se pudo eliminar la identificación.');
     }
   }
 
