@@ -1034,9 +1034,10 @@ function fmtTime(d: string | Date): string {
       .sections-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
-      .hero { height: 340px; }
-      .hero-skeleton { height: 340px; }
+      .hero { height: 360px; }
+      .hero-skeleton { height: 360px; }
       .hero__back { padding: 7px 12px; font-size: var(--font-size-xs); }
+      .hero-content { padding-top: 76px; }
       .hero-overlay { padding: var(--spacing-lg); }
       .hero-stats { flex-direction: column; align-items: flex-start; gap: var(--spacing-xs); }
       .page { padding: var(--spacing-lg); gap: var(--spacing-lg); }
