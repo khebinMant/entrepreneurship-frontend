@@ -13,9 +13,16 @@ export class App implements OnInit {
   private readonly router = inject(Router);
 
   ngOnInit(): void {
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
-        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        });
       }
     });
   }

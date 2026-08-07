@@ -1,7 +1,6 @@
 import { Component, inject, input, OnInit, output, signal, computed } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { EventService } from '../../services/event.service';
@@ -15,6 +14,7 @@ import { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
 import { Event as EventModel } from '../../models/event';
 import { ImageGallery } from '../../../shared-domain/models/image-gallery';
 import type { EntityPortal, CreateEntityPortalDto, UpdateEntityPortalDto } from '../../../entrepreneurship/models/entrepreneurship-portal';
+import { PortalEditorComponent, PortalFormValue } from '../../../shared/ui/portal-editor/portal-editor.component';
 
 const MAX_IMAGES = 20;
 
@@ -26,7 +26,7 @@ interface SocialLinkItem {
 @Component({
   selector: 'app-event-create',
   standalone: true,
-  imports: [NgIf, FormsModule],
+  imports: [NgIf, FormsModule, PortalEditorComponent],
   templateUrl: './create.component.html',
   styleUrl: './create.component.scss',
 })
@@ -38,7 +38,6 @@ export class CreateComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
-  private readonly sanitizer = inject(DomSanitizer);
 
   readonly created = output<void>();
   readonly cancelled = output<void>();
@@ -103,12 +102,6 @@ export class CreateComponent implements OnInit {
   readonly portalLoading = signal(false);
   readonly savingPortal = signal(false);
   readonly themes = signal<CatalogueValue[]>([]);
-  readonly portalPreviewOpen = signal(false);
-  readonly aiPrompt = signal('');
-
-  readonly safePortalHtml = computed<SafeHtml>(() => {
-    return this.sanitizer.bypassSecurityTrustHtml(this.portalForm().htmlContent || '<p style="font-family:sans-serif">Tu portal aparecerá aquí.</p>');
-  });
 
   readonly portalForm = signal({
     subdomain: '',
@@ -468,9 +461,8 @@ export class CreateComponent implements OnInit {
     this.showPortalForm.update(v => !v);
   }
 
-  async savePortal(): Promise<void> {
-    const pf = this.portalForm();
-    const subdomain = pf.subdomain.trim();
+  async onPortalSave(f: PortalFormValue): Promise<void> {
+    const subdomain = f.subdomain.trim();
     if (!subdomain) {
       this.toastService.error('Escribe un subdominio para el portal (ej. mi-evento).');
       return;
@@ -482,9 +474,9 @@ export class CreateComponent implements OnInit {
       if (eventId && existing) {
         const dto: UpdateEntityPortalDto = {
           subdomain,
-          themeId: pf.themeId ?? undefined,
-          isActive: pf.isActive,
-          htmlContent: pf.htmlContent || undefined,
+          themeId: f.themeId ?? undefined,
+          isActive: f.isActive,
+          htmlContent: f.htmlContent || undefined,
         };
         const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
         await lastValueFrom(this.eventService.updatePortal(id, dto));
@@ -493,9 +485,9 @@ export class CreateComponent implements OnInit {
         const dto: CreateEntityPortalDto = {
           entityId: eventId,
           subdomain,
-          themeId: pf.themeId ?? undefined,
-          isActive: pf.isActive,
-          htmlContent: pf.htmlContent || undefined,
+          themeId: f.themeId ?? undefined,
+          isActive: f.isActive,
+          htmlContent: f.htmlContent || undefined,
         };
         await lastValueFrom(this.eventService.createPortal(dto));
         this.toastService.success('Portal creado correctamente.');

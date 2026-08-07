@@ -6,9 +6,19 @@
         Explora y gestiona todos los emprendimientos registrados en la plataforma.
       </p>
     </div>
-    <button class="btn btn--primary" (click)="openCreateModal()">
-      <i class="pi pi-plus"></i> Nuevo
-    </button>
+    <div class="entrepreneurship-list__header-actions">
+      @if (isAppRoute) {
+        <a class="btn btn--outline" routerLink="/app/invitations">
+          <i class="pi pi-envelope"></i> Invitaciones
+        </a>
+        <a class="btn btn--outline" routerLink="/app/events">
+          <i class="pi pi-calendar"></i> Eventos
+        </a>
+      }
+      <button class="btn btn--primary" (click)="openCreateModal()">
+        <i class="pi pi-plus"></i> Nuevo
+      </button>
+    </div>
   </div>
 
   <app-modal
@@ -56,43 +66,58 @@
   </app-modal>
 
   <div class="entrepreneurship-list__filters">
-    <div class="entrepreneurship-list__search">
-      <i class="pi pi-search"></i>
-      <input
-        type="text"
-        placeholder="Buscar por nombre..."
-        [ngModel]="filters().name"
-        (ngModelChange)="filters.update(f => ({...f, name: $event}))"
-        (keyup.enter)="onSearch()"
-      />
+    <div class="entrepreneurship-list__filter-bar">
+      <div class="entrepreneurship-list__search">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          placeholder="Buscar por nombre..."
+          [ngModel]="filters().name"
+          (ngModelChange)="filters.update(f => ({...f, name: $event}))"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+      <button
+        class="entrepreneurship-list__toggle"
+        (click)="toggleFilters()"
+        [class.entrepreneurship-list__toggle--active]="showFilters()"
+      >
+        <i class="pi" [ngClass]="showFilters() ? 'pi-angle-up' : 'pi-sliders-h'"></i>
+        <span>{{ showFilters() ? 'Ocultar filtros' : 'Más filtros' }}</span>
+        @if (activeFilterCount() > 0) {
+          <span class="entrepreneurship-list__toggle-badge">{{ activeFilterCount() }}</span>
+        }
+      </button>
     </div>
 
-    <select
-      [ngModel]="filters().categoryId"
-      (ngModelChange)="filters.update(f => ({...f, categoryId: $event || undefined})); onFilterChange()"
-      class="select"
-      style="min-width: 180px"
-    >
-      <option [ngValue]="undefined">Todas las categorías</option>
-      @for (cat of categories(); track cat.categoryId) {
-        <option [ngValue]="cat.categoryId">{{ cat.name }}</option>
-      }
-    </select>
+    @if (showFilters()) {
+      <div class="entrepreneurship-list__advanced">
+        <select
+          [ngModel]="filters().categoryId"
+          (ngModelChange)="filters.update(f => ({...f, categoryId: $event || undefined})); onFilterChange()"
+          class="select"
+        >
+          <option [ngValue]="undefined">Todas las categorías</option>
+          @for (cat of categories(); track cat.categoryId) {
+            <option [ngValue]="cat.categoryId">{{ cat.name }}</option>
+          }
+        </select>
 
-    <select
-      [ngModel]="filters().isPhysical"
-      (ngModelChange)="filters.update(f => ({...f, isPhysical: $event})); onFilterChange()"
-      class="select"
-      style="min-width: 140px"
-    >
-      <option [ngValue]="undefined">Todos los tipos</option>
-      <option [ngValue]="true">Físico</option>
-      <option [ngValue]="false">Digital</option>
-    </select>
+        <select
+          [ngModel]="filters().isPhysical"
+          (ngModelChange)="filters.update(f => ({...f, isPhysical: $event})); onFilterChange()"
+          class="select"
+        >
+          <option [ngValue]="undefined">Todos los tipos</option>
+          <option [ngValue]="true">Físico</option>
+          <option [ngValue]="false">Digital</option>
+        </select>
 
-    <button class="btn btn--ghost" (click)="filters.set({ name: '', categoryId: undefined, isPhysical: undefined, isDigital: undefined, page: 0, size: pageSize }); loadEntrepreneurships()">
-      <i class="pi pi-filter-slash"></i> Limpiar
-    </button>
+        <button class="btn btn--ghost" (click)="filters.set({ name: '', categoryId: undefined, isPhysical: undefined, isDigital: undefined, page: 0, size: pageSize }); loadEntrepreneurships()">
+          <i class="pi pi-filter-slash"></i> Limpiar
+        </button>
+      </div>
+    }
   </div>
 
   <div class="entrepreneurship-list__stats" *ngIf="pageData() as data">
@@ -110,7 +135,7 @@
             <h3 class="entrepreneurship-card__name">{{ item.name }}</h3>
             <p class="entrepreneurship-card__description">{{ item.description }}</p>
             <div class="entrepreneurship-card__meta">
-              <span class="entrepreneurship-card__category" *ngIf="item.categoryName">
+              <span class="entrepreneurship-card__category" *ngIf="item.categoryName" [ngClass]="categoryChipClass(item.categoryName)">
                 <i class="pi pi-tag"></i> {{ item.categoryName }}
               </span>
               <span class="entrepreneurship-card__type">
@@ -121,23 +146,16 @@
           </div>
         </a>
         @if (isAppRoute) {
-          <div class="entrepreneurship-card__actions" appClickOutside (appClickOutside)="closeMenu()">
-            <button class="entrepreneurship-card__menu-btn" (click)="toggleMenu(item.entrepreneurshipId); $event.stopPropagation()" aria-label="Acciones">
-              <i class="pi pi-ellipsis-v"></i>
+          <div class="entrepreneurship-card__actions" (click)="$event.stopPropagation()">
+            <button class="entrepreneurship-card__quick-btn" (click)="openEditModal(item)" title="Editar emprendimiento">
+              <i class="pi pi-pencil"></i>
             </button>
-            @if (openMenuId() === item.entrepreneurshipId) {
-              <div class="entrepreneurship-card__dropdown">
-                <a class="entrepreneurship-card__dropdown-item" [routerLink]="'/entrepreneurships/' + item.entrepreneurshipId" (click)="closeMenu()">
-                  <i class="pi pi-eye"></i> Visualizar
-                </a>
-                <button class="entrepreneurship-card__dropdown-item" (click)="openEditModal(item)">
-                  <i class="pi pi-pencil"></i> Editar
-                </button>
-                <button class="entrepreneurship-card__dropdown-item entrepreneurship-card__dropdown-item--danger" (click)="openDeleteConfirm(item)">
-                  <i class="pi pi-trash"></i> Eliminar
-                </button>
-              </div>
-            }
+            <a class="entrepreneurship-card__quick-btn" [routerLink]="'/app/entrepreneurships/' + item.entrepreneurshipId + '/edit?tab=portal'" title="Editar portal">
+              <i class="pi pi-globe"></i>
+            </a>
+            <button class="entrepreneurship-card__quick-btn entrepreneurship-card__quick-btn--danger" (click)="openDeleteConfirm(item)" title="Eliminar emprendimiento">
+              <i class="pi pi-trash"></i>
+            </button>
           </div>
         }
       </div>

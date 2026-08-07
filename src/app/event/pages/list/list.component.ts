@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal, HostListener } from '@angular/core';
-import { NgIf, NgClass, DatePipe } from '@angular/common';
+import { Component, inject, OnInit, signal, computed, HostListener } from '@angular/core';
+import { NgIf, NgClass, DatePipe, DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -14,8 +14,8 @@ import { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
 import { CATALOGUE_CODES } from '../../../core/constants/app.constants';
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
 import { CreateComponent } from '../create/create.component';
+import { EditComponent } from '../edit/edit.component';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
-import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import { EntrepreneurshipService } from '../../../entrepreneurship/services/entrepreneurship.service';
 import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepreneurship';
 import type { CreateEventInvitationDto, BulkCreateInvitationDto, EventInvitation } from '../../models/event-invitation';
@@ -24,7 +24,7 @@ import type { Page } from '../../../shared/models/pagination';
 @Component({
   selector: 'app-event-list',
   standalone: true,
-  imports: [NgIf, NgClass, DatePipe, RouterLink, FormsModule, ModalComponent, CreateComponent, ClickOutsideDirective],
+  imports: [NgIf, NgClass, DatePipe, DecimalPipe, RouterLink, FormsModule, ModalComponent, CreateComponent, EditComponent],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
 })
@@ -48,7 +48,6 @@ export class ListComponent implements OnInit {
   readonly showDeleteConfirm = signal(false);
   readonly deletingEvent = signal<Event | null>(null);
   readonly deleting = signal(false);
-  readonly openMenuEventId = signal<number | null>(null);
 
   readonly showInviteModal = signal(false);
   readonly invitingEvent = signal<Event | null>(null);
@@ -96,6 +95,16 @@ export class ListComponent implements OnInit {
     page: 0,
     size: this.pageSize,
   });
+
+  readonly showFilters = signal(false);
+  readonly activeFilterCount = computed(() => {
+    const f = this.filters();
+    return Number(!!f.eventTypeId) + Number(!!f.eventVisibilityId) + Number(!!f.fromDate) + Number(!!f.toDate);
+  });
+
+  toggleFilters(): void {
+    this.showFilters.update(v => !v);
+  }
 
   ngOnInit(): void {
     this.loadCatalogues();
@@ -244,7 +253,6 @@ export class ListComponent implements OnInit {
   openEditModal(event: Event): void {
     this.editingEvent.set(event);
     this.showEditModal.set(true);
-    this.openMenuEventId.set(null);
   }
 
   closeEditModal(): void {
@@ -256,7 +264,6 @@ export class ListComponent implements OnInit {
   openDeleteConfirm(event: Event): void {
     this.deletingEvent.set(event);
     this.showDeleteConfirm.set(true);
-    this.openMenuEventId.set(null);
   }
 
   cancelDelete(): void {
@@ -282,19 +289,10 @@ export class ListComponent implements OnInit {
     }
   }
 
-  toggleMenu(eventId: number): void {
-    this.openMenuEventId.update(current => current === eventId ? null : eventId);
-  }
-
-  closeMenu(): void {
-    this.openMenuEventId.set(null);
-  }
-
   openInvitacionesModal(event: Event): void {
     this.invitingEvent.set(event);
     this.showInviteModal.set(true);
     this.inviteTab.set('invitar');
-    this.openMenuEventId.set(null);
     this.searchQuery.set('');
     this.searchResults.set([]);
     this.selectedIds.set(new Set());

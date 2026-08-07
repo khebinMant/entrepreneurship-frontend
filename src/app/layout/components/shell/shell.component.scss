@@ -51,6 +51,9 @@
     &__content {
       margin-left: 0 !important;
       padding: var(--spacing-md);
+      padding-left: max(var(--spacing-md), env(safe-area-inset-left, 0px));
+      padding-right: max(var(--spacing-md), env(safe-area-inset-right, 0px));
+      padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom, 0px));
     }
 
     &__backdrop {

@@ -1,7 +1,7 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
@@ -13,6 +13,7 @@ import type { CatalogueValue } from '../../../shared-domain/models/catalogue-val
 import type { ImageGallery } from '../../../shared-domain/models/image-gallery';
 import type { EntitySocialLink, CreateEntitySocialLinkDto, UpdateEntitySocialLinkDto } from '../../../entrepreneurship/models/entrepreneurship-social-link';
 import type { EntityPortal, CreateEntityPortalDto, UpdateEntityPortalDto } from '../../../entrepreneurship/models/entrepreneurship-portal';
+import { PortalEditorComponent, PortalFormValue } from '../../../shared/ui/portal-editor/portal-editor.component';
 
 type TabId = 'info' | 'socials' | 'portal';
 interface Tab { id: TabId; label: string; }
@@ -25,7 +26,7 @@ interface SocialFormValue {
 @Component({
   selector: 'app-event-edit',
   standalone: true,
-  imports: [NgIf, FormsModule],
+  imports: [NgIf, FormsModule, PortalEditorComponent, RouterLink],
   templateUrl: './edit.component.html',
   styleUrl: './edit.component.scss',
 })
@@ -38,6 +39,9 @@ export class EditComponent implements OnInit {
   private readonly toastService = inject(ToastService);
 
   readonly activeTab = signal<TabId>('info');
+  readonly editingEvent = input<EventModel | null>(null);
+  readonly saved = output<void>();
+  readonly cancelled = output<void>();
 
   readonly tabs: Tab[] = [
     { id: 'info', label: 'Información' },
@@ -111,24 +115,32 @@ export class EditComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) { this.router.navigate(['/app/events']); return; }
-    this.eventId = id;
-    await Promise.all([
-      this.loadEvent(),
-      this.loadCatalogues(),
-    ]);
+    const input = this.editingEvent();
+    if (input) {
+      this.eventId = input.eventId;
+      this.event.set(input);
+      this.populateForm(input);
+      await Promise.all([this.loadCatalogues(), this.loadExistingImages()]);
+      this.loadPortal();
+      this.loadSocialPlatforms();
+    } else {
+      const id = Number(this.route.snapshot.paramMap.get('id'));
+      if (!id) { this.router.navigate(['/app/events']); return; }
+      this.eventId = id;
+      await Promise.all([
+        this.loadEvent(),
+        this.loadCatalogues(),
+      ]);
+      this.loadPortal();
+    }
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'portal') this.activeTab.set('portal');
   }
 
   setTab(tab: TabId): void {
     this.activeTab.set(tab);
-    console.log('[EDIT] setTab:', tab, 'socialLinks.length:', this.socialLinks().length, 'socialLinks:', this.socialLinks(), 'portal:', this.portal());
     if (tab === 'socials' && this.socialLinks().length === 0 && !this.socialLinksLoading()) {
-      console.log('[EDIT] calling loadSocialLinks');
       this.loadSocialLinks();
-    } else if (tab === 'portal' && this.portal() === null && !this.portalLoading()) {
-      console.log('[EDIT] calling loadPortal');
-      this.loadPortal();
     }
   }
 
@@ -301,20 +313,12 @@ export class EditComponent implements OnInit {
       }));
       if (socials.length) payload.socialLinks = socials;
 
-      const pf = this.portalForm();
-      const subdomain = pf.subdomain.trim();
-      const htmlContent = pf.htmlContent.trim();
-      if (subdomain || htmlContent || pf.themeId) {
-        payload.portal = {
-          subdomain: subdomain || undefined,
-          themeId: pf.themeId ?? undefined,
-          isActive: pf.isActive,
-          htmlContent: htmlContent || undefined,
-        };
-      }
-
       await lastValueFrom(this.eventService.update(this.eventId!, payload));
-      await this.loadEvent();
+      if (this.editingEvent()) {
+        this.saved.emit();
+      } else {
+        await this.loadEvent();
+      }
       this.toastService.success('Evento actualizado correctamente.');
     } catch {
       this.toastService.error('No se pudo guardar el evento. Intenta de nuevo.');
@@ -323,7 +327,11 @@ export class EditComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/app/events', this.eventId]);
+    if (this.editingEvent()) {
+      this.cancelled.emit();
+    } else {
+      this.router.navigate(['/app/events', this.eventId]);
+    }
   }
 
   // ========== Social Links ==========
@@ -438,9 +446,8 @@ export class EditComponent implements OnInit {
     finally { this.portalLoading.set(false); }
   }
 
-  async savePortal(): Promise<void> {
-    const pf = this.portalForm();
-    const subdomain = pf.subdomain.trim();
+  async onPortalSave(f: PortalFormValue): Promise<void> {
+    const subdomain = f.subdomain.trim();
     if (!subdomain) {
       this.toastService.error('Escribe un subdominio para el portal (ej. mi-evento).');
       return;
@@ -451,16 +458,16 @@ export class EditComponent implements OnInit {
       const dto: CreateEntityPortalDto = {
         entityId: this.eventId!,
         subdomain,
-        themeId: pf.themeId ?? undefined,
-        isActive: pf.isActive,
-        htmlContent: pf.htmlContent || undefined,
+        themeId: f.themeId ?? undefined,
+        isActive: f.isActive,
+        htmlContent: f.htmlContent || undefined,
       };
       if (existing) {
         const updateDto: UpdateEntityPortalDto = {
           subdomain,
-          themeId: pf.themeId ?? undefined,
-          isActive: pf.isActive,
-          htmlContent: pf.htmlContent || undefined,
+          themeId: f.themeId ?? undefined,
+          isActive: f.isActive,
+          htmlContent: f.htmlContent || undefined,
         };
         const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
         await lastValueFrom(this.eventService.updatePortal(id, updateDto));

@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { EntrepreneurshipService } from '../../services/entrepreneurship.service';
 import { ImageService } from '../../../shared-domain/services/image.service';
@@ -15,6 +15,7 @@ import type { EntitySocialLink } from '../../models/entrepreneurship-social-link
 import type { EntityPortal } from '../../models/entrepreneurship-portal';
 import type { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
 import type { ImageGallery } from '../../../shared-domain/models/image-gallery';
+import { PortalEditorComponent, PortalFormValue } from '../../../shared/ui/portal-editor/portal-editor.component';
 
 const MAX_IMAGES = 20;
 
@@ -40,7 +41,7 @@ interface SocialFormValue {
 @Component({
   selector: 'app-edit',
   standalone: true,
-  imports: [NgIf, FormsModule],
+  imports: [NgIf, FormsModule, PortalEditorComponent, RouterLink],
   templateUrl: './edit.component.html',
   styleUrl: './edit.component.scss',
 })
@@ -163,6 +164,9 @@ export class EditComponent implements OnInit {
       this.loadEntrepreneurship();
     }
     this.loadCategories();
+    this.loadPortal();
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'portal') this.activeTab.set('portal');
   }
 
   setTab(tab: TabId): void {
@@ -268,8 +272,6 @@ export class EditComponent implements OnInit {
       this.loadLocations();
     } else if (tab === 'socials' && this.socialLinks().length === 0 && !this.socialLinksLoading()) {
       this.loadSocialLinks();
-    } else if (tab === 'portal' && this.portal() === null && !this.portalLoading()) {
-      this.loadPortal();
     }
   }
 
@@ -332,7 +334,6 @@ export class EditComponent implements OnInit {
   async saveInfo(): Promise<void> {
     const id = this.entrepreneurshipId!;
     const f = this.form();
-    const portal = this.portalForm();
     this.saving.set(true);
     try {
       const payload: any = {
@@ -361,17 +362,6 @@ export class EditComponent implements OnInit {
         mapsUrl: l.mapsUrl || undefined,
       }));
       if (locs.length) payload.locations = locs;
-
-      const subdomain = portal.subdomain.trim();
-      const htmlContent = portal.htmlContent.trim();
-      if (subdomain || htmlContent || portal.themeId) {
-        payload.portal = {
-          subdomain: subdomain || undefined,
-          themeId: portal.themeId ?? undefined,
-          isActive: portal.isActive,
-          htmlContent: htmlContent || undefined,
-        };
-      }
 
       await lastValueFrom(this.entrepreneurshipService.update(id, payload));
 
@@ -612,9 +602,8 @@ export class EditComponent implements OnInit {
 
   // ===================== Portal =====================
 
-  async savePortal(): Promise<void> {
+  async onPortalSave(f: PortalFormValue): Promise<void> {
     const id = this.entrepreneurshipId!;
-    const f = this.portalForm();
     const existing = this.portal();
     const portalId = existing?.entityPortalId ?? (existing as any)?.portalId ?? (existing as any)?.id;
     this.savingPortal.set(true);

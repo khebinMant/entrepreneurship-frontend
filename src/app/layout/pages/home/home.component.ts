@@ -196,6 +196,9 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
     <!-- CTA -->
     <section class="cta-banner">
       <div class="cta-inner">
+        <div class="cta-grid"></div>
+        <div class="cta-glow cta-glow--one"></div>
+        <div class="cta-glow cta-glow--two"></div>
         <h2 class="cta-title">¿Listo para ser parte de la comunidad?</h2>
         <p class="cta-text">Crea tu cuenta y empieza a conectar con emprendedores y eventos hoy mismo.</p>
         <div class="cta-actions">
@@ -827,20 +830,61 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
     .cta-inner {
       position: relative;
       overflow: hidden;
+      isolation: isolate;
       border-radius: var(--radius-xl);
-      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, color-mix(in srgb, var(--color-accent) 70%, var(--color-primary)) 130%);
+      background:
+        radial-gradient(46% 55% at 85% 12%, color-mix(in srgb, var(--color-accent) 28%, transparent) 0%, transparent 55%),
+        radial-gradient(60% 70% at 10% 95%, color-mix(in srgb, var(--color-primary) 20%, transparent) 0%, transparent 62%),
+        linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 9%, var(--color-surface)) 0%, color-mix(in srgb, var(--color-accent) 9%, var(--color-surface)) 135%);
+      border: 1px solid var(--color-border);
       padding: var(--spacing-xxl);
       text-align: center;
+      box-shadow: 0 24px 60px -30px color-mix(in srgb, var(--color-primary) 35%, transparent);
+    }
+    .cta-grid {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background-image:
+        linear-gradient(color-mix(in srgb, var(--color-text-primary) 6%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-text-primary) 6%, transparent) 1px, transparent 1px);
+      background-size: 56px 56px;
+      -webkit-mask-image: radial-gradient(75% 75% at 50% 40%, #000 0%, transparent 100%);
+      mask-image: radial-gradient(75% 75% at 50% 40%, #000 0%, transparent 100%);
+    }
+    .cta-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.5;
+      z-index: -1;
+      background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+      pointer-events: none;
+    }
+    .cta-glow--one {
+      width: 320px;
+      height: 320px;
+      top: -130px;
+      left: -80px;
+      animation: hero-float 10s ease-in-out infinite;
+    }
+    .cta-glow--two {
+      width: 380px;
+      height: 380px;
+      bottom: -160px;
+      right: -100px;
+      background: color-mix(in srgb, var(--color-accent) 34%, transparent);
+      animation: hero-float 13s ease-in-out infinite reverse;
     }
     .cta-title {
       font-size: clamp(1.6rem, 3.5vw, 2.4rem);
       font-weight: 800;
-      color: #fff;
+      color: var(--color-text-primary);
       margin: 0 0 var(--spacing-sm);
       letter-spacing: -0.02em;
     }
     .cta-text {
-      color: rgba(255, 255, 255, 0.82);
+      color: var(--color-text-secondary);
       margin: 0 auto var(--spacing-lg);
       max-width: 520px;
       line-height: 1.6;
@@ -862,21 +906,22 @@ import type { Entrepreneurship } from '../../../entrepreneurship/models/entrepre
       transition: all var(--transition-fast);
     }
     .cta-btn--primary {
-      background: #fff;
-      color: var(--color-primary);
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 10px 26px color-mix(in srgb, var(--color-primary) 28%, transparent);
     }
     .cta-btn--primary:hover {
-      background: rgba(255, 255, 255, 0.92);
+      background: var(--color-primary-dark);
       transform: translateY(-2px);
     }
     .cta-btn--ghost {
       background: transparent;
-      border: 2px solid rgba(255, 255, 255, 0.32);
-      color: #fff;
+      border: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+      color: var(--color-primary);
     }
     .cta-btn--ghost:hover {
-      border-color: #fff;
-      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
     }
 
     /* ===== FOOTER ===== */

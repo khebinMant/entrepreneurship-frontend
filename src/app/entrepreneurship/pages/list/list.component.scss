@@ -3,7 +3,120 @@
 @include entity-list.entity-list('entrepreneurship-list');
 @include entity-list.entity-card('entrepreneurship-card');
 
+.entrepreneurship-list {
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+
+  &__filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  &__filter-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    position: relative;
+
+    &:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    &--active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 7%, var(--color-surface));
+    }
+  }
+
+  &__toggle-badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &__advanced {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    animation: fadeIn 0.2s ease;
+  }
+}
+
 .entrepreneurship-card {
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__quick-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    text-decoration: none;
+    transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.4);
+
+    &:hover {
+      transform: translateY(-2px);
+      background: var(--color-primary);
+    }
+
+    &--danger:hover {
+      background: var(--color-error);
+    }
+  }
+
   &__category,
   &__type {
     font-size: var(--font-size-xs);

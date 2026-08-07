@@ -414,6 +414,24 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
       box-shadow: 0 4px 16px rgba(2, 6, 23, 0.25);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      &.chip--blue { background: rgba(59, 130, 246, 0.9); }
+      &.chip--indigo { background: rgba(99, 102, 241, 0.9); }
+      &.chip--sky { background: rgba(14, 165, 233, 0.9); }
+      &.chip--cyan { background: rgba(6, 182, 212, 0.9); }
+      &.chip--teal { background: rgba(20, 184, 166, 0.9); }
+      &.chip--green { background: rgba(34, 197, 94, 0.9); }
+      &.chip--lime { background: rgba(132, 204, 22, 0.9); }
+      &.chip--amber { background: rgba(217, 119, 6, 0.9); }
+      &.chip--orange { background: rgba(249, 115, 22, 0.9); }
+      &.chip--coral { background: rgba(244, 114, 108, 0.9); }
+      &.chip--pink { background: rgba(236, 72, 153, 0.9); }
+      &.chip--rose { background: rgba(244, 63, 94, 0.9); }
+      &.chip--magenta { background: rgba(217, 70, 239, 0.9); }
+      &.chip--purple { background: rgba(168, 85, 247, 0.9); }
+      &.chip--violet { background: rgba(139, 92, 246, 0.9); }
+      &.chip--mandarin { background: rgba(251, 146, 60, 0.9); }
+      &.chip--sand { background: rgba(202, 138, 4, 0.9); }
+      &.chip--slate { background: rgba(100, 116, 139, 0.9); }
     }
     .hero-title {
       font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; color: #fff;
@@ -909,10 +927,10 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
       .sections-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
-      .hero { height: 360px; }
-      .hero-skeleton { height: 360px; }
+      .hero { height: auto; min-height: 460px; }
+      .hero-skeleton { height: 460px; }
       .hero__back { padding: 7px 12px; font-size: var(--font-size-xs); }
-      .hero-content { padding-top: 76px; }
+      .hero-content { padding-top: 96px; }
       .hero-overlay { padding: var(--spacing-lg); }
       .hero-stats { flex-direction: column; align-items: flex-start; gap: var(--spacing-xs); }
       .page { padding: var(--spacing-lg); gap: var(--spacing-lg); }

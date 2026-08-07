@@ -1,0 +1,124 @@
+<div class="portal-editor">
+  @if (loading()) {
+    <div class="portal-editor__skeleton">
+      <div class="skeleton skeleton--line"></div>
+      <div class="skeleton skeleton--block"></div>
+    </div>
+  } @else {
+    <div class="portal-editor__bar">
+      <div class="portal-editor__field">
+        <label class="portal-editor__label">Subdominio</label>
+        <input
+          class="portal-editor__input"
+          type="text"
+          [ngModel]="form().subdomain"
+          (ngModelChange)="update('subdomain', $event)"
+          maxlength="200"
+          placeholder="mi-evento"
+        />
+        <span class="portal-editor__hint">Ej: mi-evento.emprendia.com</span>
+      </div>
+      <div class="portal-editor__field">
+        <label class="portal-editor__label">Tema visual</label>
+        <select class="select portal-editor__select" [ngModel]="form().themeId" (ngModelChange)="update('themeId', $event)">
+          <option [ngValue]="null">Seleccionar tema</option>
+          @for (t of themes(); track t.catalogueValueId) {
+            <option [ngValue]="t.catalogueValueId">{{ t.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="portal-editor__field portal-editor__field--check">
+        <label class="portal-editor__check">
+          <input type="checkbox" [ngModel]="form().isActive" (ngModelChange)="update('isActive', $event)" />
+          Portal activo
+        </label>
+      </div>
+      <div class="portal-editor__actions">
+        <button class="btn btn--primary btn--sm" type="button" (click)="onSave()" [disabled]="saving()">
+          <i class="pi pi-spin pi-spinner" *ngIf="saving()"></i>
+          {{ saving() ? 'Guardando...' : portal() ? 'Guardar cambios' : 'Crear portal' }}
+        </button>
+        @if (portal()) {
+          <button class="btn btn--danger btn--sm" type="button" (click)="onDelete()">
+            <i class="pi pi-trash"></i> Eliminar
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="portal-editor__workspace">
+      <section class="portal-editor__panel portal-editor__panel--code">
+        <header class="portal-editor__panel-head">
+          <span class="portal-editor__panel-title"><i class="pi pi-code"></i> HTML / CSS / JS</span>
+        </header>
+        <textarea
+          class="portal-editor__code"
+          [ngModel]="form().htmlContent"
+          (ngModelChange)="update('htmlContent', $event)"
+          spellcheck="false"
+          placeholder="<h1>Bienvenido a mi página</h1>&#10;<style>body { font-family: sans-serif }</style>"
+        ></textarea>
+      </section>
+      <section class="portal-editor__panel portal-editor__panel--preview">
+        <header class="portal-editor__panel-head">
+          <span class="portal-editor__panel-title"><i class="pi pi-eye"></i> Vista previa en vivo</span>
+          <button class="portal-editor__preview-toggle" type="button" (click)="previewOpen.update(v => !v)">
+            <i class="pi" [class]="previewOpen() ? 'pi-eye-slash' : 'pi-eye'"></i>
+            {{ previewOpen() ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </header>
+        @if (previewOpen()) {
+          <iframe
+            class="portal-editor__frame"
+            [srcdoc]="safeHtml()"
+            title="Vista previa del portal"
+            sandbox="allow-scripts allow-popups allow-forms"
+          ></iframe>
+        }
+      </section>
+    </div>
+
+    <section class="portal-editor__ai">
+      <header class="portal-editor__ai-head">
+        <span><i class="pi pi-sparkles"></i> Generar con IA</span>
+        <span class="portal-editor__ai-badge">OpenRouter · modelos gratis</span>
+      </header>
+      <div class="portal-editor__ai-row">
+        <input
+          class="portal-editor__input"
+          type="password"
+          [ngModel]="aiKey()"
+          (ngModelChange)="aiKey.set($event)"
+          placeholder="API key de OpenRouter (openrouter.ai)"
+          autocomplete="off"
+        />
+        <select class="select" [ngModel]="aiModel()" (ngModelChange)="aiModel.set($event)">
+          @for (m of models; track m.id) {
+            <option [ngValue]="m.id">{{ m.label }}</option>
+          }
+        </select>
+        <button class="btn btn--ghost btn--sm" type="button" (click)="saveAiKey()" title="Guardar clave en este navegador">
+          Guardar
+        </button>
+      </div>
+      <textarea
+        class="portal-editor__ai-prompt"
+        rows="3"
+        [ngModel]="aiPrompt()"
+        (ngModelChange)="aiPrompt.set($event)"
+        placeholder="Describe tu página: secciones, colores, mensaje principal, si es para un evento o emprendimiento..."
+      ></textarea>
+      <div class="portal-editor__ai-actions">
+        <button class="btn btn--primary btn--sm" type="button" (click)="generateAi()" [disabled]="aiLoading()">
+          <i class="pi pi-spin pi-spinner" *ngIf="aiLoading()"></i>
+          <i class="pi pi-sparkles" *ngIf="!aiLoading()"></i>
+          {{ aiLoading() ? 'Generando...' : 'Generar página' }}
+        </button>
+        <span class="portal-editor__hint">El HTML generado reemplazará el contenido actual y se verá en la vista previa.</span>
+      </div>
+      @if (aiError(); as err) {
+        <div class="portal-editor__ai-error"><i class="pi pi-exclamation-circle"></i> {{ err }}</div>
+      }
+    </section>
+  }
+</div>

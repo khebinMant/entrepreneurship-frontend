@@ -1,7 +1,17 @@
 <div class="invitations-page">
   <div class="invitations-page__header">
-    <h1 class="invitations-page__title">Invitaciones</h1>
-    <p class="invitations-page__subtitle">Selecciona un evento para ver sus invitaciones.</p>
+    <div class="invitations-page__heading">
+      <h1 class="invitations-page__title">Invitaciones</h1>
+      <p class="invitations-page__subtitle">Selecciona un evento para ver sus invitaciones.</p>
+    </div>
+    <div class="invitations-page__header-actions">
+      <a class="btn btn--outline" routerLink="/app/dashboard">
+        <i class="pi pi-chart-pie"></i> Panel de control
+      </a>
+      <a class="btn btn--outline" routerLink="/app/entrepreneurships">
+        <i class="pi pi-briefcase"></i> Emprendimientos
+      </a>
+    </div>
   </div>
 
   @if (error()) {
@@ -318,7 +328,7 @@
                     <span><i class="pi pi-map"></i> {{ event.addressLine }}</span>
                   }
                   @if (event.isPaid) {
-                    <span class="invitations-page__tag invitations-page__tag--paid"><i class="pi pi-dollar"></i> {{ event.price ? event.price : 'Pago' }}</span>
+                    <span class="invitations-page__tag invitations-page__tag--paid"><i class="pi pi-dollar"></i> {{ event.price ? (event.price | number:'1.2-2') : 'Pago' }}</span>
                   }
                 </div>
               </div>

@@ -1,7 +1,6 @@
 import { Component, inject, input, OnInit, output, signal, computed } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { EntrepreneurshipService } from '../../services/entrepreneurship.service';
@@ -15,6 +14,8 @@ import { Category } from '../../models/category';
 import { Entrepreneurship } from '../../models/entrepreneurship';
 import { ImageGallery } from '../../../shared-domain/models/image-gallery';
 import type { CatalogueValue } from '../../../shared-domain/models/catalogue-value';
+import type { EntityPortal, CreateEntityPortalDto, UpdateEntityPortalDto } from '../../models/entrepreneurship-portal';
+import { PortalEditorComponent, PortalFormValue } from '../../../shared/ui/portal-editor/portal-editor.component';
 
 const MAX_IMAGES = 20;
 
@@ -37,7 +38,7 @@ interface SocialLinkForm {
 @Component({
   selector: 'app-entrepreneurship-create',
   standalone: true,
-  imports: [NgIf, FormsModule],
+  imports: [NgIf, FormsModule, PortalEditorComponent],
   templateUrl: './create.component.html',
   styleUrl: './create.component.scss',
 })
@@ -49,7 +50,6 @@ export class CreateComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
-  private readonly sanitizer = inject(DomSanitizer);
 
   readonly created = output<void>();
   readonly cancelled = output<void>();
@@ -145,14 +145,11 @@ export class CreateComponent implements OnInit {
     isActive: true,
     htmlContent: '',
   });
+  readonly portal = signal<EntityPortal | null>(null);
+  readonly portalLoading = signal(false);
+  readonly savingPortal = signal(false);
   readonly themes = signal<CatalogueValue[]>([]);
   readonly showPortalSection = signal(false);
-  readonly portalPreviewOpen = signal(false);
-  readonly aiPrompt = signal('');
-
-  readonly safePortalHtml = computed<SafeHtml>(() => {
-    return this.sanitizer.bypassSecurityTrustHtml(this.portalForm().htmlContent || '<p style="font-family:sans-serif">Tu portal aparecerá aquí.</p>');
-  });
 
   ngOnInit(): void {
     this.loadCategories();
@@ -162,6 +159,7 @@ export class CreateComponent implements OnInit {
     if (editing) {
       this.populateForm(editing);
       this.loadExistingImages(editing.entrepreneurshipId);
+      this.loadPortal(editing.entrepreneurshipId);
     }
   }
 
@@ -577,5 +575,81 @@ export class CreateComponent implements OnInit {
   cancel(): void {
     this.cancelled.emit();
     this.router.navigate(['/app/entrepreneurships']);
+  }
+
+  // ========== Portal ==========
+
+  private async loadPortal(entrepreneurshipId: number): Promise<void> {
+    this.portalLoading.set(true);
+    try {
+      const [portal, themes] = await Promise.all([
+        lastValueFrom(this.entrepreneurshipService.getPortal(entrepreneurshipId)),
+        lastValueFrom(this.catalogueService.getValuesByType(CATALOGUE_CODES.THEME_TYPE)),
+      ]);
+      if (portal) {
+        this.portal.set(portal);
+        this.portalForm.set({
+          subdomain: portal.subdomain || '',
+          themeId: portal.themeId ?? null,
+          isActive: portal.isActive ?? true,
+          htmlContent: portal.htmlContent || '',
+        });
+      }
+      if (themes.length) this.themes.set(themes);
+    } catch { /* fallback */ }
+    finally { this.portalLoading.set(false); }
+  }
+
+  async onPortalSave(f: PortalFormValue): Promise<void> {
+    const subdomain = f.subdomain.trim();
+    if (!subdomain) {
+      this.toastService.error('Escribe un subdominio para el portal (ej. mi-emprendimiento).');
+      return;
+    }
+    this.savingPortal.set(true);
+    try {
+      const existing = this.portal();
+      const entrepreneurshipId = this.editingEntrepreneurship()?.entrepreneurshipId;
+      if (entrepreneurshipId && existing) {
+        const dto: UpdateEntityPortalDto = {
+          subdomain,
+          themeId: f.themeId ?? undefined,
+          isActive: f.isActive,
+          htmlContent: f.htmlContent || undefined,
+        };
+        const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
+        await lastValueFrom(this.entrepreneurshipService.updatePortal(id, dto));
+        this.toastService.success('Portal guardado correctamente.');
+      } else if (entrepreneurshipId) {
+        const dto: CreateEntityPortalDto = {
+          entityId: entrepreneurshipId,
+          subdomain,
+          themeId: f.themeId ?? undefined,
+          isActive: f.isActive,
+          htmlContent: f.htmlContent || undefined,
+        };
+        await lastValueFrom(this.entrepreneurshipService.createPortal(dto));
+        this.toastService.success('Portal creado correctamente.');
+      }
+    } catch {
+      this.toastService.error('No se pudo guardar el portal. Revisa los datos e intenta de nuevo.');
+    }
+    finally { this.savingPortal.set(false); }
+  }
+
+  async deletePortal(): Promise<void> {
+    const existing = this.portal();
+    if (!existing) return;
+    this.savingPortal.set(true);
+    try {
+      const id = (existing as any).entityPortalId ?? (existing as any).portalId ?? existing.entityId;
+      await lastValueFrom(this.entrepreneurshipService.deletePortal(id));
+      this.portal.set(null);
+      this.portalForm.set({ subdomain: '', themeId: null, isActive: true, htmlContent: '' });
+      this.toastService.success('Portal eliminado correctamente.');
+    } catch {
+      this.toastService.error('No se pudo eliminar el portal.');
+    }
+    finally { this.savingPortal.set(false); }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, ElementRef, HostListener } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { ToastService, ToastType } from './toast.service';
 
@@ -23,8 +23,19 @@ import { ToastService, ToastType } from './toast.service';
       }
     </div>
 
-    <div class="toast-log" [class.toast-log--open]="logOpen()">
-      <button class="toast-log__toggle" (click)="logOpen.update((v) => !v)" aria-label="Actividad del sistema">
+    <div
+      class="toast-log"
+      [class.toast-log--open]="logOpen()"
+      [style.transform]="'translate(' + pos().x + 'px,' + pos().y + 'px)'"
+    >
+      <button
+        class="toast-log__toggle"
+        [class.toast-log__toggle--dragging]="dragging"
+        (pointerdown)="onPointerDown($event)"
+        (click)="onToggleClick()"
+        aria-label="Actividad del sistema"
+        title="Actividad"
+      >
         <i class="pi pi-history"></i>
         @if (logService().length) {
           <span class="toast-log__led-count">{{ logService().length }}</span>
@@ -160,12 +171,21 @@ import { ToastService, ToastType } from './toast.service';
       border: 1px solid var(--color-border);
       background: var(--color-surface);
       color: var(--color-text-secondary);
-      cursor: pointer;
+      cursor: grab;
       font-size: 16px;
       box-shadow: 0 8px 24px -10px color-mix(in srgb, var(--color-text-primary) 35%, transparent);
       transition: all var(--transition-fast);
       position: relative;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
       &:hover { color: var(--color-primary); transform: translateY(-2px); }
+      &:active { cursor: grabbing; }
+    }
+    .toast-log__toggle--dragging {
+      cursor: grabbing;
+      color: var(--color-primary);
+      transform: scale(1.06);
     }
     .toast-log__led-count {
       position: absolute;
@@ -267,9 +287,59 @@ import { ToastService, ToastType } from './toast.service';
 })
 export class ToastComponent {
   readonly toastService = inject(ToastService);
+  private readonly hostEl = inject(ElementRef);
   readonly logOpen = signal(false);
+
+  readonly pos = signal({ x: 0, y: 0 });
+  dragging = false;
+  private moved = false;
+  private startPos = { x: 0, y: 0 };
+  private startPointer = { x: 0, y: 0 };
 
   logService(): import('./toast.service').LoggedToast[] {
     return this.toastService.log();
+  }
+
+  onPointerDown(e: PointerEvent): void {
+    if (e.button !== 0) return;
+    this.startPointer = { x: e.clientX, y: e.clientY };
+    this.startPos = this.pos();
+    this.moved = false;
+    this.dragging = true;
+    window.addEventListener('pointermove', this.onPointerMove);
+    window.addEventListener('pointerup', this.onPointerUp);
+  }
+
+  private readonly onPointerMove = (e: PointerEvent): void => {
+    if (!this.dragging) return;
+    const dx = e.clientX - this.startPointer.x;
+    const dy = e.clientY - this.startPointer.y;
+    if (!this.moved && Math.hypot(dx, dy) > 4) {
+      this.moved = true;
+    }
+    if (this.moved) {
+      const margin = 44;
+      const x = Math.min(Math.max(this.startPos.x + dx, -margin), window.innerWidth - margin);
+      const y = Math.min(Math.max(this.startPos.y + dy, -(window.innerHeight - 120)), window.innerHeight - 120);
+      this.pos.set({ x, y });
+    }
+  };
+
+  private readonly onPointerUp = (): void => {
+    this.dragging = false;
+    window.removeEventListener('pointermove', this.onPointerMove);
+    window.removeEventListener('pointerup', this.onPointerUp);
+  };
+
+  onToggleClick(): void {
+    if (this.moved) return;
+    this.logOpen.update((v) => !v);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(e: MouseEvent): void {
+    if (!this.logOpen()) return;
+    if (this.hostEl.nativeElement.contains(e.target as Node)) return;
+    this.logOpen.set(false);
   }
 }

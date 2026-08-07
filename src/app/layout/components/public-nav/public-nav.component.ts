@@ -46,6 +46,19 @@ import { STORAGE_KEYS } from '../../../core/constants/app.constants';
                 <i class="pi pi-chevron-down" [class.open]="dropdownOpen()"></i>
               </button>
               <div class="public-nav__dropdown" *ngIf="dropdownOpen()">
+                <a class="public-nav__dropdown-item" routerLink="/app/entrepreneurships" (click)="dropdownOpen.set(false)">
+                  <i class="pi pi-briefcase"></i> Mis Emprendimientos
+                </a>
+                <a class="public-nav__dropdown-item" routerLink="/app/events" (click)="dropdownOpen.set(false)">
+                  <i class="pi pi-calendar"></i> Mis Eventos
+                </a>
+                <a class="public-nav__dropdown-item" routerLink="/app/invitations" (click)="dropdownOpen.set(false)">
+                  <i class="pi pi-envelope"></i> Invitaciones
+                </a>
+                <a class="public-nav__dropdown-item" routerLink="/app/dashboard" (click)="dropdownOpen.set(false)">
+                  <i class="pi pi-chart-pie"></i> Panel de control
+                </a>
+                <div class="public-nav__dropdown-divider"></div>
                 <a class="public-nav__dropdown-item" routerLink="/app/perfil" (click)="dropdownOpen.set(false)">
                   <i class="pi pi-user"></i> Mi Perfil
                 </a>

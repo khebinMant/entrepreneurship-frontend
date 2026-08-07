@@ -23,6 +23,14 @@ export class SidebarComponent {
   readonly sidebarState = inject(SidebarStateService);
 
   readonly navItems: NavItem[] = [
+    {
+      label: 'Crear',
+      icon: 'pi pi-plus',
+      children: [
+        { label: 'Nuevo Evento', route: '/app/events/create', icon: 'pi pi-calendar-plus' },
+        { label: 'Nuevo Emprendimiento', route: '/app/entrepreneurships/create', icon: 'pi pi-plus' },
+      ],
+    },
     { label: 'Panel administración', route: '/app/dashboard', icon: 'pi pi-chart-pie' },
     { label: 'Mis Emprendimientos', route: '/app/entrepreneurships', icon: 'pi pi-briefcase' },
     {

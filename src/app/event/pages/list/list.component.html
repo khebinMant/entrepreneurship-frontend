@@ -6,9 +6,19 @@
         Explora y gestiona todos los eventos registrados en la plataforma.
       </p>
     </div>
-    <button class="btn btn--primary" (click)="openCreateModal()">
-      <i class="pi pi-plus"></i> Nuevo
-    </button>
+    <div class="event-list__header-actions">
+      @if (isAppRoute()) {
+        <a class="btn btn--outline" routerLink="/app/invitations">
+          <i class="pi pi-envelope"></i> Invitaciones
+        </a>
+        <a class="btn btn--outline" routerLink="/app/entrepreneurships">
+          <i class="pi pi-briefcase"></i> Emprendimientos
+        </a>
+      }
+      <button class="btn btn--primary" (click)="openCreateModal()">
+        <i class="pi pi-plus"></i> Nuevo
+      </button>
+    </div>
   </div>
 
   <app-modal
@@ -27,7 +37,7 @@
     (close)="closeEditModal()"
   >
     @if (editingEvent(); as ev) {
-      <app-event-create [editingEvent]="ev" (created)="closeEditModal()" (cancelled)="closeEditModal()" />
+      <app-event-edit [editingEvent]="ev" (saved)="closeEditModal()" (cancelled)="closeEditModal()" />
     }
   </app-modal>
 
@@ -56,64 +66,77 @@
   </app-modal>
 
   <div class="event-list__filters">
-    <div class="event-list__search">
-      <i class="pi pi-search"></i>
-      <input
-        type="text"
-        placeholder="Buscar por nombre..."
-        [ngModel]="filters().name"
-        (ngModelChange)="filters.update(f => ({...f, name: $event}))"
-        (keyup.enter)="onSearch()"
-      />
+    <div class="event-list__filter-bar">
+      <div class="event-list__search">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          placeholder="Buscar por nombre..."
+          [ngModel]="filters().name"
+          (ngModelChange)="filters.update(f => ({...f, name: $event}))"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+      <button
+        class="event-list__toggle"
+        (click)="toggleFilters()"
+        [class.event-list__toggle--active]="showFilters()"
+      >
+        <i class="pi" [ngClass]="showFilters() ? 'pi-angle-up' : 'pi-sliders-h'"></i>
+        <span>{{ showFilters() ? 'Ocultar filtros' : 'Más filtros' }}</span>
+        @if (activeFilterCount() > 0) {
+          <span class="event-list__toggle-badge">{{ activeFilterCount() }}</span>
+        }
+      </button>
     </div>
 
-    <select
-      [ngModel]="filters().eventTypeId"
-      (ngModelChange)="filters.update(f => ({...f, eventTypeId: $event || undefined})); onFilterChange()"
-      class="select"
-      style="min-width: 160px"
-    >
-      <option [ngValue]="undefined">Tipo</option>
-      @for (type of eventTypes(); track type.catalogueValueId) {
-        <option [ngValue]="type.catalogueValueId">{{ type.name === 'Physical Event' ? 'Evento Presencial' : type.name === 'Virtual Event' ? 'Evento Virtual' : type.name }}</option>
-      }
-    </select>
+    @if (showFilters()) {
+      <div class="event-list__advanced">
+        <select
+          [ngModel]="filters().eventTypeId"
+          (ngModelChange)="filters.update(f => ({...f, eventTypeId: $event || undefined})); onFilterChange()"
+          class="select"
+        >
+          <option [ngValue]="undefined">Tipo</option>
+          @for (type of eventTypes(); track type.catalogueValueId) {
+            <option [ngValue]="type.catalogueValueId">{{ type.name === 'Physical Event' ? 'Evento Presencial' : type.name === 'Virtual Event' ? 'Evento Virtual' : type.name }}</option>
+          }
+        </select>
 
-    <select
-      [ngModel]="filters().eventVisibilityId"
-      (ngModelChange)="filters.update(f => ({...f, eventVisibilityId: $event || undefined})); onFilterChange()"
-      class="select"
-      style="min-width: 160px"
-    >
-      <option [ngValue]="undefined">Categoría</option>
-      @for (vis of visibilities(); track vis.catalogueValueId) {
-        <option [ngValue]="vis.catalogueValueId">{{ vis.name === 'Private' ? 'Privado' : vis.name === 'Public' ? 'Público' : vis.name }}</option>
-      }
-    </select>
+        <select
+          [ngModel]="filters().eventVisibilityId"
+          (ngModelChange)="filters.update(f => ({...f, eventVisibilityId: $event || undefined})); onFilterChange()"
+          class="select"
+        >
+          <option [ngValue]="undefined">Categoría</option>
+          @for (vis of visibilities(); track vis.catalogueValueId) {
+            <option [ngValue]="vis.catalogueValueId">{{ vis.name === 'Private' ? 'Privado' : vis.name === 'Public' ? 'Público' : vis.name }}</option>
+          }
+        </select>
 
-    <div class="event-list__date-group">
-      <input
-        type="date"
-        [ngModel]="filters().fromDate"
-        (ngModelChange)="filters.update(f => ({...f, fromDate: $event || ''})); onFilterChange()"
-        class="input"
-        style="width: auto; min-width: 140px"
-        placeholder="Desde"
-      />
-      <span class="event-list__date-sep">a</span>
-      <input
-        type="date"
-        [ngModel]="filters().toDate"
-        (ngModelChange)="filters.update(f => ({...f, toDate: $event || ''})); onFilterChange()"
-        class="input"
-        style="width: auto; min-width: 140px"
-        placeholder="Hasta"
-      />
-    </div>
+        <div class="event-list__date-group">
+          <input
+            type="date"
+            [ngModel]="filters().fromDate"
+            (ngModelChange)="filters.update(f => ({...f, fromDate: $event || ''})); onFilterChange()"
+            class="input"
+            placeholder="Desde"
+          />
+          <span class="event-list__date-sep">a</span>
+          <input
+            type="date"
+            [ngModel]="filters().toDate"
+            (ngModelChange)="filters.update(f => ({...f, toDate: $event || ''})); onFilterChange()"
+            class="input"
+            placeholder="Hasta"
+          />
+        </div>
 
-    <button class="btn btn--ghost" (click)="filters.set({ name: '', eventTypeId: undefined, eventVisibilityId: undefined, fromDate: '', toDate: '', page: 0, size: pageSize }); loadEvents()">
-      <i class="pi pi-filter-slash"></i> Limpiar
-    </button>
+        <button class="btn btn--ghost" (click)="filters.set({ name: '', eventTypeId: undefined, eventVisibilityId: undefined, fromDate: '', toDate: '', page: 0, size: pageSize }); loadEvents()">
+          <i class="pi pi-filter-slash"></i> Limpiar
+        </button>
+      </div>
+    }
   </div>
 
   <div class="event-list__stats" *ngIf="pageData() as data">
@@ -126,7 +149,7 @@
         <a class="event-card__link" [routerLink]="(isAppRoute() ? '/app' : '') + '/events/' + item.eventId">
           <div class="event-card__image">
             <img [src]="getImageUrl(item)" [alt]="item.name" loading="lazy" />
-            <span class="event-card__badge" *ngIf="item.isPaid">{{ item.price ? ('$' + item.price) : 'Pago' }}</span>
+            <span class="event-card__badge" *ngIf="item.isPaid"><i class="pi pi-dollar"></i> {{ item.price ? (item.price | number:'1.2-2') : 'Pago' }}</span>
           </div>
           <div class="event-card__body">
             <h3 class="event-card__name">{{ item.name }}</h3>
@@ -145,26 +168,19 @@
           </div>
         </a>
         @if (isAppRoute()) {
-          <div class="event-card__actions" appClickOutside (appClickOutside)="closeMenu()">
-            <button class="event-card__menu-btn" (click)="toggleMenu(item.eventId); $event.stopPropagation()" aria-label="Acciones">
-              <i class="pi pi-ellipsis-v"></i>
+          <div class="event-card__actions" (click)="$event.stopPropagation()">
+            <button class="event-card__quick-btn" (click)="openEditModal(item)" title="Editar evento">
+              <i class="pi pi-pencil"></i>
             </button>
-            @if (openMenuEventId() === item.eventId) {
-              <div class="event-card__dropdown">
-                <a class="event-card__dropdown-item" [routerLink]="'/events/' + item.eventId" (click)="closeMenu()">
-                  <i class="pi pi-eye"></i> Visualizar
-                </a>
-                <button class="event-card__dropdown-item" (click)="openEditModal(item)">
-                  <i class="pi pi-pencil"></i> Editar
-                </button>
-                <button class="event-card__dropdown-item" (click)="openInvitacionesModal(item)">
-                  <i class="pi pi-envelope"></i> Invitaciones
-                </button>
-                <button class="event-card__dropdown-item event-card__dropdown-item--danger" (click)="openDeleteConfirm(item)">
-                  <i class="pi pi-trash"></i> Eliminar
-                </button>
-              </div>
-            }
+            <a class="event-card__quick-btn" [routerLink]="'/app/events/' + item.eventId + '/edit?tab=portal'" title="Editar portal">
+              <i class="pi pi-globe"></i>
+            </a>
+            <a class="event-card__quick-btn" [routerLink]="'/app/invitations'" title="Invitaciones">
+              <i class="pi pi-envelope"></i>
+            </a>
+            <button class="event-card__quick-btn event-card__quick-btn--danger" (click)="openDeleteConfirm(item)" title="Eliminar evento">
+              <i class="pi pi-trash"></i>
+            </button>
           </div>
         }
       </div>

@@ -9,6 +9,7 @@ import { UserService } from '../../../user/services/user.service';
 import { ThemeService } from '../../../core/theme/theme.service';
 import { APP_ROLE } from '../../../core/constants/app.constants';
 import { SessionService } from '../../../core/session/session.service';
+import { greetName as buildGreetName } from '../../../shared/utils/greeting';
 import { lastValueFrom } from 'rxjs';
 import type { MonthlyActivity, ByType, EventTypeCount, EventVisibilityCount, CategoryCount } from '../../../shared/models/analytics';
 
@@ -40,19 +41,13 @@ export class DashboardMetricsComponent implements OnInit {
   readonly loading = signal(false);
   readonly isAdmin = computed(() => this.authService.hasRole(APP_ROLE.ADMIN) || this.authService.hasRole(APP_ROLE.ADMIN_KEYCLOAK));
   readonly username = computed(() => this.authService.authState().username || 'Usuario');
-  readonly greetName = computed(() => {
-    const full = [this.sessionService.firstName(), this.sessionService.lastName()]
-      .map((x) => x.trim())
-      .filter(Boolean)
-      .join(' ');
-    if (full) return full.split(' ')[0];
-    const raw = this.authService.authState().username;
-    if (!raw) return 'Emprendedor';
-    const base = raw.includes('@') ? raw.split('@')[0] : raw;
-    const parts = base.split(/[-_.]+/).filter(Boolean);
-    if (parts.join('') === base) return base.charAt(0).toUpperCase() + base.slice(1);
-    return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
-  });
+  readonly greetName = computed(() =>
+    buildGreetName(
+      this.sessionService.firstName(),
+      this.sessionService.lastName(),
+      this.authService.authState().username,
+    ),
+  );
   readonly userId = computed(() => this.authService.backendUserId());
 
   readonly metrics = signal<MetricCard[]>([]);

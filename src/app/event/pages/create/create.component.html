@@ -128,72 +128,15 @@
         </button>
       </div>
       @if (showPortalForm()) {
-        <div class="create-form__portal-card">
-          <div class="create-form__portal-form">
-            <div class="create-form__grid">
-              <div class="create-form__field">
-                <label class="create-form__label">Subdominio</label>
-                <input class="create-form__input" type="text" [ngModel]="portalForm().subdomain" (ngModelChange)="portalForm.update(p => ({...p, subdomain: $event}))" maxlength="200" placeholder="mi-evento" />
-                <span class="create-form__field-hint">Ej: mi-evento.emprendia.com</span>
-              </div>
-              <div class="create-form__field">
-                <label class="create-form__label">Tema visual</label>
-                <select class="select" style="width: 100%" [ngModel]="portalForm().themeId" (ngModelChange)="portalForm.update(p => ({...p, themeId: $event}))">
-                  <option [ngValue]="null">Seleccionar tema</option>
-                  @for (t of themes(); track t.catalogueValueId) {
-                    <option [ngValue]="t.catalogueValueId">{{ t.name }}</option>
-                  }
-                </select>
-              </div>
-              <div class="create-form__field create-form__field--full">
-                <label class="create-form__label">Contenido HTML</label>
-                <textarea class="create-form__textarea create-form__textarea--code" rows="6" [ngModel]="portalForm().htmlContent" (ngModelChange)="portalForm.update(p => ({...p, htmlContent: $event}))" placeholder="&lt;h1&gt;Bienvenido a mi evento&lt;/h1&gt;"></textarea>
-                <span class="create-form__field-hint">Puedes usar HTML, CSS y JS para personalizar la página del portal</span>
-              </div>
-              <div class="create-form__field create-form__field--full">
-                <button class="btn btn--ghost btn--sm" type="button" (click)="portalPreviewOpen.update(v => !v)">
-                  <i class="pi" [class]="portalPreviewOpen() ? 'pi-eye-slash' : 'pi-eye'"></i>
-                  {{ portalPreviewOpen() ? 'Ocultar vista previa' : 'Vista previa en vivo' }}
-                </button>
-                @if (portalPreviewOpen()) {
-                  <div class="create-form__portal-preview">
-                    <iframe class="create-form__portal-frame" [srcdoc]="safePortalHtml()" title="Vista previa del portal" sandbox="allow-scripts allow-popups"></iframe>
-                  </div>
-                }
-              </div>
-              <div class="create-form__field create-form__field--full">
-                <div class="create-form__ai">
-                  <div class="create-form__ai-head">
-                    <span><i class="pi pi-sparkles"></i> Generar con IA</span>
-                    <span class="create-form__ai-tag">Próximamente</span>
-                  </div>
-                  <textarea class="create-form__textarea" rows="3" [ngModel]="aiPrompt()" (ngModelChange)="aiPrompt.set($event)" placeholder="Describe cómo quieres tu página: colores, secciones, mensaje principal..." [disabled]="true"></textarea>
-                  <button class="btn btn--primary btn--sm" type="button" [disabled]="true" title="Disponible próximamente">
-                    <i class="pi pi-sparkles"></i> Generar
-                  </button>
-                  <span class="create-form__field-hint">Escribe una descripción y la IA armará el portal por ti.</span>
-                </div>
-              </div>
-              <div class="create-form__field">
-                <div class="create-form__checkbox">
-                  <input type="checkbox" id="portal-active" [ngModel]="portalForm().isActive" (ngModelChange)="portalForm.update(p => ({...p, isActive: $event}))" />
-                  <label for="portal-active">Portal activo</label>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="create-form__portal-actions">
-            <button class="btn btn--primary btn--sm" type="button" (click)="savePortal()" [disabled]="savingPortal()">
-              <i class="pi pi-spin pi-spinner" *ngIf="savingPortal()"></i>
-              {{ savingPortal() ? 'Guardando...' : portal() ? 'Guardar cambios' : 'Crear portal' }}
-            </button>
-            @if (portal()) {
-              <button class="btn btn--danger btn--sm" type="button" (click)="deletePortal()">
-                <i class="pi pi-trash"></i> Eliminar
-              </button>
-            }
-          </div>
-        </div>
+        <app-portal-editor
+          [(form)]="portalForm"
+          [portal]="portal()"
+          [themes]="themes()"
+          [loading]="portalLoading()"
+          [saving]="savingPortal()"
+          (save)="onPortalSave($event)"
+          (delete)="deletePortal()"
+        />
       }
     </div>
 

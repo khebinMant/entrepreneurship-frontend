@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { NgClass, DatePipe } from '@angular/common';
+import { NgClass, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -33,7 +33,7 @@ const STATUS_CLASS: Record<string, string> = {
 @Component({
   selector: 'app-event-invitations',
   standalone: true,
-  imports: [NgClass, DatePipe, RouterLink, FormsModule, ModalComponent],
+  imports: [NgClass, DatePipe, DecimalPipe, RouterLink, FormsModule, ModalComponent],
   templateUrl: './invitations.component.html',
   styleUrl: './invitations.component.scss',
 })

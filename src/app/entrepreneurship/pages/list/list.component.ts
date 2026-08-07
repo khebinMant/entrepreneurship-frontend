@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { NgIf, NgClass } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -12,17 +12,18 @@ import { Entrepreneurship, EntrepreneurshipSearchFilters } from '../../models/en
 import { ModalComponent } from '../../../shared/ui/modal/modal.component';
 import { CreateComponent } from '../create/create.component';
 import { EditComponent } from '../edit/edit.component';
-import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
+import { categoryChipClass } from '../../../shared/utils/category-colors';
 import type { Page } from '../../../shared/models/pagination';
 
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [NgIf, NgClass, RouterLink, FormsModule, ModalComponent, CreateComponent, EditComponent, ClickOutsideDirective],
+  imports: [NgIf, NgClass, RouterLink, FormsModule, ModalComponent, CreateComponent, EditComponent],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
 })
 export class ListComponent implements OnInit {
+  readonly categoryChipClass = categoryChipClass;
   private readonly entrepreneurshipService = inject(EntrepreneurshipService);
   private readonly authService = inject(AuthenticationService);
   private readonly router = inject(Router);
@@ -39,7 +40,6 @@ export class ListComponent implements OnInit {
   readonly showDeleteConfirm = signal(false);
   readonly deletingEntrepreneurship = signal<Entrepreneurship | null>(null);
   readonly deleting = signal(false);
-  readonly openMenuId = signal<number | null>(null);
 
   readonly pageSize = 10;
 
@@ -51,6 +51,16 @@ export class ListComponent implements OnInit {
     page: 0,
     size: this.pageSize,
   });
+
+  readonly showFilters = signal(false);
+  readonly activeFilterCount = computed(() => {
+    const f = this.filters();
+    return Number(!!f.categoryId) + Number(f.isPhysical !== undefined);
+  });
+
+  toggleFilters(): void {
+    this.showFilters.update(v => !v);
+  }
 
   ngOnInit(): void {
     this.loadCategories();
@@ -155,7 +165,6 @@ export class ListComponent implements OnInit {
   openEditModal(entrepreneurship: Entrepreneurship): void {
     this.editingEntrepreneurship.set(entrepreneurship);
     this.showEditModal.set(true);
-    this.openMenuId.set(null);
   }
 
   closeEditModal(): void {
@@ -167,7 +176,6 @@ export class ListComponent implements OnInit {
   openDeleteConfirm(entrepreneurship: Entrepreneurship): void {
     this.deletingEntrepreneurship.set(entrepreneurship);
     this.showDeleteConfirm.set(true);
-    this.openMenuId.set(null);
   }
 
   cancelDelete(): void {
@@ -191,13 +199,5 @@ export class ListComponent implements OnInit {
     } finally {
       this.deleting.set(false);
     }
-  }
-
-  toggleMenu(id: number): void {
-    this.openMenuId.update(current => current === id ? null : id);
-  }
-
-  closeMenu(): void {
-    this.openMenuId.set(null);
   }
 }

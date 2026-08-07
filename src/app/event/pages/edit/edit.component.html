@@ -1,7 +1,13 @@
 <div class="edit-form">
   <div class="edit-form__header">
     <h1>Editar Evento</h1>
-    <button class="btn btn--ghost" type="button" (click)="cancel()"><i class="pi pi-arrow-left"></i> Volver</button>
+    <div class="edit-form__header-actions">
+      @if (!editingEvent()) {
+        <a class="btn btn--ghost" [routerLink]="['/app', 'events', event()!.eventId, 'invitations']"><i class="pi pi-envelope"></i> Invitaciones</a>
+        <a class="btn btn--ghost" [routerLink]="['/app', 'events', event()!.eventId]"><i class="pi pi-eye"></i> Ver público</a>
+      }
+      <button class="btn btn--ghost" type="button" (click)="cancel()"><i class="pi pi-arrow-left"></i> Volver</button>
+    </div>
   </div>
 
   @if (loading()) {
@@ -242,6 +248,7 @@
       <div class="edit-form__tab-content">
         <div class="edit-form__section-header">
           <h3>Portal Web</h3>
+          <p class="edit-form__section-sub">Edita aquí la página pública de tu evento. Puedes escribir el HTML o generarlo con IA.</p>
         </div>
 
         @if (portalLoading()) {
@@ -249,51 +256,14 @@
             <div class="skeleton skeleton--portal-card"></div>
           </div>
         } @else {
-          <div class="edit-form__portal-card">
-            <div class="edit-form__portal-icon">
-              <i class="pi pi-globe"></i>
-            </div>
-            <div class="edit-form__portal-form">
-              <div class="edit-form__grid">
-                <div class="edit-form__field">
-                  <label class="edit-form__label">Subdominio</label>
-                  <input class="edit-form__input" type="text" [ngModel]="portalForm().subdomain" (ngModelChange)="portalForm.update(p => ({...p, subdomain: $event}))" maxlength="200" placeholder="mi-evento" />
-                  <span class="edit-form__field-hint">Ej: mi-evento.emprendia.com</span>
-                </div>
-                <div class="edit-form__field">
-                  <label class="edit-form__label">Tema visual</label>
-                  <select class="select" style="width: 100%" [ngModel]="portalForm().themeId" (ngModelChange)="portalForm.update(p => ({...p, themeId: $event}))">
-                    <option [ngValue]="null">Seleccionar tema</option>
-                    @for (t of themes(); track t.catalogueValueId) {
-                      <option [ngValue]="t.catalogueValueId">{{ t.name }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="edit-form__field edit-form__field--full">
-                  <label class="edit-form__label">Contenido HTML</label>
-                  <textarea class="edit-form__textarea edit-form__textarea--code" rows="6" [ngModel]="portalForm().htmlContent" (ngModelChange)="portalForm.update(p => ({...p, htmlContent: $event}))" placeholder="&lt;h1&gt;Bienvenido a mi evento&lt;/h1&gt;"></textarea>
-                  <span class="edit-form__field-hint">Puedes usar HTML para personalizar la página del portal</span>
-                </div>
-                <div class="edit-form__field">
-                  <div class="edit-form__checkbox">
-                    <input type="checkbox" id="portal-active" [ngModel]="portalForm().isActive" (ngModelChange)="portalForm.update(p => ({...p, isActive: $event}))" />
-                    <label for="portal-active">Portal activo</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="edit-form__portal-actions">
-              <button class="btn btn--primary" type="button" (click)="savePortal()" [disabled]="savingPortal()">
-                <i class="pi pi-spin pi-spinner" *ngIf="savingPortal()"></i>
-                {{ savingPortal() ? 'Guardando...' : portal() ? 'Guardar cambios' : 'Crear portal' }}
-              </button>
-              @if (portal()) {
-                <button class="btn btn--danger btn--sm" type="button" (click)="deletePortal()">
-                  <i class="pi pi-trash"></i> Eliminar portal
-                </button>
-              }
-            </div>
-          </div>
+          <app-portal-editor
+            [portal]="portal()"
+            [themes]="themes()"
+            [loading]="false"
+            [saving]="savingPortal()"
+            (save)="onPortalSave($event)"
+            (delete)="deletePortal()"
+          />
         }
       </div>
     }
