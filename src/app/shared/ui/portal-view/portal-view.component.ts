@@ -37,7 +37,10 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         <div class="portal-maximize__topbar">
           <div class="portal-maximize__brand">
             <span class="portal-maximize__logo">E</span>
-            <span class="portal-maximize__title-hint">Estás viendo <strong>{{ title }}</strong> a través de Emprendia</span>
+            <div class="portal-maximize__wordmark">
+              <span class="portal-maximize__emark">Emprendia</span>
+              <span class="portal-maximize__title-hint">Estás viendo <strong>{{ title }}</strong></span>
+            </div>
           </div>
           <div class="portal-maximize__actions">
             <span class="portal-maximize__live"><span class="portal-maximize__live-dot"></span> En vivo</span>
@@ -193,8 +196,25 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       gap: var(--spacing-sm);
       min-width: 0;
     }
+    .portal-maximize__wordmark {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+    .portal-maximize__emark {
+      font-size: var(--font-size-md);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      white-space: nowrap;
+    }
     .portal-maximize__logo {
-      width: 30px; height: 30px;
+      width: 32px; height: 32px;
       display: flex; align-items: center; justify-content: center;
       border-radius: 10px;
       background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
@@ -202,14 +222,16 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       font-weight: 800;
       font-size: 16px;
       flex-shrink: 0;
+      box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--color-primary) 60%, transparent);
     }
     .portal-maximize__title-hint {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      strong { color: var(--color-text-primary); }
+      max-width: 40vw;
+      strong { color: var(--color-text-secondary); font-weight: 600; }
     }
     .portal-maximize__actions {
       display: flex;

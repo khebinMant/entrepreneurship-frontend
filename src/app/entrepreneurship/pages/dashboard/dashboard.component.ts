@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthenticationService } from '../../../core/authentication/services/authentication.service';
 
@@ -13,7 +13,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
         <div class="dashboard__hero-content">
           <h1 class="dashboard__title">Panel de Control</h1>
           <p class="dashboard__subtitle">
-            Bienvenido de nuevo, {{ authService.authState().username }}. Aquí tienes un resumen de tu plataforma.
+            Hola {{ greetName() }}, ¡nos alegra verte! Aquí tienes un resumen de tu plataforma.
           </p>
         </div>
       </div>
@@ -135,4 +135,15 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
 })
 export class DashboardComponent {
   readonly authService = inject(AuthenticationService);
+
+  readonly greetName = computed(() => {
+    const raw = this.authService.authState().username;
+    if (!raw) return 'Emprendedor';
+    const base = raw.includes('@') ? raw.split('@')[0] : raw;
+    return base
+      .split(/[-_.]+/)
+      .filter(Boolean)
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' ');
+  });
 }

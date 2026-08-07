@@ -318,7 +318,7 @@
                     <span><i class="pi pi-map"></i> {{ event.addressLine }}</span>
                   }
                   @if (event.isPaid) {
-                    <span class="invitations-page__tag invitations-page__tag--paid"><i class="pi pi-dollar"></i> {{ event.price ? ('$' + event.price) : 'Pago' }}</span>
+                    <span class="invitations-page__tag invitations-page__tag--paid"><i class="pi pi-dollar"></i> {{ event.price ? event.price : 'Pago' }}</span>
                   }
                 </div>
               </div>

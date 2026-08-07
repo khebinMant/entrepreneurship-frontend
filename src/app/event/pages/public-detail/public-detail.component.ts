@@ -82,7 +82,7 @@ function fmtTime(d: string | Date): string {
               <span><i class="pi pi-map-marker"></i> {{ locationDisplay() }}</span>
               <span>
                 @if (e.isPaid && e.price) {
-                  <i class="pi pi-dollar price-icon price-icon--paid"></i> \${{ e.price.toFixed(2) }}
+                  <i class="pi pi-dollar price-icon price-icon--paid"></i> {{ e.price.toFixed(2) }}
                 } @else {
                   <i class="pi pi-check-circle price-icon price-icon--free"></i> Gratuito
                 }

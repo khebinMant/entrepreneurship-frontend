@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgClass } from '@angular/common';
 
 import { lastValueFrom } from 'rxjs';
 import { format, parseISO } from 'date-fns';
@@ -10,6 +11,7 @@ import { AuthenticationService } from '../../../core/authentication/services/aut
 import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ClickOutsideDirective } from '../../../shared/directives/click-outside.directive';
 import { PortalViewComponent } from '../../../shared/ui/portal-view/portal-view.component';
+import { categoryChipClass } from '../../../shared/utils/category-colors';
 import type { Entrepreneurship } from '../../models/entrepreneurship';
 import type { EntrepreneurshipLocation } from '../../models/entrepreneurship-location';
 import type { EntitySocialLink } from '../../models/entrepreneurship-social-link';
@@ -23,7 +25,7 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
 @Component({
   selector: 'app-entrepreneurship-public-detail',
   standalone: true,
-  imports: [RouterLink, ClickOutsideDirective, PortalViewComponent],
+  imports: [RouterLink, ClickOutsideDirective, PortalViewComponent, NgClass],
   template: `
     @if (loading()) {
       <div class="hero-skeleton">
@@ -68,7 +70,7 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
         <div class="hero-overlay">
           <div class="hero-content">
             @if (e.categoryName) {
-              <span class="hero-chip">{{ e.categoryName }}</span>
+              <span class="hero-chip" [ngClass]="categoryChipClass(e.categoryName)">{{ e.categoryName }}</span>
             }
             <h1 class="hero-title">{{ e.name }}</h1>
             <div class="hero-stats">
@@ -938,6 +940,7 @@ function fmt(d: string | Date, pattern = "d 'de' MMMM 'de' yyyy"): string {
   `],
 })
 export class PublicDetailComponent implements OnInit {
+  readonly categoryChipClass = categoryChipClass;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly entrepreneurshipService = inject(EntrepreneurshipService);
